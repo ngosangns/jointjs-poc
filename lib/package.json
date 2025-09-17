@@ -1,0 +1,28 @@
+{
+  "name": "diagram-library",
+  "version": "1.0.0",
+  "description": "TypeScript diagram library using JointJS core",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean"
+  },
+  "keywords": [
+    "diagram",
+    "jointjs",
+    "typescript",
+    "visualization"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "@joint/core": "^4.0.0"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.10",
+    "typescript": "^5.9.2"
+  }
+}
