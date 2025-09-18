@@ -22,6 +22,8 @@ export interface IEventManager {
   clear(): void;
   getRegisteredEventTypes(): DiagramEventType[];
   hasListeners(eventType: DiagramEventType): boolean;
+  setupPaperEvents(paper: dia.Paper): void;
+  setupGraphEvents(graph: dia.Graph): void;
   destroy(): void;
 }
 
@@ -58,7 +60,6 @@ export interface IDataManager {
  */
 export interface IPaperManager {
   initialize(element: HTMLElement, graph: dia.Graph, config: DiagramConfig): dia.Paper;
-  setupEvents(paper: dia.Paper, eventManager: IEventManager): void;
   setGrid(paper: dia.Paper, enabled: boolean, gridSize?: number): void;
   resize(paper: dia.Paper, width: number, height: number): void;
   destroy(paper: dia.Paper): void;
@@ -81,7 +82,6 @@ export interface IGraphManager {
   removeElement(graph: dia.Graph, elementId: string): void;
   removeLink(graph: dia.Graph, linkId: string): void;
   clear(graph: dia.Graph): void;
-  setupEvents(graph: dia.Graph, eventManager: IEventManager): void;
 
   // Query methods
   getElement(graph: dia.Graph, elementId: string): dia.Element | null;

@@ -137,82 +137,6 @@ export class GraphManager implements IGraphManager {
   }
 
   /**
-   * Setup graph-specific events
-   */
-  public setupEvents(graph: dia.Graph, eventManager: IEventManager): void {
-    // Cell addition events
-    graph.on('add', (cell) => {
-      if (cell.isElement()) {
-        eventManager.emitEvent('element:added', {
-          id: cell.id,
-          element: this.convertToElementData(cell as dia.Element),
-        });
-      } else if (cell.isLink()) {
-        eventManager.emitEvent('link:added', {
-          id: cell.id,
-          link: this.convertToLinkData(cell as dia.Link),
-        });
-      }
-    });
-
-    // Cell removal events
-    graph.on('remove', (cell) => {
-      if (cell.isElement()) {
-        eventManager.emitEvent('element:removed', {
-          id: cell.id,
-          element: this.convertToElementData(cell as dia.Element),
-        });
-      } else if (cell.isLink()) {
-        eventManager.emitEvent('link:removed', {
-          id: cell.id,
-          link: this.convertToLinkData(cell as dia.Link),
-        });
-      }
-    });
-
-    // Cell change events
-    graph.on('change', (cell) => {
-      if (cell.isElement()) {
-        eventManager.emitEvent('element:changed', {
-          id: cell.id,
-          element: this.convertToElementData(cell as dia.Element),
-          changes: cell.changed,
-        });
-      } else if (cell.isLink()) {
-        eventManager.emitEvent('link:changed', {
-          id: cell.id,
-          link: this.convertToLinkData(cell as dia.Link),
-          changes: cell.changed,
-        });
-      }
-    });
-
-    // Position change events
-    graph.on('change:position', (element) => {
-      if (element.isElement()) {
-        eventManager.emitEvent('element:moved', {
-          id: element.id,
-          element: this.convertToElementData(element as dia.Element),
-          newPosition: element.position(),
-          previousPosition: element.previous('position'),
-        });
-      }
-    });
-
-    // Size change events
-    graph.on('change:size', (element) => {
-      if (element.isElement()) {
-        eventManager.emitEvent('element:resized', {
-          id: element.id,
-          element: this.convertToElementData(element as dia.Element),
-          newSize: element.size(),
-          previousSize: element.previous('size'),
-        });
-      }
-    });
-  }
-
-  /**
    * Get element by ID
    */
   public getElement(graph: dia.Graph, elementId: string): dia.Element | null {
@@ -499,34 +423,5 @@ export class GraphManager implements IGraphManager {
     this.removeElement(graph, groupId);
 
     return childIds;
-  }
-
-  /**
-   * Convert JointJS element to DiagramElement data
-   */
-  private convertToElementData(element: dia.Element): DiagramElement {
-    return {
-      id: String(element.id),
-      type: element.get('type') || 'element',
-      position: element.position(),
-      size: element.size(),
-      properties: element.attributes,
-    };
-  }
-
-  /**
-   * Convert JointJS link to DiagramLink data
-   */
-  private convertToLinkData(link: dia.Link): DiagramLink {
-    const source = link.source();
-    const target = link.target();
-
-    return {
-      id: String(link.id),
-      type: link.get('type'),
-      source: String(source.id || ''),
-      target: String(target.id || ''),
-      properties: link.attributes,
-    };
   }
 }
