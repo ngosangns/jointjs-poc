@@ -47,6 +47,27 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   filteredShapes: ShapeMetadata[] = [];
   hoveredShape: string | null = null;
 
+  private resizeRafId: number | null = null;
+  private lastContainerSize: { width: number; height: number } = { width: 0, height: 0 };
+  private onWindowResize = () => {
+    const container = this.diagramContainer?.nativeElement;
+    if (!container) return;
+    const targetWidth = Math.max(0, Math.round(container.clientWidth));
+    const targetHeight = Math.max(0, Math.round(container.clientHeight));
+    if (
+      targetWidth === this.lastContainerSize.width &&
+      targetHeight === this.lastContainerSize.height
+    ) {
+      return;
+    }
+    this.lastContainerSize = { width: targetWidth, height: targetHeight };
+    if (this.resizeRafId != null) cancelAnimationFrame(this.resizeRafId);
+    this.resizeRafId = requestAnimationFrame(() => {
+      this.resizeRafId = null;
+      this.diagramService.resizeDiagram(targetWidth, targetHeight);
+    });
+  };
+
   constructor(
     private diagramService: DiagramService,
     private cdr: ChangeDetectorRef,
@@ -56,30 +77,38 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   ) {}
 
   ngOnInit(): void {
-    // Initialize diagram service
-    this.diagramService.initialize({
-      width: 800,
-      height: 600,
-      gridSize: 10,
-      interactive: true,
-    });
-
     // Initialize shape library
     this.categories = this.shapeLibraryService.getCategories();
     this.updateFilteredShapes();
   }
 
   ngAfterViewInit(): void {
-    // Attach diagram to DOM element
+    // Initialize and attach diagram based on container size
     if (this.diagramContainer?.nativeElement) {
-      this.diagramService.attachToElement(this.diagramContainer.nativeElement);
+      const container = this.diagramContainer.nativeElement;
+      const { clientWidth, clientHeight } = container;
+
+      this.diagramService.initialize({
+        width: Math.max(0, clientWidth),
+        height: Math.max(0, clientHeight),
+        gridSize: 10,
+        interactive: true,
+      });
+
+      this.diagramService.attachToElement(container);
 
       // Expose diagram engine to window for E2E tests
       (window as any).diagramEngine = this.diagramService.getEngine();
 
+      // Cache current size
+      this.lastContainerSize = { width: clientWidth, height: clientHeight };
+
       this.updateHistoryState();
       this.setupEventListeners();
       this.setupDragDropHandlers();
+
+      // Listen to window resize and resize diagram based on container size
+      window.addEventListener('resize', this.onWindowResize, { passive: true });
 
       // Initialize grid state
       this.isGridEnabled = this.diagramService.isGridEnabled();
@@ -90,6 +119,11 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   ngOnDestroy(): void {
     this.diagramService.destroy();
     this.dropZoneService.clearAllDropZones();
+    window.removeEventListener('resize', this.onWindowResize as any);
+    if (this.resizeRafId != null) {
+      cancelAnimationFrame(this.resizeRafId);
+      this.resizeRafId = null;
+    }
   }
 
   // Shape toolbar methods

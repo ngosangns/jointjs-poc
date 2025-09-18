@@ -23,7 +23,7 @@ module.exports = [
       '@typescript-eslint': tseslint,
     },
     rules: {
-      '@typescript-eslint/consistent-type-imports': 'warn',
+      '@typescript-eslint/consistent-type-imports': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },

@@ -22,8 +22,6 @@ export interface IEventManager {
   clear(): void;
   getRegisteredEventTypes(): DiagramEventType[];
   hasListeners(eventType: DiagramEventType): boolean;
-  setupPaperEvents(paper: dia.Paper): void;
-  setupGraphEvents(graph: dia.Graph): void;
   destroy(): void;
 }
 
@@ -67,6 +65,7 @@ export interface IPaperManager {
   scale(paper: dia.Paper, scaleX: number, scaleY?: number): void;
   getScale(paper: dia.Paper): { sx: number; sy: number };
   translate(paper: dia.Paper, dx: number, dy: number): void;
+  setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void;
 }
 
 /**
@@ -82,6 +81,7 @@ export interface IGraphManager {
   removeElement(graph: dia.Graph, elementId: string): void;
   removeLink(graph: dia.Graph, linkId: string): void;
   clear(graph: dia.Graph): void;
+  setupGraphEvents(graph: dia.Graph, eventManager: IEventManager): void;
 
   // Query methods
   getElement(graph: dia.Graph, elementId: string): dia.Element | null;

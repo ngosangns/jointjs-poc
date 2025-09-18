@@ -251,13 +251,6 @@ export class DropZoneService {
   }
 
   /**
-   * Validate drop zone bounds
-   */
-  private validateBounds(bounds: DropZoneBounds): boolean {
-    return bounds.width > 0 && bounds.height > 0;
-  }
-
-  /**
    * Get drop zone statistics for debugging
    */
   getDropZoneStats(): {

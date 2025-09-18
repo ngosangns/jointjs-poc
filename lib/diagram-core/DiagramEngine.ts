@@ -123,10 +123,17 @@ export class DiagramEngine {
     }
 
     this.paper = this.paperManager.initialize(element, this.graph, this.config);
-    this.eventManager.setupPaperEvents(this.paper);
+    this.paperManager.setupPaperEvents(this.paper, this.eventManager);
 
     // Initialize EventManager with graph and paper for JointJS event integration
     this.eventManager.initialize(this.graph, this.paper);
+
+    // Setup graph event bridging via GraphManager
+    try {
+      this.graphManager.setupGraphEvents(this.graph, this.eventManager);
+    } catch (error) {
+      console.error('GraphManager setupGraphEvents error:', error);
+    }
 
     // Initialize ToolsManager with paper for tools management
     this.toolsManager.initialize(this.paper);
