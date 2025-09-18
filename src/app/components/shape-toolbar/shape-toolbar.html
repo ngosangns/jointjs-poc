@@ -1,0 +1,118 @@
+<div class="shape-toolbar" [class.collapsed]="isCollapsed">
+  <!-- Toolbar Header -->
+  <div class="toolbar-header">
+    <h3 class="toolbar-title">Shapes</h3>
+    <button
+      class="collapse-btn"
+      (click)="toggleCollapse()"
+      [attr.aria-label]="isCollapsed ? 'Expand toolbar' : 'Collapse toolbar'"
+    >
+      <span class="collapse-icon" [class.rotated]="isCollapsed">‹</span>
+    </button>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-container" *ngIf="!isCollapsed">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search shapes..."
+      [(ngModel)]="searchQuery"
+      (input)="onSearchChange()"
+      aria-label="Search shapes"
+    />
+  </div>
+
+  <!-- Category Tabs -->
+  <div class="category-tabs" *ngIf="!isCollapsed">
+    <button
+      *ngFor="let category of categories"
+      class="category-tab"
+      [class.active]="selectedCategory === category.id"
+      (click)="onCategorySelect(category.id)"
+      [attr.aria-label]="'Select ' + category.name + ' category'"
+    >
+      <span class="category-icon" [ngClass]="getCategoryIconClass(category)"></span>
+      <span class="category-name">{{ category.name }}</span>
+    </button>
+  </div>
+
+  <!-- Action buttons shown only when a selection exists -->
+  <div class="selection-actions" *ngIf="(diagramService.selection$ | async)?.hasSelection">
+    <button
+      class="btn btn-danger"
+      (click)="diagramService.deleteSelected()"
+      aria-label="Delete Selection"
+      title="Delete"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path
+          fill="currentColor"
+          d="M6 7h12l-1 14H7L6 7zm3-3h6l1 2H8l1-2zM9 9h2v10H9V9zm4 0h2v10h-2V9z"
+        />
+      </svg>
+      <span class="sr-only">Delete</span>
+    </button>
+    <button
+      class="btn btn-secondary"
+      (click)="onDuplicateSelection()"
+      aria-label="Duplicate Selection"
+      title="Duplicate"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path
+          fill="currentColor"
+          d="M16 1H6c-1.1 0-2 .9-2 2v10h2V3h10V1zm3 4H10c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h9c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 13H10V7h9v11z"
+        />
+      </svg>
+      <span class="sr-only">Duplicate</span>
+    </button>
+  </div>
+
+  <!-- Shapes Grid -->
+  <div class="shapes-container" *ngIf="!isCollapsed">
+    <div class="shapes-grid">
+      <div
+        *ngFor="let shape of filteredShapes"
+        class="shape-item"
+        [class.hovered]="isShapeHovered(getShapeType(shape))"
+        draggable="true"
+        (dragstart)="onShapeDragStart($event, getShapeType(shape))"
+        (dragend)="onShapeDragEnd($event)"
+        (mouseenter)="onShapeHover(getShapeType(shape))"
+        (mouseleave)="onShapeHoverEnd()"
+        [attr.aria-label]="'Drag ' + shape.name + ' to canvas'"
+        [title]="shape.description"
+      >
+        <div class="shape-preview">
+          <div class="shape-icon" [ngClass]="getShapeIconClass(shape)"></div>
+        </div>
+        <div class="shape-info">
+          <span class="shape-name">{{ shape.name }}</span>
+          <span class="shape-shortcut" *ngIf="shape.shortcut">{{ getShortcutText(shape) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Results Message -->
+    <div class="no-results" *ngIf="filteredShapes.length === 0">
+      <p>No shapes found</p>
+      <small>Try adjusting your search or select a different category</small>
+    </div>
+  </div>
+
+  <!-- Collapsed State Content -->
+  <div class="collapsed-content" *ngIf="isCollapsed">
+    <div class="collapsed-categories">
+      <button
+        *ngFor="let category of categories"
+        class="collapsed-category-btn"
+        [class.active]="selectedCategory === category.id"
+        (click)="onCategorySelect(category.id)"
+        [attr.aria-label]="'Select ' + category.name + ' category'"
+      >
+        <span class="category-icon" [ngClass]="getCategoryIconClass(category)"></span>
+      </button>
+    </div>
+  </div>
+</div>

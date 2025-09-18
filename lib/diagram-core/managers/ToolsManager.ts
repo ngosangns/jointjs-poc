@@ -27,39 +27,8 @@ export class ToolsManager implements IToolsManager {
    * Register default element and link tools with enhanced functionality
    */
   private registerDefaultTools(): void {
-    // Enhanced element tools with better UX
+    // Default element tools (no delete/duplicate buttons; keep boundary only)
     const defaultElementTools = [
-      new elementTools.Remove({
-        x: '100%',
-        y: 0,
-        offset: { x: -5, y: 5 },
-        markup: [
-          {
-            tagName: 'circle',
-            selector: 'button',
-            attributes: {
-              r: 10,
-              fill: '#ff4757',
-              stroke: '#ffffff',
-              'stroke-width': 2,
-              cursor: 'pointer',
-            },
-          },
-          {
-            tagName: 'path',
-            selector: 'icon',
-            attributes: {
-              d: 'M -5 -5 L 5 5 M 5 -5 L -5 5',
-              stroke: '#ffffff',
-              'stroke-width': 2,
-              'pointer-events': 'none',
-            },
-          },
-        ],
-        action: (evt: dia.Event, elementView: dia.ElementView) => {
-          elementView.model.remove();
-        },
-      }),
       new elementTools.Boundary({
         padding: 8,
         useModelGeometry: true,
@@ -77,46 +46,10 @@ export class ToolsManager implements IToolsManager {
           },
         ],
       }),
-      new elementTools.Button({
-        x: '100%',
-        y: '100%',
-        offset: { x: -5, y: -5 },
-        markup: [
-          {
-            tagName: 'circle',
-            selector: 'button',
-            attributes: {
-              r: 10,
-              fill: '#2ed573',
-              stroke: '#ffffff',
-              'stroke-width': 2,
-              cursor: 'pointer',
-            },
-          },
-          {
-            tagName: 'path',
-            selector: 'icon',
-            attributes: {
-              d: 'M -4 -4 L 4 4 M 4 -4 L -4 4',
-              stroke: '#ffffff',
-              'stroke-width': 2,
-              'pointer-events': 'none',
-            },
-          },
-        ],
-        action: (evt: dia.Event, elementView: dia.ElementView) => {
-          // Clone element functionality
-          const model = elementView.model;
-          const bbox = model.getBBox();
-          const newElement = model.clone();
-          newElement.translate(bbox.width + 20, 0);
-          this.paper?.model.addCell(newElement);
-        },
-      }),
     ];
     this.elementToolsRegistry.set('default', defaultElementTools);
 
-    // Default link tools
+    // Default link tools (no remove tool)
     const defaultLinkTools = [
       new linkTools.Vertices({
         redundancyRemoval: false,
@@ -126,9 +59,6 @@ export class ToolsManager implements IToolsManager {
       new linkTools.Segments(),
       new linkTools.SourceArrowhead(),
       new linkTools.TargetArrowhead(),
-      new linkTools.Remove({
-        distance: 20,
-      }),
       new linkTools.Boundary({
         padding: 10,
       }),
@@ -250,15 +180,16 @@ export class ToolsManager implements IToolsManager {
   public setGridEnabled(enabled: boolean) {
     this.gridEnabled = enabled;
     if (this.paper) {
-      // Use JointJS grid visibility control
-      if (enabled) {
-        this.paper.setGridSize(this.gridSize);
-        this.paper.options.drawGrid = true;
-      } else {
-        this.paper.options.drawGrid = false;
+      // Update grid visibility without recreating or clearing cells
+      this.paper.options.drawGrid = !!enabled;
+      if (enabled) this.paper.setGridSize(this.gridSize);
+      // Redraw background grid layer only
+      try {
+        (this.paper as any).drawGrid({ color: '#e9ecef' });
+      } catch {
+        // Fallback to render if drawGrid not available
+        this.paper.render();
       }
-      // Trigger re-render to show/hide grid
-      this.paper.render();
     }
   }
 
@@ -266,7 +197,11 @@ export class ToolsManager implements IToolsManager {
     this.gridSize = Math.max(1, size);
     if (this.paper && this.gridEnabled) {
       this.paper.setGridSize(this.gridSize);
-      this.paper.render();
+      try {
+        (this.paper as any).drawGrid({ color: '#e9ecef' });
+      } catch {
+        this.paper.render();
+      }
     }
   }
 

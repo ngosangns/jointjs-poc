@@ -11,6 +11,11 @@ export type {
   DiagramEvent,
   DiagramEventType,
 } from './types';
+// Selection event names for convenience
+export const SelectionEvents = {
+  Changed: 'selection:changed',
+  Cleared: 'selection:cleared',
+} as const;
 export {
   generateId,
   validateElement,

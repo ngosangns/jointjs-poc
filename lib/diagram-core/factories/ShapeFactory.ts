@@ -214,6 +214,7 @@ export class ShapeFactory implements IShapeFactory {
   private registerDefaultShapes(): void {
     // Rectangle shape with ports support
     this.registerShape('rectangle', shapes.standard.Rectangle, {
+      size: { width: 100, height: 60 },
       attrs: {
         body: {
           fill: '#ffffff',
@@ -263,6 +264,7 @@ export class ShapeFactory implements IShapeFactory {
 
     // Circle shape
     this.registerShape('circle', shapes.standard.Circle, {
+      size: { width: 80, height: 80 },
       attrs: {
         body: {
           fill: '#ffffff',
@@ -282,6 +284,7 @@ export class ShapeFactory implements IShapeFactory {
 
     // Ellipse shape
     this.registerShape('ellipse', shapes.standard.Ellipse, {
+      size: { width: 120, height: 80 },
       attrs: {
         body: {
           fill: '#ffffff',
@@ -301,6 +304,7 @@ export class ShapeFactory implements IShapeFactory {
 
     // Polygon shape
     this.registerShape('polygon', shapes.standard.Polygon, {
+      size: { width: 100, height: 100 },
       attrs: {
         body: {
           fill: '#ffffff',
@@ -321,6 +325,7 @@ export class ShapeFactory implements IShapeFactory {
 
     // Path shape
     this.registerShape('path', shapes.standard.Path, {
+      size: { width: 100, height: 100 },
       attrs: {
         body: {
           fill: '#ffffff',
@@ -362,6 +367,7 @@ export class ShapeFactory implements IShapeFactory {
 
     // Header shape (rectangle with header section)
     this.registerShape('header', shapes.standard.HeaderedRectangle, {
+      size: { width: 150, height: 100 },
       attrs: {
         body: {
           fill: '#ffffff',
@@ -387,6 +393,304 @@ export class ShapeFactory implements IShapeFactory {
           fontSize: 14,
           fontFamily: 'Arial, sans-serif',
           fill: '#333333',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    // Flowchart shapes
+    this.registerShape('process', shapes.standard.Rectangle, {
+      size: { width: 120, height: 60 },
+      attrs: {
+        body: {
+          fill: '#e3f2fd',
+          stroke: '#1976d2',
+          strokeWidth: 2,
+          rx: 5,
+          ry: 5,
+        },
+        label: {
+          text: 'Process',
+          fontSize: 14,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#1976d2',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('decision', shapes.standard.Polygon, {
+      size: { width: 100, height: 100 },
+      attrs: {
+        body: {
+          fill: '#fff3e0',
+          stroke: '#f57c00',
+          strokeWidth: 2,
+          points: '50,10 90,50 50,90 10,50',
+        },
+        label: {
+          text: 'Decision',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#f57c00',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('start-end', shapes.standard.Ellipse, {
+      size: { width: 100, height: 60 },
+      attrs: {
+        body: {
+          fill: '#e8f5e8',
+          stroke: '#4caf50',
+          strokeWidth: 2,
+        },
+        label: {
+          text: 'Start/End',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#4caf50',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('input-output', shapes.standard.Polygon, {
+      size: { width: 120, height: 60 },
+      attrs: {
+        body: {
+          fill: '#f3e5f5',
+          stroke: '#9c27b0',
+          strokeWidth: 2,
+          points: '20,10 100,10 80,30 100,50 20,50 0,30',
+        },
+        label: {
+          text: 'Input/Output',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#9c27b0',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('connector', shapes.standard.Circle, {
+      size: { width: 40, height: 40 },
+      attrs: {
+        body: {
+          fill: '#ffebee',
+          stroke: '#f44336',
+          strokeWidth: 2,
+        },
+        label: {
+          text: 'C',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#f44336',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    // UML shapes
+    this.registerShape('class', shapes.standard.Rectangle, {
+      size: { width: 150, height: 100 },
+      attrs: {
+        body: {
+          fill: '#ffffff',
+          stroke: '#333333',
+          strokeWidth: 2,
+        },
+        label: {
+          text: 'ClassName',
+          fontSize: 14,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#333333',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('interface', shapes.standard.Rectangle, {
+      size: { width: 150, height: 80 },
+      attrs: {
+        body: {
+          fill: '#f0f8ff',
+          stroke: '#4169e1',
+          strokeWidth: 2,
+        },
+        label: {
+          text: '<<interface>>\nInterfaceName',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#4169e1',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('actor', shapes.standard.Circle, {
+      size: { width: 80, height: 80 },
+      attrs: {
+        body: {
+          fill: '#fff9c4',
+          stroke: '#fbc02d',
+          strokeWidth: 2,
+        },
+        label: {
+          text: 'Actor',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#fbc02d',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('usecase', shapes.standard.Ellipse, {
+      size: { width: 120, height: 60 },
+      attrs: {
+        body: {
+          fill: '#e1f5fe',
+          stroke: '#03a9f4',
+          strokeWidth: 2,
+        },
+        label: {
+          text: 'Use Case',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#03a9f4',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('package', shapes.standard.Rectangle, {
+      size: { width: 120, height: 80 },
+      attrs: {
+        body: {
+          fill: '#f1f8e9',
+          stroke: '#689f38',
+          strokeWidth: 2,
+        },
+        label: {
+          text: 'Package',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#689f38',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    // Network shapes
+    this.registerShape('router', shapes.standard.Rectangle, {
+      size: { width: 80, height: 80 },
+      attrs: {
+        body: {
+          fill: '#e3f2fd',
+          stroke: '#2196f3',
+          strokeWidth: 2,
+          rx: 5,
+          ry: 5,
+        },
+        label: {
+          text: 'Router',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#2196f3',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('server', shapes.standard.Rectangle, {
+      size: { width: 100, height: 80 },
+      attrs: {
+        body: {
+          fill: '#e8f5e8',
+          stroke: '#4caf50',
+          strokeWidth: 2,
+          rx: 5,
+          ry: 5,
+        },
+        label: {
+          text: 'Server',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#4caf50',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('database', shapes.standard.Ellipse, {
+      size: { width: 100, height: 80 },
+      attrs: {
+        body: {
+          fill: '#fff3e0',
+          stroke: '#ff9800',
+          strokeWidth: 2,
+        },
+        label: {
+          text: 'Database',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#ff9800',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('cloud', shapes.standard.Ellipse, {
+      size: { width: 120, height: 80 },
+      attrs: {
+        body: {
+          fill: '#f3e5f5',
+          stroke: '#9c27b0',
+          strokeWidth: 2,
+        },
+        label: {
+          text: 'Cloud',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#9c27b0',
+          textAnchor: 'middle',
+          textVerticalAnchor: 'middle',
+        },
+      },
+    });
+
+    this.registerShape('firewall', shapes.standard.Rectangle, {
+      size: { width: 100, height: 60 },
+      attrs: {
+        body: {
+          fill: '#ffebee',
+          stroke: '#f44336',
+          strokeWidth: 2,
+          rx: 5,
+          ry: 5,
+        },
+        label: {
+          text: 'Firewall',
+          fontSize: 12,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#f44336',
           textAnchor: 'middle',
           textVerticalAnchor: 'middle',
         },

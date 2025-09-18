@@ -7,7 +7,7 @@ export async function spawnElements(engine: DiagramEngine, count: number) {
       position: { x: 20 + (i % 50) * 20, y: 20 + Math.floor(i / 50) * 20 },
       size: { width: 16, height: 12 },
       properties: { attrs: { body: { fill: '#ccc' } } },
-    } as any);
+    });
   }
 }
 

@@ -67,15 +67,25 @@ this.engine.grid.setSpacing(20);
 ## Events
 
 ```ts
-this.engine.addEventListener('element:selected', (e) => console.log(e));
+this.engine.addEventListener('selection:changed', (e) => {
+  const { elementIds, linkIds, hasSelection } = e.data;
+  console.log('selection changed', { elementIds, linkIds, hasSelection });
+});
+this.engine.addEventListener('selection:cleared', () => {
+  console.log('selection cleared');
+});
 this.engine.addEventListener('document:saved', (e) => console.log(e));
-this.engine.addEventListener('viewport:changed', ({ zoom, pan }) => console.log({ zoom, pan }));
+this.engine.addEventListener('viewport:changed', (e) => {
+  const { zoom, pan } = e.data;
+  console.log({ zoom, pan });
+});
 ```
 
 ## Toolbar Integration
 
 - Bind buttons to engine commands (undo, redo, align, distribute, group)
 - Toggle grid and snapping via engine settings
+- Delete/Duplicate buttons should only render when selection exists; subscribe to selection events or a service `selection$` observable to drive visibility.
 
 ## Persistence
 
@@ -87,3 +97,20 @@ this.engine.addEventListener('viewport:changed', ({ zoom, pan }) => console.log(
 yarn test:lib   # runs Jest for the library
 yarn e2e        # runs Playwright E2E against Angular app
 ```
+
+## Tailwind CSS
+
+Tailwind is preconfigured via `tailwind.config.js` and `postcss.config.js`. Global utilities are enabled in `src/styles.scss` via:
+
+```scss
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+You can safely add utility classes to templates (e.g., `min-h-screen`, `grid`) alongside existing SCSS.
+
+## Panning
+
+- Blank-drag pans the canvas; element drag moves the element.
+- Programmatic: `engine.pan(dx, dy)` and `engine.panTo(x, y)`; the engine emits `viewport:changed` on pan/zoom.

@@ -75,6 +75,8 @@ export type DiagramEventType =
   | 'element:double-click'
   | 'element:dragging'
   | 'element:drag-end'
+  // Shape creation events
+  | 'shape:created'
   // Link events
   | 'link:added'
   | 'link:removed'
@@ -110,7 +112,8 @@ export type DiagramEventType =
   | 'keyboard:fit-viewport'
   | 'keyboard:fit-selection'
   // Selection events
-  | 'selection:changed';
+  | 'selection:changed'
+  | 'selection:cleared';
 
 export interface DiagramEvent {
   type: DiagramEventType;

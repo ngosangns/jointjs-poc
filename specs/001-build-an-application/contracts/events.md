@@ -2,7 +2,11 @@
 
 ## selection:changed
 
-- payload: { ids: string[] }
+- payload: { elementIds: string[], linkIds: string[], hasSelection: boolean }
+
+## selection:cleared
+
+- payload: {}
 
 ## element:added
 

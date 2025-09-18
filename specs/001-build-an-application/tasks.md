@@ -1,296 +1,318 @@
-# Tasks: Pan (Translate), Move Shapes, and Links Features
+Feature: Show Delete/Duplicate only when a shape or link is selected (not on hover)
 
-**Feature**: Enhanced pan/zoom and shape movement capabilities  
+Scope: Adjust selection-driven UI behavior across the Angular app toolbar and the diagram core events so that the delete and duplicate actions appear only when one or more shapes/links are selected. Maintain existing keyboard shortcuts and command APIs.
+
+Conventions:
+
+- [P] means tasks that can run in parallel with other [P] tasks.
+- Numbering indicates execution order; respect dependencies in the Dependency Notes.
+
+T001. Validate contracts for selection events and toolbar visibility [P]
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/contracts/events.md`, `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/contracts/library-apis.md`
+- Goal: Confirm there are contract-level expectations for selection events (`element:selected`, `link:selected`, `selection:changed`) and toolbar visibility rules. If missing, update the contracts file(s) to define: when selection becomes non-empty → show delete/duplicate; when empty → hide.
+- Output: Updated contracts docs with explicit selection → toolbar visibility mapping; event names and payload shape.
+- Dependency Notes: None.
+- Example commands:
+  - Edit contracts to add acceptance criteria.
+
+T002. Add/verify selection events in diagram core library (library-level contracts)
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/EventManager.ts`, `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/GraphManager.ts`, `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/DiagramEngine.ts`, `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/ToolsManager.ts`
+- Goal: Ensure the engine emits consistent selection lifecycle events: `selection:changed` with payload `{ elementIds: string[], linkIds: string[] }`. Confirm existing `element:selected` / `link:selected` are fired, and add `selection:cleared` if selection empties.
+- Output: Selection events standardized and exported via public API.
+- Dependency Notes: Requires T001 decisions to finalize event names/payloads.
+- Example commands:
+  - yarn test:lib
+
+T003. Expose selection observable/API at public surface [P]
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/lib/index.ts`, `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/index.ts`
+- Goal: Export `addEventListener` types and selection event names in the library public API so Angular app can subscribe.
+- Output: Type-safe exports and docs.
+- Dependency Notes: After T002.
+
+T004. Angular service: bridge selection events to app state
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/src/app/services/diagram.ts`
+- Goal: Subscribe to engine `selection:changed` and expose `selection$` (BehaviorSubject) with `{ hasSelection: boolean, elementIds: string[], linkIds: string[] }`.
+- Output: New observable and minimal unit coverage.
+- Dependency Notes: After T003.
+
+T005. Implement toolbar visibility logic in `shape-toolbar` component
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/src/app/components/shape-toolbar/shape-toolbar.ts`, `/Users/ngosangns/Github/jointjs-poc/src/app/components/shape-toolbar/shape-toolbar.html`
+- Goal: Show the Delete and Duplicate buttons only when `hasSelection === true`; hide when `false`. Remove any hover-triggered visibility logic for these two actions.
+- Output: Conditional template/host bindings; CSS adjustments if needed.
+- Dependency Notes: After T004.
+
+T006. Remove hover-based triggers for delete/duplicate in canvas UI
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/src/app/components/diagram-canvas/diagram-canvas.ts`, `/Users/ngosangns/Github/jointjs-poc/src/app/components/diagram-canvas/diagram-canvas.html`, `/Users/ngosangns/Github/jointjs-poc/src/app/components/diagram-canvas/diagram-canvas.scss`
+- Goal: If any hover listeners or overlays toggle delete/duplicate visibility, remove them. Keep other hover affordances intact (e.g., resizing handles).
+- Output: Cleaned interaction logic; relies solely on selection state for these two actions.
+- Dependency Notes: After T004.
+
+T007. Wire toolbar actions to existing engine commands [P]
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/src/app/components/shape-toolbar/shape-toolbar.ts`, `/Users/ngosangns/Github/jointjs-poc/src/app/services/diagram.ts`
+- Goal: Ensure Delete invokes engine delete on current selection; Duplicate clones current selection. Preserve keyboard shortcuts.
+- Output: Verified command wiring; no visual regressions.
+- Dependency Notes: After T005.
+
+T008. Unit tests: diagram service selection stream [P]
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/lib/tests/unit/` (if reinstated) or Angular test location; prefer library tests for events payload and Angular tests for service.
+- Goal: Test `selection:changed` propagation and `selection$` derivation of `hasSelection`.
+- Output: Green tests.
+- Dependency Notes: After T004.
+
+T009. E2E tests: toolbar visibility and actions
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/e2e/tests/` (new spec file)
+- Goal: Playwright scenario: no selection → delete/duplicate hidden; select shape → buttons visible; duplicate creates a copy; delete clears selection and hides buttons; same for link.
+- Output: Passing E2E spec covering both shape and link.
+- Dependency Notes: After T005 and T006.
+- Example commands:
+  - yarn e2e
+
+T010. Documentation updates [P]
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/quickstart.md`, `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/contracts/events.md`
+- Goal: Document selection-driven visibility behavior and example subscription code.
+- Output: Updated docs.
+- Dependency Notes: After T005.
+
+T011. Refactor styles if needed [P]
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/src/app/components/shape-toolbar/shape-toolbar.scss`, `/Users/ngosangns/Github/jointjs-poc/src/styles.scss`
+- Goal: Ensure no CSS hover rules still control delete/duplicate visibility; use state classes/attributes bound to selection.
+- Output: Clean CSS with state-based visibility.
+- Dependency Notes: After T005.
+
+T012. Performance sanity and regression check [P]
+
+- Files: `/Users/ngosangns/Github/jointjs-poc/lib/scripts/perf-scenarios.ts`, project build
+- Goal: Confirm no measurable regressions from event wiring; run existing perf scenarios.
+- Output: Notes in PR.
+- Dependency Notes: After T002–T007.
+
+Parallelization Guidance
+
+- [P] Group 1 (docs/contracts): T001, T010 can run in parallel with code tasks once event names are settled.
+- [P] Group 2 (public API + wiring): T003, T007, T011, T012 can run in parallel after T002.
+- Tests: T008 can run parallel to T005/T006 once T004 is done. T009 after UI wiring completes.
+
+Agent Commands (examples)
+
+```bash
+# Library tests and build
+yarn test:lib
+yarn build
+
+# Angular app dev
+yarn start
+
+# E2E
+yarn e2e
+```
+
+Acceptance Criteria
+
+- With no selection, delete/duplicate controls are not rendered and are not tabbable.
+- Selecting a shape shows delete/duplicate; duplicate creates a single identical shape with new IDs; delete removes selected items.
+- Selecting a link shows delete/duplicate; actions behave identically for links.
+- Clearing selection hides the controls immediately.
+- Keyboard shortcuts for delete/duplicate continue to work irrespective of toolbar visibility.
+
+# Tasks: Tailwind Integration & Canvas Interaction Fixes
+
+**Feature**: Add Tailwind CSS; fix shape disappearance on grid toggle; fix duplicate icon; enable shape panning
+
 **Branch**: `001-build-an-application`  
-**Date**: 2025-01-27  
-**Dependencies**: Core diagram engine, JointJS integration, event system
+**Dependencies**: Angular app shell, diagram core library (`lib/diagram-core`), events & API contracts  
+**Parallel Execution**: Tasks marked with [P] can be executed in parallel
 
-## Overview
+## Setup Tasks
 
-This task list implements comprehensive pan (translate), shape movement, and link manipulation features for the draw.io-like diagramming application. The implementation follows TDD principles with contract tests first, then core functionality, and finally integration.
+### T001: Integrate Tailwind CSS into Angular app
 
-## Task Dependencies
+**Files**: `/Users/ngosangns/Github/jointjs-poc/package.json`, `/Users/ngosangns/Github/jointjs-poc/tailwind.config.js`, `/Users/ngosangns/Github/jointjs-poc/postcss.config.js`, `/Users/ngosangns/Github/jointjs-poc/src/styles.scss`, `/Users/ngosangns/Github/jointjs-poc/angular.json`  
+**Description**: Install and configure Tailwind for the Angular application without breaking existing SCSS.  
+**Dependencies**: None  
+**Implementation**:
 
-```
-Setup → Contract Tests → Core Implementation → Integration → Polish
-  ↓           ↓              ↓                ↓          ↓
-T001      T002-T003      T004-T010        T011-T013   T014-T015
-```
+- Add Tailwind deps: `tailwindcss postcss autoprefixer`
+- Create `tailwind.config.js` with content paths under `src/**/*.html,ts`
+- Create `postcss.config.js` and wire Tailwind plugins
+- Add `@tailwind base; @tailwind components; @tailwind utilities;` to `src/styles.scss` (keep existing styles below)
+- Ensure Angular builds with PostCSS (via default builder or config)
 
-## Artifacts Used
+### T002: Align UI styles to Tailwind utility classes [P]
 
-- Plan: `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/plan.md`
-- Data Model: `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/data-model.md`
-- Contracts: `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/contracts/{events.md,library-apis.md}`
-- Quickstart: `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/quickstart.md`
+**Files**: `/Users/ngosangns/Github/jointjs-poc/src/app/app.html`, `/Users/ngosangns/Github/jointjs-poc/src/app/app.scss`, `/Users/ngosangns/Github/jointjs-poc/src/app/components/shape-toolbar/shape-toolbar.html`, `/Users/ngosangns/Github/jointjs-poc/src/app/components/shape-toolbar/shape-toolbar.scss`  
+**Description**: Non-destructive pass: add utility classes while preserving existing SCSS to verify Tailwind is effective.  
+**Dependencies**: T001  
+**Implementation**:
 
-## Conventions
+- Add minimal Tailwind utilities for layout (flex, gaps) and colors, without deleting SCSS
+- Keep selectors stable; prefer class additions for easy revert
 
-- [P] means can run in parallel with other [P] tasks.
-- Paths are absolute.
-- Use TDD: write/enable tests before implementation.
+## Test Tasks [P]
 
----
+### T003: Contract tests for events (viewport, element) [P]
 
-### T001. Setup enhanced pan/zoom and movement test infrastructure [P]
+**File**: `/Users/ngosangns/Github/jointjs-poc/lib/tests/contract/events.spec.ts`  
+**Description**: Ensure `viewport:changed`, `element:*` emit according to `contracts/events.md`.  
+**Dependencies**: None  
+**Implementation**:
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/tests/contract/pan-zoom-movement.spec.ts` (new)
-  - `/Users/ngosangns/Github/jointjs-poc/e2e/tests/pan-zoom-movement.spec.ts` (new)
-- **Actions**:
-  - Create contract test file for pan/zoom and movement APIs
-  - Create E2E test file for user interaction scenarios
-  - Set up test data with multiple shapes and links for movement testing
-  - Define performance benchmarks (60fps for pan, <100ms for shape movement)
-- **Commands**:
-  - `yarn test:lib -- -t "pan-zoom-movement"`
-  - `yarn e2e -- -g "pan zoom movement"`
+- Assert payload shapes for `selection:changed`, `element:added|updated|removed`, `viewport:changed`
 
-### T002. Add contract tests for pan/zoom API compliance [P]
+### T004: Contract tests for library APIs (grid, pan) [P]
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/tests/contract/pan-zoom-movement.spec.ts`
-  - **Contracts**: `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/contracts/library-apis.md`
-- **Actions**:
-  - Test `zoomIn()`, `zoomOut()`, `setZoom(z)` methods
-  - Test `panTo(x,y)`, `fitToViewport()` methods
-  - Verify zoom bounds (0.1x to 5x) and smooth transitions
-  - Test `viewport:changed` event emission with correct payload shape
-- **Commands**:
-  - `yarn test:lib -- -t "pan zoom API"`
-- **Notes**: Tests should fail before implementation, ensuring TDD compliance.
+**File**: `/Users/ngosangns/Github/jointjs-poc/lib/tests/contract/library-apis.spec.ts`  
+**Description**: Validate `grid.enable(bool)`, `grid.setSpacing(n)`, `panTo(x,y)`, `setZoom(z)` per `contracts/library-apis.md`.  
+**Dependencies**: None
 
-### T003. Add contract tests for shape and link movement [P]
+### T005: E2E tests for grid toggle and panning [P]
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/tests/contract/pan-zoom-movement.spec.ts`
-  - **Contracts**: `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/contracts/events.md`
-- **Actions**:
-  - Test `moveSelectedElements(dx, dy)` method
-  - Test individual shape movement via `updateShape(id, { geometry })`
-  - Test link movement and vertex manipulation
-  - Verify `element:updated` events with geometry changes
-  - Test movement constraints (bounds checking, grid snapping)
-- **Commands**:
-  - `yarn test:lib -- -t "shape link movement"`
-- **Notes**: Ensure events emit correct payload shapes per contracts.
+**File**: `/Users/ngosangns/Github/jointjs-poc/e2e/tests/grid-and-pan.spec.ts`  
+**Description**: Playwright scenarios: toggling grid does not remove shapes; canvas pans while shapes remain interactive.  
+**Dependencies**: None  
+**Implementation**:
 
-### T004. Enhance pan/zoom implementation in DiagramEngine
+- Seed 2 rectangles, toggle grid on/off, verify both remain
+- Mouse-drag on empty canvas pans viewport; mouse-drag on shape moves shape (no unintended pan)
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/DiagramEngine.ts`
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/PaperManager.ts`
-- **Actions**:
-  - Implement `panTo(x: number, y: number)` method
-  - Implement `fitToViewport(padding?: number)` method
-  - Add zoom bounds checking (0.1x to 5x)
-  - Enhance `emitViewportChanged()` to emit `{ zoom, pan }` instead of `{ scale, translate }`
-  - Add smooth transition support for pan/zoom operations
-- **Dependencies**: T002 (contract tests)
-- **Notes**: Update existing zoom methods to use consistent event payload format.
+## Core Fixes (Library)
 
-### T005. Implement advanced shape movement with constraints
+### T006: Fix grid toggle removing elements
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/DiagramEngine.ts`
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/GraphManager.ts`
-- **Actions**:
-  - Enhance `moveSelectedElements(dx, dy)` with bounds checking
-  - Add grid snapping support for moved elements
-  - Implement `moveElement(id, dx, dy)` for individual element movement
-  - Add collision detection for overlapping elements
-  - Ensure moved elements stay within page bounds
-- **Dependencies**: T003 (contract tests)
-- **Notes**: Integrate with existing ToolsManager for grid settings.
+**Files**: `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/PaperManager.ts`, `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/GraphManager.ts`  
+**Description**: Ensure enabling/disabling grid updates only grid layer or background without reinitializing graph/paper or clearing elements.  
+**Dependencies**: T003, T004 (tests should fail first)  
+**Implementation**:
 
-### T006. Implement link movement and vertex manipulation
+- Replace any paper/graph reinitialization in grid toggle with an idempotent background/grid overlay update
+- Maintain reference to current `dia.Graph` and avoid `graph.resetCells([])` during grid setting changes
+- Emit `viewport:changed` only if visual viewport changes
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/DiagramEngine.ts`
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/links/CustomLinks.ts`
-- **Actions**:
-  - Add `moveLinkVertex(linkId, vertexIndex, x, y)` method
-  - Add `addLinkVertex(linkId, x, y)` and `removeLinkVertex(linkId, vertexIndex)` methods
-  - Implement link routing updates when source/target elements move
-  - Add link movement constraints (maintain connection validity)
-- **Dependencies**: T003 (contract tests)
-- **Notes**: Ensure links update automatically when connected elements move.
+### T007: Ensure pan interactions are wired and enabled
 
-### T007. Add keyboard navigation and movement shortcuts
+**Files**: `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/PaperManager.ts`, `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/KeyboardManager.ts`  
+**Description**: Enable panning via mouse-drag on empty canvas and via programmatic API `panTo`, keeping shape drag separate.  
+**Dependencies**: T003, T004  
+**Implementation**:
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/KeyboardManager.ts`
-- **Actions**:
-  - Implement arrow key movement (1px, 10px with Shift)
-  - Add Page Up/Down for zoom, Home/End for fit viewport
-  - Add Ctrl+Arrow for pan operations
-  - Implement keyboard-based element selection and movement
-- **Dependencies**: T004, T005 (core movement)
-- **Notes**: Ensure accessibility compliance with WCAG 2.1 AA.
+- Configure JointJS paper options: `interactive: { linkMove: true }`, `defaultInteraction: { blank: { pan: true }, element: { move: true } }` (or equivalent)
+- Implement pan handlers that update internal viewport state and emit `viewport:changed`
+- Ensure shape drag has priority when mousedown starts on an element; pan only on blank
 
-### T008. Implement touch gesture support for pan/zoom
+### T008: Preserve elements across paper configuration updates
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/PaperManager.ts`
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/DiagramEngine.ts`
-- **Actions**:
-  - Add touch event handlers for pan gestures
-  - Implement pinch-to-zoom with touch
-  - Add touch-based element selection and movement
-  - Ensure smooth touch interactions (60fps target)
-- **Dependencies**: T004 (pan/zoom core)
-- **Notes**: Basic touch support only, advanced gestures deferred.
+**Files**: `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/PaperManager.ts`  
+**Description**: When applying runtime changes (grid size, snap), do not recreate paper or rebind the graph.  
+**Dependencies**: T006  
+**Implementation**:
 
-### T009. Add movement history and undo/redo support
+- Guard against paper re-creation; update options in place if supported, else update background layer only
+- Add regression unit test to cover multiple toggles
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/HistoryManager.ts`
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/DiagramEngine.ts`
-- **Actions**:
-  - Track pan/zoom operations in history
-  - Track shape and link movement operations
-  - Implement granular undo/redo for movement operations
-  - Add batch operation support for multiple element moves
-- **Dependencies**: T005, T006 (movement core)
-- **Notes**: Integrate with existing history system.
+## App/UI Fixes
 
-### T010. Implement performance optimizations for large diagrams
+### T009: Fix duplicate button icon
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/DiagramEngine.ts`
-  - `/Users/ngosangns/Github/jointjs-poc/lib/diagram-core/managers/PaperManager.ts`
-- **Actions**:
-  - Add viewport culling for off-screen elements during pan
-  - Implement movement batching for multiple elements
-  - Add performance monitoring for pan/zoom operations
-  - Optimize event emission frequency during continuous operations
-- **Dependencies**: T004, T005 (core functionality)
-- **Notes**: Target 60fps for 3k elements, 30fps for 10k elements.
+**Files**: `/Users/ngosangns/Github/jointjs-poc/src/app/components/shape-toolbar/shape-toolbar.html`, `/Users/ngosangns/Github/jointjs-poc/src/app/components/shape-toolbar/shape-toolbar.scss`  
+**Description**: Replace incorrect icon with the proper duplicate/clone glyph and ensure accessibility label.  
+**Dependencies**: None  
+**Implementation**:
 
-### T011. Integrate pan/zoom with Angular canvas component
+- Update the button to use the correct SVG/icon font
+- Add `aria-label="Duplicate"` and a `title` attribute
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/src/app/components/diagram-canvas/diagram-canvas.ts`
-  - `/Users/ngosangns/Github/jointjs-poc/src/app/services/diagram.ts`
-- **Actions**:
-  - Add mouse wheel zoom support
-  - Implement drag-to-pan functionality
-  - Add zoom controls to UI toolbar
-  - Expose pan/zoom state in component
-- **Dependencies**: T004 (pan/zoom core)
-- **Notes**: Update existing service methods to use new API.
+### T010: Ensure canvas panning works in the app
 
-### T012. Add shape movement UI controls and feedback
+**Files**: `/Users/ngosangns/Github/jointjs-poc/src/app/components/diagram-canvas/diagram-canvas.ts`, `/Users/ngosangns/Github/jointjs-poc/src/app/components/diagram-canvas/diagram-canvas.html`  
+**Description**: Wire UI events to engine pan/zoom; avoid preventing default on blank drag.  
+**Dependencies**: T007  
+**Implementation**:
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/src/app/components/diagram-canvas/diagram-canvas.html`
-  - `/Users/ngosangns/Github/jointjs-poc/src/app/components/diagram-canvas/diagram-canvas.scss`
-- **Actions**:
-  - Add visual feedback for selected elements during movement
-  - Implement drag handles for shape resizing
-  - Add movement constraints visualization (grid, bounds)
-  - Show element coordinates during movement
-- **Dependencies**: T005 (shape movement core)
-- **Notes**: Enhance existing canvas UI with movement indicators.
+- Add handlers for mousedown/mousemove on blank area to delegate to engine
+- Verify wheel+ctrl zoom, wheel-only pan as designed
 
-### T013. Create comprehensive E2E tests for user interactions
+## Validation & Performance
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/e2e/tests/pan-zoom-movement.spec.ts`
-- **Actions**:
-  - Test mouse wheel zoom and drag-to-pan
-  - Test touch gestures on mobile devices
-  - Test keyboard navigation and shortcuts
-  - Test shape selection and movement workflows
-  - Test link manipulation and vertex editing
-  - Verify performance under load (3k+ elements)
-- **Dependencies**: T011, T012 (UI integration)
-- **Commands**:
-  - `yarn e2e -- -g "pan zoom movement"`
+### T011: Unit tests for grid toggle regression
 
-### T014. Add unit tests for movement algorithms and constraints
+**File**: `/Users/ngosangns/Github/jointjs-poc/lib/tests/unit/grid-toggle.spec.ts`  
+**Description**: Reproduce “shapes disappear when grid toggled” and assert fixed behavior.  
+**Dependencies**: T006
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/tests/unit/movement.spec.ts` (new)
-  - `/Users/ngosangns/Github/jointjs-poc/lib/tests/unit/pan-zoom.spec.ts` (new)
-- **Actions**:
-  - Test bounds checking algorithms
-  - Test grid snapping calculations
-  - Test collision detection logic
-  - Test performance optimization functions
-  - Test edge cases (empty selections, invalid coordinates)
-- **Dependencies**: T010 (performance optimizations)
-- **Commands**:
-  - `yarn test:lib -- -t "movement algorithms"`
+### T012: Performance test for pan/zoom stamina [P]
 
-### T015. Performance testing and optimization validation
+**File**: `/Users/ngosangns/Github/jointjs-poc/lib/tests/performance/pan-zoom-performance.spec.ts`  
+**Description**: Ensure performance targets hold while panning with 500+ elements.  
+**Dependencies**: T007
 
-- **Path(s)**:
-  - `/Users/ngosangns/Github/jointjs-poc/lib/scripts/perf-scenarios.ts`
-- **Actions**:
-  - Add performance test scenarios for pan/zoom with large diagrams
-  - Test movement performance with 3k+ elements
-  - Validate 60fps target for typical operations
-  - Add memory usage monitoring during operations
-  - Create performance regression tests
-- **Dependencies**: T014 (unit tests)
-- **Commands**:
-  - `yarn test:perf`
+## Documentation
+
+### T013: Update quickstart and README with Tailwind and panning
+
+**Files**: `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/quickstart.md`, `/Users/ngosangns/Github/jointjs-poc/specs/001-build-an-application/README.md`  
+**Description**: Document Tailwind setup, grid toggle expectations, and panning behaviors.  
+**Dependencies**: T001, T007, T009
 
 ## Parallel Execution Examples
 
-### Phase 1: Contract Tests (can run in parallel)
+### Phase 1: Setup (Parallel)
 
 ```bash
-# Terminal 1
-yarn test:lib -- -t "pan zoom API"
-
-# Terminal 2
-yarn test:lib -- -t "shape link movement"
-
-# Terminal 3
-yarn e2e -- -g "pan zoom movement"
+# Can run together
+T001 Integrate Tailwind
+T003 Contract tests for events
+T004 Contract tests for library APIs
+T005 E2E tests for grid & pan
 ```
 
-### Phase 2: Core Implementation (sequential due to shared files)
+### Phase 2: Core Fixes (Sequential where shared files)
 
 ```bash
-# Must run in order due to DiagramEngine.ts modifications
-yarn test:lib -- -t "pan zoom API" && \
-yarn test:lib -- -t "shape link movement" && \
-# Then implement T004, T005, T006 sequentially
+# PaperManager is shared; apply in order
+T006 Fix grid toggle removing elements
+T007 Ensure pan interactions are wired
+T008 Preserve elements across paper updates
 ```
 
-### Phase 3: Integration (can run in parallel)
+### Phase 3: App/UI (Parallel)
 
 ```bash
-# Terminal 1
-# Implement T011 (Angular integration)
-
-# Terminal 2
-# Implement T012 (UI controls)
-
-# Terminal 3
-# Implement T013 (E2E tests)
+T009 Fix duplicate button icon
+T010 Ensure canvas panning works in the app
 ```
+
+### Phase 4: Validation & Docs (Parallel)
+
+```bash
+T011 Unit tests for grid regression
+T012 Pan/zoom performance test
+T013 Update quickstart/README
+```
+
+## Dependencies Summary
+
+- **T001** → T002, T013
+- **T003** → T006, T007
+- **T004** → T006, T007
+- **T005** → (validates T006, T007, T010)
+- **T006** → T008, T011
+- **T007** → T010, T012, T013
+- **T009** → —
 
 ## Success Criteria
 
-- [ ] All contract tests pass
-- [ ] Pan/zoom operations achieve 60fps with 3k elements
-- [ ] Shape movement respects grid snapping and bounds
-- [ ] Link movement maintains connection validity
-- [ ] Touch gestures work smoothly on mobile devices
-- [ ] Keyboard navigation is fully accessible
-- [ ] Movement operations are properly undoable
-- [ ] E2E tests cover all user interaction scenarios
-- [ ] Performance targets met under load testing
-
-## Notes
-
-- Follow TDD approach: contract tests must fail initially
-- Maintain backward compatibility with existing API
-- Ensure all events follow contract specifications
-- Performance is critical for user experience
-- Accessibility compliance required for keyboard navigation
-- Touch support should be basic but functional
+- **Tailwind integrated**: Angular app builds and styles applied via utilities alongside SCSS
+- **Grid toggle safe**: Toggling grid on/off never removes or resets existing shapes
+- **Duplicate icon fixed**: Correct icon/label in toolbar
+- **Panning works**: Mouse-drag on blank pans; dragging on shape moves the shape; programmatic `panTo` updates viewport and emits `viewport:changed`
+- **Tests pass**: Contract, unit, performance, and E2E for grid & panning

@@ -1,54 +1,116 @@
 <div class="diagram-canvas-container">
   <div class="left-toolbar" role="toolbar" aria-label="Diagram toolbar" data-testid="left-toolbar">
-    <button
-      class="btn btn-primary"
-      (click)="onAddElement()"
-      data-testid="btn-add"
-      aria-label="Add element"
-    >
-      Add
-    </button>
-    <button
-      class="btn btn-warning"
-      (click)="onClearDiagram()"
-      data-testid="btn-clear"
-      aria-label="Clear diagram"
-    >
-      Clear
-    </button>
-    <hr />
-    <button
-      class="btn"
-      (click)="onUndo()"
-      [disabled]="!canUndo"
-      data-testid="btn-undo"
-      aria-label="Undo"
-    >
-      Undo
-    </button>
-    <button
-      class="btn"
-      (click)="onRedo()"
-      [disabled]="!canRedo"
-      data-testid="btn-redo"
-      aria-label="Redo"
-    >
-      Redo
-    </button>
-    <hr />
-    <div class="zoom-controls">
-      <button class="btn" (click)="onZoomIn()" data-testid="btn-zoom-in" aria-label="Zoom in">
-        +
-      </button>
-      <button class="btn" (click)="onZoomOut()" data-testid="btn-zoom-out" aria-label="Zoom out">
-        -
-      </button>
-      <div class="zoom-display" data-testid="zoom-level">
-        {{ currentZoom * 100 | number : '1.0-0' }}%
+    <!-- Shapes Section -->
+    <div class="toolbar-section">
+      <div class="section-header">
+        <h3 class="section-title">Shapes</h3>
+        <button
+          class="collapse-btn"
+          (click)="toggleShapesCollapse()"
+          [attr.aria-label]="isShapesCollapsed ? 'Expand shapes' : 'Collapse shapes'"
+        >
+          <span class="collapse-icon" [class.rotated]="isShapesCollapsed">‹</span>
+        </button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-container" *ngIf="!isShapesCollapsed">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search shapes..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+          aria-label="Search shapes"
+        />
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="category-tabs" *ngIf="!isShapesCollapsed">
+        <button
+          *ngFor="let category of categories"
+          class="category-tab"
+          [class.active]="selectedCategory === category.id"
+          (click)="onCategorySelect(category.id)"
+          [attr.aria-label]="'Select ' + category.name + ' category'"
+        >
+          <span class="category-icon" [ngClass]="getCategoryIconClass(category)"></span>
+          <span class="category-name">{{ category.name }}</span>
+        </button>
+      </div>
+
+      <!-- Shapes Grid -->
+      <div class="shapes-container" *ngIf="!isShapesCollapsed">
+        <div class="shapes-grid">
+          <div
+            *ngFor="let shape of filteredShapes"
+            class="shape-item"
+            [class.hovered]="isShapeHovered(getShapeType(shape))"
+            draggable="true"
+            (dragstart)="onShapeDragStart($event, getShapeType(shape))"
+            (dragend)="onShapeDragEnd($event)"
+            (mouseenter)="onShapeHover(getShapeType(shape))"
+            (mouseleave)="onShapeHoverEnd()"
+            [attr.aria-label]="'Drag ' + shape.name + ' to canvas'"
+            [title]="shape.description"
+          >
+            <div class="shape-preview">
+              <div class="shape-icon" [ngClass]="getShapeIconClass(shape)"></div>
+            </div>
+            <div class="shape-info">
+              <span class="shape-name">{{ shape.name }}</span>
+              <span class="shape-shortcut" *ngIf="shape.shortcut">{{
+                getShortcutText(shape)
+              }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Results Message -->
+        <div class="no-results" *ngIf="filteredShapes.length === 0">
+          <p>No shapes found</p>
+          <small>Try adjusting your search or select a different category</small>
+        </div>
+      </div>
+
+      <!-- Collapsed State Content -->
+      <div class="collapsed-content" *ngIf="isShapesCollapsed">
+        <div class="collapsed-categories">
+          <button
+            *ngFor="let category of categories"
+            class="collapsed-category-btn"
+            [class.active]="selectedCategory === category.id"
+            (click)="onCategorySelect(category.id)"
+            [attr.aria-label]="'Select ' + category.name + ' category'"
+          >
+            <span class="category-icon" [ngClass]="getCategoryIconClass(category)"></span>
+          </button>
+        </div>
       </div>
     </div>
+
     <hr />
-    <div class="grid-controls">
+
+    <!-- Tools Section -->
+    <div class="toolbar-section">
+      <div class="section-header">
+        <h3 class="section-title">Tools</h3>
+      </div>
+      <button class="btn" (click)="onClearDiagram()">Clear</button>
+      <hr />
+      <div class="flex gap-3">
+        <button class="btn" (click)="onUndo()" [disabled]="!canUndo">Undo</button>
+        <button class="btn" (click)="onRedo()" [disabled]="!canRedo">Redo</button>
+      </div>
+      <hr />
+      <button class="btn" (click)="onZoomIn()" data-testid="btn-zoom-in" aria-label="Zoom in">
+        Zoom-in
+      </button>
+      <button class="btn" (click)="onZoomOut()" data-testid="btn-zoom-out" aria-label="Zoom out">
+        Zoom-out
+      </button>
+      <div class="zoom-display">{{ currentZoom * 100 | number : '1.0-0' }}%</div>
+      <hr />
       <button
         class="btn"
         [class.active]="isGridEnabled"
@@ -59,30 +121,8 @@
       >
         Grid
       </button>
-      <input
-        type="range"
-        min="5"
-        max="50"
-        step="5"
-        [value]="10"
-        (input)="onSetGridSize(+$event.target.value)"
-        data-testid="input-grid-size"
-        aria-label="Grid size"
-        class="grid-size-slider"
-      />
     </div>
-    <hr />
-    <button
-      class="btn btn-info"
-      (click)="onExportData()"
-      data-testid="btn-export"
-      aria-label="Export diagram data"
-    >
-      Export
-    </button>
   </div>
 
-  <div class="diagram-wrapper">
-    <div #diagramContainer class="diagram-container"></div>
-  </div>
+  <div #diagramContainer class="diagram-container"></div>
 </div>

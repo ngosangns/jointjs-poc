@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import { DiagramConfig, DiagramData, DiagramElement, DiagramEngine, DiagramLink } from 'lib';
 
 @Injectable({
@@ -11,6 +12,18 @@ export class DiagramService {
   private opsSinceSave = 0;
   private autosaveOpThreshold = 10;
   private currentDocumentId: string | null = null;
+
+  // Selection stream
+  private selectionSubject = new BehaviorSubject<{
+    hasSelection: boolean;
+    elementIds: string[];
+    linkIds: string[];
+  }>({
+    hasSelection: false,
+    elementIds: [],
+    linkIds: [],
+  });
+  public readonly selection$ = this.selectionSubject.asObservable();
 
   constructor() {}
 
@@ -29,6 +42,18 @@ export class DiagramService {
       throw new Error('Diagram engine not initialized. Call initialize first.');
     }
     this.diagramEngine.initializePaper(element);
+    // Bridge selection events to selection$
+    this.diagramEngine.addEventListener('selection:changed', (event: any) => {
+      const {
+        elementIds = [],
+        linkIds = [],
+        hasSelection = (elementIds && elementIds.length > 0) || (linkIds && linkIds.length > 0),
+      } = event.data || {};
+      this.selectionSubject.next({ hasSelection, elementIds, linkIds });
+    });
+    this.diagramEngine.addEventListener('selection:cleared', () => {
+      this.selectionSubject.next({ hasSelection: false, elementIds: [], linkIds: [] });
+    });
   }
 
   /**
@@ -167,14 +192,14 @@ export class DiagramService {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
     const id = documentId ?? this.currentDocumentId;
     if (!id) throw new Error('No documentId specified for save');
-    await (this.diagramEngine as any).save(id);
+    await this.diagramEngine.save(id);
     this.opsSinceSave = 0;
   }
 
   async load(documentId: string): Promise<void> {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
     this.currentDocumentId = documentId;
-    await (this.diagramEngine as any).load(documentId);
+    await this.diagramEngine.load(documentId);
     this.opsSinceSave = 0;
   }
 
@@ -185,54 +210,53 @@ export class DiagramService {
   // History APIs
   undo(): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).undo();
+    this.diagramEngine.undo();
   }
 
   redo(): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).redo();
+    this.diagramEngine.redo();
   }
 
   // Enhanced View APIs
   zoomIn(factor: number = 1.2): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    console.log('DiagramService.zoomIn called with factor:', factor);
-    (this.diagramEngine as any).zoomIn(factor);
+    this.diagramEngine.zoomIn(factor);
   }
 
   zoomOut(factor: number = 1 / 1.2): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).zoomOut(factor);
+    this.diagramEngine.zoomOut(factor);
   }
 
   pan(dx: number, dy: number): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).pan(dx, dy);
+    this.diagramEngine.pan(dx, dy);
   }
 
   setZoom(z: number): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).setZoom(z);
+    this.diagramEngine.setZoom(z);
   }
 
   getZoom(): number {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    return (this.diagramEngine as any).getZoom();
+    return this.diagramEngine.getZoom();
   }
 
   panTo(x: number, y: number, smooth?: boolean): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).panTo(x, y, smooth);
+    this.diagramEngine.panTo(x, y, smooth);
   }
 
   fitToViewport(padding?: number): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).fitToViewport(padding);
+    this.diagramEngine.fitToViewport(padding);
   }
 
   getPerformanceStats(): any {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    return (this.diagramEngine as any).getPerformanceStats();
+    return this.diagramEngine.getPerformanceStats();
   }
 
   setPerformanceOptimizations(options: {
@@ -241,69 +265,74 @@ export class DiagramService {
     viewportChangeThrottle?: number;
   }): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).setPerformanceOptimizations(options);
+    this.diagramEngine.setPerformanceOptimizations(options);
   }
 
   zoomToFit(padding?: number): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).zoomToFit(padding);
+    this.diagramEngine.zoomToFit(padding);
   }
 
   zoomToSelection(padding?: number): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).zoomToSelection(padding);
+    this.diagramEngine.zoomToSelection(padding);
   }
 
   // Enhanced Grid APIs
   setGridEnabled(enabled: boolean): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).grid.enable(enabled);
+    this.diagramEngine.grid.enable(enabled);
   }
 
   setGridSize(size: number): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).grid.setSpacing(size);
+    this.diagramEngine.grid.setSpacing(size);
   }
 
   toggleGrid(): boolean {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    return (this.diagramEngine as any).grid.toggle();
+    return this.diagramEngine.grid.toggle();
   }
 
   isGridEnabled(): boolean {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    return (this.diagramEngine as any).grid.isEnabled();
+    return this.diagramEngine.grid.isEnabled();
   }
 
   getGridSize(): number {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    return (this.diagramEngine as any).grid.getSize();
+    return this.diagramEngine.grid.getSize();
   }
 
   // Selection and Movement APIs
   selectAll(): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).selectAllElements();
+    this.diagramEngine.selectAllElements();
   }
 
   deselectAll(): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).deselectAllElements();
+    this.diagramEngine.deselectAllElements();
   }
 
   deleteSelected(): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).deleteSelectedElements();
+    this.diagramEngine.deleteSelectedElements();
+  }
+
+  duplicateSelected(dx: number = 20, dy: number = 20): string[] {
+    if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
+    return (this.diagramEngine as any).duplicateSelectedElements({ dx, dy });
   }
 
   moveSelected(dx: number, dy: number): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    (this.diagramEngine as any).moveSelectedElements(dx, dy);
+    this.diagramEngine.moveSelectedElements(dx, dy);
   }
 
   getSelectedElements(): any[] {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    return (this.diagramEngine as any).getSelectedElements();
+    return this.diagramEngine.getSelectedElements();
   }
 
   getEngine(): any {
@@ -312,12 +341,12 @@ export class DiagramService {
 
   canUndo(): boolean {
     if (!this.diagramEngine) return false;
-    return (this.diagramEngine as any).canUndo();
+    return this.diagramEngine.canUndo();
   }
 
   canRedo(): boolean {
     if (!this.diagramEngine) return false;
-    return (this.diagramEngine as any).canRedo();
+    return this.diagramEngine.canRedo();
   }
 
   // Autosave internals

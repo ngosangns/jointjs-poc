@@ -59,6 +59,7 @@ export interface IDataManager {
 export interface IPaperManager {
   initialize(element: HTMLElement, graph: dia.Graph, config: DiagramConfig): dia.Paper;
   setupEvents(paper: dia.Paper, eventManager: IEventManager): void;
+  setGrid(paper: dia.Paper, enabled: boolean, gridSize?: number): void;
   resize(paper: dia.Paper, width: number, height: number): void;
   destroy(paper: dia.Paper): void;
   fitToContent(paper: dia.Paper, padding?: number): void;

@@ -10,7 +10,6 @@ import type {
   DiagramEventType,
   DiagramLink,
 } from '../types';
-import type { Shape } from './interfaces/Shape';
 import { LinkFactory, ShapeFactory } from './factories';
 import type {
   IDataManager,
@@ -21,8 +20,16 @@ import type {
   IShapeFactory,
   IToolsManager,
 } from './interfaces';
-import { DataManager, EventManager, GraphManager, PaperManager, ToolsManager } from './managers';
-import { PersistenceManager, HistoryManager } from './managers';
+import type { Shape } from './interfaces/Shape';
+import {
+  DataManager,
+  EventManager,
+  GraphManager,
+  HistoryManager,
+  PaperManager,
+  PersistenceManager,
+  ToolsManager,
+} from './managers';
 import { KeyboardManager } from './managers/KeyboardManager';
 
 export class DiagramEngine {
@@ -126,9 +133,7 @@ export class DiagramEngine {
 
     // Initialize KeyboardManager with paper, graph, and event manager
     try {
-      console.log('Initializing KeyboardManager...');
       this.keyboardManager.initialize(this.paper, this.graph, this.eventManager);
-      console.log('KeyboardManager initialized successfully');
       // Setup keyboard event handlers
       this.setupKeyboardEventHandlers();
     } catch (error) {
@@ -142,6 +147,46 @@ export class DiagramEngine {
   public addElement(elementConfig: Partial<DiagramElement>): string {
     this.history.push();
     return this.graphManager.addElement(this.graph, elementConfig, this.shapeFactory);
+  }
+
+  /**
+   * Add a shape at specific coordinates from drag-drop
+   */
+  public addShapeAtPosition(
+    shapeType: string,
+    position: { x: number; y: number },
+    options: Partial<DiagramElement> = {}
+  ): string {
+    this.history.push();
+
+    // Get default size from shape factory
+    const defaultConfig = this.shapeFactory.getDefaultConfig(shapeType);
+    const defaultSize = defaultConfig?.size || { width: 100, height: 60 };
+
+    // Create element configuration
+    const elementConfig: Partial<DiagramElement> = {
+      type: shapeType,
+      position: {
+        x: position.x - defaultSize.width / 2, // Center the shape on drop position
+        y: position.y - defaultSize.height / 2,
+      },
+      size: defaultSize,
+      ...options,
+    };
+
+    // Add element to graph
+    const elementId = this.graphManager.addElement(this.graph, elementConfig, this.shapeFactory);
+
+    // Emit shape creation event
+    this.eventManager.emitEvent('shape:created', {
+      id: elementId,
+      type: shapeType,
+      position: elementConfig.position,
+      size: elementConfig.size,
+      source: 'drag-drop',
+    });
+
+    return elementId;
   }
 
   /**
@@ -202,7 +247,7 @@ export class DiagramEngine {
     if (data) {
       this.graph.clear();
       this.dataManager.deserializeCustomFormat(
-        data as any,
+        data as DiagramData,
         this.graph,
         this.shapeFactory,
         this.linkFactory
@@ -235,7 +280,6 @@ export class DiagramEngine {
     const { sx } = this.paperManager.getScale(paper);
     const newScale = sx * step;
     const clampedScale = this.clampZoom(newScale);
-    console.log('Zoom in:', { current: sx, new: newScale, clamped: clampedScale });
 
     if (smooth) {
       this.smoothZoomTo(paper, clampedScale);
@@ -579,7 +623,6 @@ export class DiagramEngine {
 
     const { sx } = paper.scale();
     const { tx, ty } = paper.translate();
-    console.log('Emitting viewport:changed:', { zoom: sx, pan: { x: tx, y: ty } });
     this.eventManager.emitEvent('viewport:changed', { zoom: sx, pan: { x: tx, y: ty } });
     this.performanceMonitor.lastViewportChange = now;
   }
@@ -708,9 +751,12 @@ export class DiagramEngine {
   public grid = {
     enable: (enabled: boolean): void => {
       this.toolsManager.setGridEnabled(enabled);
+      if (this.paper) this.paperManager.setGrid(this.paper, enabled);
     },
     setSpacing: (size: number): void => {
       this.toolsManager.setGridSize(size);
+      if (this.paper)
+        this.paperManager.setGrid(this.paper, this.toolsManager.getGridEnabled(), size);
     },
     toggle: (): boolean => {
       return this.toolsManager.toggleGrid();
@@ -740,8 +786,19 @@ export class DiagramEngine {
   }
 
   private updateSelectionState(): void {
-    const selectedCount = this.getSelectedElements().length;
-    this.eventManager.emitEvent('selection:changed', { count: selectedCount });
+    const elements = this.getSelectedElements();
+    const elementIds = elements.map((el: any) => String(el.id));
+    // Links selection not yet tracked; keep empty for now
+    const linkIds: string[] = [];
+    const hasSelection = elementIds.length > 0 || linkIds.length > 0;
+    this.eventManager.emitEvent('selection:changed', {
+      elementIds,
+      linkIds,
+      hasSelection,
+    });
+    if (!hasSelection) {
+      this.eventManager.emitEvent('selection:cleared', {});
+    }
   }
 
   private dragState: {
@@ -755,7 +812,6 @@ export class DiagramEngine {
   };
 
   private handleElementDrag(data: any): void {
-    console.log('handleElementDrag called with data:', data);
     if (!this.dragState.isDragging) {
       this.dragState.isDragging = true;
       this.dragState.startPosition = data.position || { x: 0, y: 0 };
@@ -765,10 +821,7 @@ export class DiagramEngine {
     const dx = (data.position?.x || 0) - this.dragState.startPosition.x;
     const dy = (data.position?.y || 0) - this.dragState.startPosition.y;
 
-    console.log('Drag delta:', dx, dy);
-
     if (this.dragState.elementId) {
-      console.log('Moving element:', this.dragState.elementId, 'by', dx, dy);
       this.moveElement(this.dragState.elementId, dx, dy);
     }
   }
@@ -782,7 +835,6 @@ export class DiagramEngine {
   }
 
   private handleElementSelection(data: any): void {
-    console.log('Element selected:', data.id);
     this.selectedElements.add(data.id);
     this.updateSelectionState();
   }
@@ -795,6 +847,37 @@ export class DiagramEngine {
         element.remove();
       });
     }
+  }
+
+  /** Duplicate current selection with a configurable offset */
+  public duplicateSelectedElements(
+    offset: { dx: number; dy: number } = { dx: 20, dy: 20 }
+  ): string[] {
+    if (!this.paper) return [];
+    const selectedElements = this.getSelectedElements();
+    const newIds: string[] = [];
+    if (selectedElements.length === 0) return newIds;
+
+    this.history.push();
+    selectedElements.forEach((element: any) => {
+      const clone = element.clone();
+      clone.translate(offset.dx, offset.dy);
+      this.graph.addCell(clone);
+      newIds.push(String(clone.id));
+
+      // Emit element:added for each clone for consistency
+      this.eventManager.emitEvent('element:added', {
+        id: clone.id,
+        element: {
+          id: String(clone.id),
+          type: clone.get('type') || 'element',
+          position: clone.position(),
+          size: clone.size(),
+          properties: clone.attributes,
+        },
+      });
+    });
+    return newIds;
   }
 
   public moveSelectedElements(dx: number, dy: number): void {
@@ -878,16 +961,8 @@ export class DiagramEngine {
         }
       });
 
-      console.log(
-        'getSelectedElements: found',
-        selectedElements.length,
-        'selected elements out of',
-        elements.length,
-        'total'
-      );
       return selectedElements;
     } catch (error) {
-      console.log('getSelectedElements error:', error);
       return [];
     }
   }
@@ -982,20 +1057,19 @@ export class DiagramEngine {
       return; // Movement blocked by constraints
     }
 
-    // Get current geometry and update position
-    const geometry = element.get('geometry');
-    const newGeometry = {
-      ...geometry,
-      x: geometry.x + newPosition.dx,
-      y: geometry.y + newPosition.dy,
+    // Update JointJS element position
+    const currentPosition = element.get('position') || { x: 0, y: 0 };
+    const updatedPosition = {
+      x: currentPosition.x + newPosition.dx,
+      y: currentPosition.y + newPosition.dy,
     };
 
-    element.set('geometry', newGeometry);
+    element.set('position', updatedPosition);
 
-    // Emit element:updated event
+    // Emit element:updated event (position)
     this.eventManager.emitEvent('element:updated', {
       id: id,
-      patch: { geometry: newGeometry },
+      patch: { position: updatedPosition },
     });
 
     // Update connected links
@@ -1033,7 +1107,7 @@ export class DiagramEngine {
     }
 
     // Check for collision with other elements (optional - can be disabled for performance)
-    const collisionDetection = (this.config as any).collisionDetection !== false;
+    const collisionDetection = this.config.collisionDetection !== false;
     if (collisionDetection) {
       const collision = this.checkCollision(element, finalX, finalY);
       if (collision) {
@@ -1169,9 +1243,7 @@ export class DiagramEngine {
    * Select an element by ID (for testing)
    */
   public selectElement(elementId: string | number): void {
-    console.log('selectElement called with id:', elementId);
     this.selectedElements.add(elementId);
-    console.log('Selected elements after add:', Array.from(this.selectedElements));
     this.updateSelectionState();
   }
 

@@ -31,13 +31,11 @@ export class KeyboardManager {
    * Initialize keyboard manager with paper and graph
    */
   public initialize(paper: dia.Paper, graph: dia.Graph, eventManager: IEventManager): void {
-    console.log('KeyboardManager: Initializing...');
     this.paper = paper;
     this.graph = graph;
     this.eventManager = eventManager;
     this.setupDefaultShortcuts();
     this.attachEventListeners();
-    console.log('KeyboardManager: Initialized with', this.shortcuts.size, 'shortcuts');
   }
 
   /**
@@ -304,10 +302,8 @@ export class KeyboardManager {
       metaKey: event.metaKey,
     });
 
-    console.log('KeyboardManager: Key pressed:', shortcutKey);
     const shortcut = this.shortcuts.get(shortcutKey);
     if (shortcut) {
-      console.log('KeyboardManager: Executing shortcut:', shortcut.description);
       event.preventDefault();
       event.stopPropagation();
       shortcut.action(event);
@@ -358,7 +354,6 @@ export class KeyboardManager {
   }
 
   private moveSelected(dx: number, dy: number): void {
-    console.log('KeyboardManager: moveSelected called with dx:', dx, 'dy:', dy);
     this.eventManager?.emitEvent('keyboard:move-selected', { dx, dy });
   }
 

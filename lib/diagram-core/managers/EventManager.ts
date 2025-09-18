@@ -2,9 +2,9 @@
  * Event manager for handling diagram events using JointJS built-in event system
  */
 
-import { dia } from '@joint/core';
-import { DiagramEvent, DiagramEventType } from '../../types';
-import { IEventManager } from '../interfaces';
+import type { dia } from '@joint/core';
+import type { DiagramEvent, DiagramEventType } from '../../types';
+import type { IEventManager } from '../interfaces';
 
 export class EventManager implements IEventManager {
   private graph: dia.Graph | null = null;
@@ -103,6 +103,9 @@ export class EventManager implements IEventManager {
     this.eventMappings.set('document:saved', []);
     this.eventMappings.set('document:loaded', []);
     this.eventMappings.set('viewport:changed', []);
+    this.eventMappings.set('shape:created', []);
+    this.eventMappings.set('selection:changed', []);
+    this.eventMappings.set('selection:cleared', []);
   }
 
   /**

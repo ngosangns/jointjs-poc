@@ -107,7 +107,7 @@ export class GraphManager implements IGraphManager {
       element.resize(updates.size.width, updates.size.height);
     }
     if (updates.properties) {
-      element.set(updates.properties as any);
+      element.set(updates.properties);
     }
   }
 
@@ -119,13 +119,13 @@ export class GraphManager implements IGraphManager {
     if (!link) throw new Error('Link not found');
 
     if (updates.source !== undefined) {
-      link.set('source', updates.source as any);
+      link.set('source', updates.source);
     }
     if (updates.target !== undefined) {
-      link.set('target', updates.target as any);
+      link.set('target', updates.target);
     }
     if (updates.properties) {
-      link.set(updates.properties as any);
+      link.set(updates.properties);
     }
   }
 

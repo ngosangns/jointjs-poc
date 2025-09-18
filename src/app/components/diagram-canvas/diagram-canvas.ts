@@ -1,20 +1,28 @@
+import { CommonModule, DecimalPipe } from '@angular/common';
 import {
   type AfterViewInit,
+  ChangeDetectorRef,
   Component,
   type ElementRef,
   type OnDestroy,
   type OnInit,
   ViewChild,
-  ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule, DecimalPipe, NgIf } from '@angular/common';
-import type { DiagramElement, DiagramLink } from 'lib';
+import { FormsModule } from '@angular/forms';
+import type { DiagramElement } from 'lib';
 import { DiagramService } from '../../services/diagram';
+import { DragDropService } from '../../services/drag-drop';
+import { DropZoneService } from '../../services/drop-zone';
+import {
+  type ShapeCategory,
+  ShapeLibraryService,
+  type ShapeMetadata,
+} from '../../services/shape-library';
 
 @Component({
   selector: 'app-diagram-canvas',
   standalone: true,
-  imports: [DecimalPipe, CommonModule],
+  imports: [DecimalPipe, CommonModule, FormsModule],
   providers: [DiagramService],
   templateUrl: './diagram-canvas.html',
   styleUrl: './diagram-canvas.scss',
@@ -22,6 +30,7 @@ import { DiagramService } from '../../services/diagram';
 export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('diagramContainer', { static: true }) diagramContainer!: ElementRef<HTMLDivElement>;
 
+  // Diagram state
   canUndo: boolean = false;
   canRedo: boolean = false;
   currentZoom: number = 1;
@@ -31,7 +40,21 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   isPanning: boolean = false;
   performanceStats: any = null;
 
-  constructor(private diagramService: DiagramService, private cdr: ChangeDetectorRef) {}
+  // Shape toolbar state
+  categories: ShapeCategory[] = [];
+  selectedCategory: string = 'basic';
+  searchQuery: string = '';
+  filteredShapes: ShapeMetadata[] = [];
+  isShapesCollapsed: boolean = false;
+  hoveredShape: string | null = null;
+
+  constructor(
+    private diagramService: DiagramService,
+    private cdr: ChangeDetectorRef,
+    private dragDropService: DragDropService,
+    private dropZoneService: DropZoneService,
+    private shapeLibraryService: ShapeLibraryService
+  ) {}
 
   ngOnInit(): void {
     // Initialize diagram service
@@ -41,6 +64,10 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
       gridSize: 10,
       interactive: true,
     });
+
+    // Initialize shape library
+    this.categories = this.shapeLibraryService.getCategories();
+    this.updateFilteredShapes();
   }
 
   ngAfterViewInit(): void {
@@ -48,34 +75,136 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     if (this.diagramContainer?.nativeElement) {
       this.diagramService.attachToElement(this.diagramContainer.nativeElement);
 
-      // Add some sample elements
-      this.addSampleDiagram();
-
-      // Mark UI hooks for E2E
-      this.diagramContainer.nativeElement.setAttribute('data-testid', 'shape-default');
-      this.diagramContainer.nativeElement.setAttribute('data-testid', 'persistence-ready');
-      this.diagramContainer.nativeElement.setAttribute('data-testid', 'history-undo-redo-ready');
-      this.diagramContainer.nativeElement.setAttribute('data-testid', 'view-controls-ready');
-
       // Expose diagram engine to window for E2E tests
       (window as any).diagramEngine = this.diagramService.getEngine();
 
       this.updateHistoryState();
       this.setupEventListeners();
+      this.setupDragDropHandlers();
 
       // Initialize grid state
       this.isGridEnabled = this.diagramService.isGridEnabled();
       this.currentZoom = this.diagramService.getZoom();
-
-      console.log('Initial grid state:', this.isGridEnabled);
-      console.log('Initial zoom level:', this.currentZoom);
     }
   }
 
   ngOnDestroy(): void {
     this.diagramService.destroy();
+    this.dropZoneService.clearAllDropZones();
   }
 
+  // Shape toolbar methods
+  updateFilteredShapes(): void {
+    if (this.searchQuery.trim()) {
+      this.filteredShapes = this.shapeLibraryService.searchShapes(this.searchQuery);
+    } else {
+      this.filteredShapes = this.shapeLibraryService.getShapesByCategory(this.selectedCategory);
+    }
+    this.cdr.detectChanges();
+  }
+
+  onCategorySelect(categoryId: string): void {
+    this.selectedCategory = categoryId;
+    this.searchQuery = ''; // Clear search when switching categories
+    this.updateFilteredShapes();
+  }
+
+  onSearchChange(): void {
+    this.updateFilteredShapes();
+  }
+
+  onShapeDragStart(event: DragEvent, shapeType: string): void {
+    if (!event.dataTransfer) return;
+
+    const shapeMetadata = this.shapeLibraryService.getShapeMetadata(shapeType);
+    if (!shapeMetadata) return;
+
+    const dragData = {
+      type: 'shape' as const,
+      shapeType: shapeType,
+      metadata: shapeMetadata,
+    };
+
+    // Set drag data
+    event.dataTransfer.setData('application/json', JSON.stringify(dragData));
+
+    // Set drag effect
+    event.dataTransfer.effectAllowed = 'copy';
+
+    // Set active drag data in service
+    this.dragDropService.setActiveDragData(dragData);
+
+    // Add visual feedback
+    if (event.target instanceof HTMLElement) {
+      event.target.classList.add('dragging');
+    }
+  }
+
+  onShapeDragEnd(event: DragEvent): void {
+    // Remove visual feedback
+    if (event.target instanceof HTMLElement) {
+      event.target.classList.remove('dragging');
+    }
+  }
+
+  onShapeHover(shapeType: string): void {
+    this.hoveredShape = shapeType;
+  }
+
+  onShapeHoverEnd(): void {
+    this.hoveredShape = null;
+  }
+
+  toggleShapesCollapse(): void {
+    this.isShapesCollapsed = !this.isShapesCollapsed;
+  }
+
+  getShapeIconClass(shape: ShapeMetadata): string {
+    // Map shape types to icon classes
+    const iconMap: Record<string, string> = {
+      rectangle: 'icon-rectangle',
+      circle: 'icon-circle',
+      ellipse: 'icon-ellipse',
+      polygon: 'icon-polygon',
+      path: 'icon-path',
+      diamond: 'icon-diamond',
+      parallelogram: 'icon-parallelogram',
+      stickman: 'icon-stickman',
+      folder: 'icon-folder',
+      router: 'icon-router',
+      server: 'icon-server',
+      database: 'icon-database',
+      cloud: 'icon-cloud',
+      firewall: 'icon-firewall',
+    };
+
+    return iconMap[shape.icon] || 'icon-rectangle';
+  }
+
+  getCategoryIconClass(category: ShapeCategory): string {
+    const iconMap: Record<string, string> = {
+      shapes: 'icon-shapes',
+      flow: 'icon-flow',
+      uml: 'icon-uml',
+      network: 'icon-network',
+    };
+
+    return iconMap[category.icon] || 'icon-shapes';
+  }
+
+  isShapeHovered(shapeType: string): boolean {
+    return this.hoveredShape === shapeType;
+  }
+
+  getShortcutText(shape: ShapeMetadata): string {
+    return shape.shortcut ? `(${shape.shortcut})` : '';
+  }
+
+  getShapeType(shape: ShapeMetadata): string {
+    return shape.name.toLowerCase().replace(/\s+/g, '-');
+  }
+
+  // Diagram methods
   private updateHistoryState(): void {
     setTimeout(() => {
       this.canUndo = this.diagramService.canUndo();
@@ -87,7 +216,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   private setupEventListeners(): void {
     // Listen for viewport changes to update zoom and pan display
     this.diagramService.addEventListener('viewport:changed', (event: any) => {
-      console.log('Viewport changed:', event);
       this.currentZoom = event.data.zoom;
       this.currentPan = event.data.pan;
       this.cdr.detectChanges();
@@ -95,13 +223,16 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
     // Listen for selection changes
     this.diagramService.addEventListener('element:selected', () => {
-      console.log('Element selected');
       this.updateSelectionState();
     });
 
     this.diagramService.addEventListener('canvas:clicked', () => {
-      console.log('Canvas clicked');
       this.updateSelectionState();
+    });
+
+    // Listen for shape creation events
+    this.diagramService.addEventListener('shape:created', (event: any) => {
+      this.updateHistoryState();
     });
 
     // Setup mouse wheel zoom
@@ -112,6 +243,88 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
     // Setup performance monitoring
     this.setupPerformanceMonitoring();
+  }
+
+  private setupDragDropHandlers(): void {
+    const container = this.diagramContainer.nativeElement;
+
+    // Register canvas as drop zone
+    this.dropZoneService.registerDropZone('canvas', container, {
+      gridSnap: this.isGridEnabled,
+      gridSize: this.diagramService.getGridSize(),
+    });
+
+    // Handle drag over
+    container.addEventListener('dragover', (event: DragEvent) => {
+      const isValid = this.dragDropService.handleDragOver(event, container);
+      if (isValid) {
+        event.preventDefault();
+      }
+    });
+
+    // Handle drag leave
+    container.addEventListener('dragleave', (event: DragEvent) => {
+      this.dragDropService.handleDragLeave(event, container);
+    });
+
+    // Handle drop
+    container.addEventListener('drop', (event: DragEvent) => {
+      const dropPosition = this.dragDropService.handleDrop(event, container);
+      if (dropPosition && dropPosition.isValid) {
+        this.handleShapeDrop(dropPosition);
+      }
+    });
+
+    // Handle drag end
+    container.addEventListener('dragend', () => {
+      this.dragDropService.handleDragEnd();
+    });
+  }
+
+  private handleShapeDrop(dropPosition: { x: number; y: number }): void {
+    const dragData = this.dragDropService.getActiveDragData();
+    if (!dragData || dragData.type !== 'shape') {
+      return;
+    }
+
+    try {
+      // Get paper for coordinate transformation
+      const engine = this.diagramService.getEngine();
+      const paper = engine.getPaper();
+
+      if (!paper) {
+        console.error('Paper not available for drop operation');
+        return;
+      }
+
+      // Convert canvas coordinates to paper coordinates
+      const paperCoords = this.dragDropService.canvasToPaperCoordinates(
+        dropPosition.x,
+        dropPosition.y,
+        paper
+      );
+
+      // Apply grid snapping if enabled
+      const finalCoords = this.dragDropService.applyGridSnapping(
+        paperCoords.x,
+        paperCoords.y,
+        this.diagramService.getGridSize(),
+        this.isGridEnabled
+      );
+
+      // Create shape at position
+      const shapeId = (engine as any).addShapeAtPosition(dragData.shapeType, finalCoords, {
+        properties: {
+          label: {
+            text: dragData.metadata.name,
+          },
+        },
+      });
+      // Update history state
+      this.updateHistoryState();
+    } catch (error) {
+      console.error('Error creating shape from drag-drop:', error);
+    }
   }
 
   private setupMouseWheelZoom(): void {
@@ -202,47 +415,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     }, 0);
   }
 
-  private addSampleDiagram(): void {
-    // Add sample elements
-    const element1: DiagramElement = {
-      id: 'element1',
-      type: 'rectangle',
-      position: { x: 100, y: 100 },
-      size: { width: 100, height: 60 },
-      properties: {
-        body: { fill: '#3498db', stroke: '#2980b9' },
-        label: { text: 'Element 1', fill: 'white' },
-      },
-    };
-
-    const element2: DiagramElement = {
-      id: 'element2',
-      type: 'rectangle',
-      position: { x: 300, y: 200 },
-      size: { width: 100, height: 60 },
-      properties: {
-        body: { fill: '#e74c3c', stroke: '#c0392b' },
-        label: { text: 'Element 2', fill: 'white' },
-      },
-    };
-
-    this.diagramService.addElement(element1);
-    this.diagramService.addElement(element2);
-
-    // Add a link between elements
-    const link: DiagramLink = {
-      id: 'link1',
-      source: 'element1',
-      target: 'element2',
-      properties: {
-        line: { stroke: '#34495e', strokeWidth: 2 },
-      },
-    };
-
-    this.diagramService.addLink(link);
-    this.updateHistoryState();
-  }
-
   onAddElement(): void {
     const randomId = 'element_' + Date.now();
     const element: DiagramElement = {
@@ -270,7 +442,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   onExportData(): void {
     const data = this.diagramService.exportData();
-    console.log('Diagram data:', data);
     alert('Check console for diagram data');
   }
 
@@ -285,22 +456,20 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   onZoomIn(): void {
-    console.log('Zoom in clicked');
     this.diagramService.zoomIn();
   }
 
   onZoomOut(): void {
-    console.log('Zoom out clicked');
     this.diagramService.zoomOut();
   }
 
   onToggleGrid(): void {
-    console.log('Toggle grid clicked, current state:', this.isGridEnabled);
     this.isGridEnabled = this.diagramService.toggleGrid();
-    console.log('New grid state:', this.isGridEnabled);
-    this.diagramContainer.nativeElement.setAttribute(
-      'data-grid',
-      this.isGridEnabled ? 'on' : 'off'
+    // Update drop zone grid settings
+    this.dropZoneService.updateDropZoneGrid(
+      'canvas',
+      this.isGridEnabled,
+      this.diagramService.getGridSize()
     );
   }
 
@@ -339,6 +508,8 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   onSetGridSize(size: number): void {
     this.diagramService.setGridSize(size);
+    // Update drop zone grid settings
+    this.dropZoneService.updateDropZoneGrid('canvas', this.isGridEnabled, size);
   }
 
   onPanTo(x: number, y: number): void {

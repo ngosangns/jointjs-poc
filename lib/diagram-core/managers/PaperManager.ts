@@ -26,6 +26,11 @@ export class PaperManager implements IPaperManager {
       allowDrag: true,
       allowDrop: true,
       defaultLink: () => new shapes.standard.Link(),
+      // Enable panning on blank area by default; element drag remains enabled
+      defaultInteraction: {
+        blank: { pan: true },
+        element: { move: true },
+      } as any,
       // Additional paper options for better UX
       highlighting: {
         default: {
@@ -64,13 +69,25 @@ export class PaperManager implements IPaperManager {
     return paper;
   }
 
+  /** Update grid without reinitializing paper or clearing cells */
+  public setGrid(paper: dia.Paper, enabled: boolean, gridSize?: number): void {
+    (paper.options as any).drawGrid = !!enabled;
+    if (typeof gridSize === 'number' && gridSize > 0) {
+      paper.setGridSize(gridSize);
+    }
+    try {
+      (paper as any).drawGrid({ color: '#e9ecef' });
+    } catch {
+      paper.render();
+    }
+  }
+
   /**
    * Setup paper-specific events including touch gestures
    */
   public setupEvents(paper: dia.Paper, eventManager: IEventManager): void {
     // Element events
     paper.on('element:pointerdown', (elementView, evt) => {
-      console.log('Element pointerdown:', elementView.model.id);
       eventManager.emitEvent('element:selected', {
         id: elementView.model.id,
         element: elementView.model,
@@ -108,7 +125,6 @@ export class PaperManager implements IPaperManager {
 
     // JointJS built-in drag events
     paper.on('element:move', (elementView, evt) => {
-      console.log('JointJS element:move event triggered for element:', elementView.model.id);
       eventManager.emitEvent('element:moved', {
         id: elementView.model.id,
         element: elementView.model,
@@ -139,6 +155,17 @@ export class PaperManager implements IPaperManager {
         position: { x: evt.clientX, y: evt.clientY },
       });
     });
+
+    // Emit viewport changes on pan/translate and scale
+    const emitViewport = () => {
+      const scale = paper.scale().sx;
+      const t = paper.translate();
+      eventManager.emitEvent('viewport:changed', { zoom: scale, pan: { x: t.tx, y: t.ty } });
+    };
+    paper.on('blank:pointermove', () => emitViewport());
+    paper.on('blank:pointerup', () => emitViewport());
+    paper.on('translate', () => emitViewport());
+    paper.on('scale', () => emitViewport());
 
     paper.on('cell:mouseover', (cellView) => {
       eventManager.emitEvent('cell:hover', {
