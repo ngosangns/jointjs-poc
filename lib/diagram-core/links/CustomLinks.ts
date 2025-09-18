@@ -9,7 +9,7 @@ import { shapes, util } from '@joint/core';
  */
 export class DataFlowLink extends shapes.standard.Link {
   override defaults() {
-    return util.deepSupplement(
+    return util.defaultsDeep(
       {
         type: 'custom.DataFlow',
         attrs: {
@@ -79,7 +79,7 @@ export class DataFlowLink extends shapes.standard.Link {
  */
 export class ControlFlowLink extends shapes.standard.Link {
   override defaults() {
-    return util.deepSupplement(
+    return util.defaultsDeep(
       {
         type: 'custom.ControlFlow',
         attrs: {
@@ -135,7 +135,7 @@ export class ControlFlowLink extends shapes.standard.Link {
  */
 export class DependencyLink extends shapes.standard.Link {
   override defaults() {
-    return util.deepSupplement(
+    return util.defaultsDeep(
       {
         type: 'custom.Dependency',
         attrs: {
@@ -192,7 +192,7 @@ export class DependencyLink extends shapes.standard.Link {
  */
 export class InheritanceLink extends shapes.standard.Link {
   override defaults() {
-    return util.deepSupplement(
+    return util.defaultsDeep(
       {
         type: 'custom.Inheritance',
         attrs: {
@@ -225,7 +225,7 @@ export class InheritanceLink extends shapes.standard.Link {
  */
 export class CompositionLink extends shapes.standard.Link {
   override defaults() {
-    return util.deepSupplement(
+    return util.defaultsDeep(
       {
         type: 'custom.Composition',
         attrs: {
@@ -263,7 +263,7 @@ export class CompositionLink extends shapes.standard.Link {
  */
 export class MessageLink extends shapes.standard.Link {
   override defaults() {
-    return util.deepSupplement(
+    return util.defaultsDeep(
       {
         type: 'custom.Message',
         attrs: {

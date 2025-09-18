@@ -20,23 +20,20 @@ export class PaperManager implements IPaperManager {
       drawGrid: true,
       interactive: config.interactive !== false,
       background: config.background || { color: '#f8f9fa' },
-      // Custom interaction options for drag threshold and press-hold
       interaction: {
         dragStartThresholdPx: config.interaction?.dragStartThresholdPx ?? 4,
         pressHoldMs: config.interaction?.pressHoldMs ?? 200,
-      } as any,
+      },
       snapLinks: true,
       linkPinning: false,
-      // Enable element dragging
       allowDrag: true,
       allowDrop: true,
       defaultLink: () => new shapes.standard.Link(),
       // Enable panning on blank area by default; element drag remains enabled
       defaultInteraction: {
-        // We handle blank panning manually to use left mouse button explicitly
-        blank: { pan: false },
+        blank: { pan: true },
         element: { move: true },
-      } as any,
+      },
       // Additional paper options for better UX
       highlighting: {
         default: {
@@ -58,18 +55,14 @@ export class PaperManager implements IPaperManager {
           const sourcePortGroup = magnetS.getAttribute('port-group');
           const targetPortGroup = magnetT.getAttribute('port-group');
 
-          if (sourcePortGroup === targetPortGroup) {
-            return false;
-          }
+          if (sourcePortGroup === targetPortGroup) return false;
         }
 
         // Prevent self-linking
         return cellViewS !== cellViewT;
       },
       // Restrict link connections to ports only
-      restrictTranslate: function (elementView) {
-        return elementView.getBBox();
-      },
+      // Allow free element translation (no restriction)
     });
 
     return paper;
@@ -79,75 +72,10 @@ export class PaperManager implements IPaperManager {
    * Setup paper-specific events including drag thresholds and touch gestures
    */
   public setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void {
-    // Element events with drag threshold and press-hold activation
-    let potentialDrag = false;
-    let dragStarted = false;
-    let origin = { x: 0, y: 0 };
-    let holdTimer: any = null;
-    const dragThreshold = (paper.options as any).interaction?.dragStartThresholdPx ?? 4;
-    const pressHoldMs = (paper.options as any).interaction?.pressHoldMs ?? 200;
-
     // Manual panning over blank area with LEFT mouse button
     let isBlankPanning = false;
     let blankPanStart = { x: 0, y: 0 };
     let blankPanTranslate = { tx: 0, ty: 0 };
-
-    paper.on('element:pointerdown', (elementView: any, evt: any) => {
-      potentialDrag = true;
-      dragStarted = false;
-      origin = { x: evt.clientX, y: evt.clientY };
-
-      // emit selection immediately on down (no clearing selection here)
-      eventManager.emitEvent('element:selected', {
-        id: elementView.model.id,
-        element: elementView.model,
-        position: { x: evt.clientX, y: evt.clientY },
-      });
-
-      // start press-hold timer to initiate drag without movement
-      if (holdTimer) clearTimeout(holdTimer);
-      holdTimer = setTimeout(() => {
-        if (potentialDrag && !dragStarted) {
-          dragStarted = true;
-          eventManager.emitEvent('element:dragging', {
-            id: elementView.model.id,
-            element: elementView.model,
-            position: { x: evt.clientX, y: evt.clientY },
-          });
-        }
-      }, pressHoldMs);
-    });
-
-    // Element drag events for movement with threshold
-    paper.on('element:pointermove', (elementView: any, evt: any) => {
-      if (evt.buttons !== 1) return;
-      const dx = Math.abs(evt.clientX - origin.x);
-      const dy = Math.abs(evt.clientY - origin.y);
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (potentialDrag && !dragStarted && dist >= dragThreshold) {
-        dragStarted = true;
-      }
-      if (dragStarted) {
-        eventManager.emitEvent('element:dragging', {
-          id: elementView.model.id,
-          element: elementView.model,
-          position: { x: evt.clientX, y: evt.clientY },
-        });
-      }
-    });
-
-    paper.on('element:pointerup', (elementView: any, evt: any) => {
-      if (holdTimer) clearTimeout(holdTimer);
-      if (dragStarted) {
-        eventManager.emitEvent('element:drag-end', {
-          id: elementView.model.id,
-          element: elementView.model,
-          position: { x: evt.clientX, y: evt.clientY },
-        });
-      }
-      potentialDrag = false;
-      dragStarted = false;
-    });
 
     paper.on('element:pointerdblclick', (elementView, evt) => {
       eventManager.emitEvent('element:double-click', {
@@ -157,14 +85,7 @@ export class PaperManager implements IPaperManager {
       });
     });
 
-    // JointJS built-in drag events
-    paper.on('element:move', (elementView, evt) => {
-      eventManager.emitEvent('element:moved', {
-        id: elementView.model.id,
-        element: elementView.model,
-        position: { x: evt.clientX, y: evt.clientY },
-      });
-    });
+    // Note: element move interactions are disabled; no custom drag events
 
     // Link events
     paper.on('link:pointerdown', (linkView, evt) => {
@@ -492,12 +413,5 @@ export class PaperManager implements IPaperManager {
   public translate(paper: dia.Paper, dx: number, dy: number): void {
     const origin = paper.translate();
     paper.translate(origin.tx + dx, origin.ty + dy);
-  }
-
-  /**
-   * Attach a minimap - placeholder hook for future implementation
-   */
-  public attachMinimap(_paper: dia.Paper, _container: HTMLElement): void {
-    // Intentionally left as a stub for future enhancement
   }
 }

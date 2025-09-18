@@ -2,5 +2,5 @@
 dist
 node_modules
 .angular
-test-results
-example
+/test-results
+/joint

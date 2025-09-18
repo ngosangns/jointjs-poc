@@ -9,7 +9,7 @@ import { dia, shapes, util } from '@joint/core';
  */
 export class ProcessShape extends shapes.standard.Rectangle {
   override defaults() {
-    return util.deepSupplement(
+    return util.defaultsDeep(
       {
         type: 'custom.Process',
         attrs: {
@@ -93,7 +93,7 @@ export class ProcessShape extends shapes.standard.Rectangle {
  */
 export class DecisionShape extends dia.Element {
   override defaults() {
-    return util.deepSupplement(
+    return util.defaultsDeep(
       {
         type: 'custom.Decision',
         size: { width: 100, height: 80 },
@@ -179,7 +179,7 @@ export class DecisionShape extends dia.Element {
  */
 export class DatabaseShape extends dia.Element {
   override defaults() {
-    return util.deepSupplement(
+    return util.defaultsDeep(
       {
         type: 'custom.Database',
         size: { width: 80, height: 100 },
@@ -281,7 +281,7 @@ export class DatabaseShape extends dia.Element {
  */
 export class ActorShape extends dia.Element {
   override defaults() {
-    return util.deepSupplement(
+    return util.defaultsDeep(
       {
         type: 'custom.Actor',
         size: { width: 60, height: 100 },

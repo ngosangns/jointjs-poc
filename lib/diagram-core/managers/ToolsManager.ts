@@ -77,7 +77,7 @@ export class ToolsManager implements IToolsManager {
       this.showElementTools(elementView, 'default');
     });
 
-    // Keep tools visible during element interaction
+    // Keep tools visible on element hover; pointerdown does not initiate move
     this.paper.on('element:pointerdown', (elementView: dia.ElementView) => {
       this.showElementTools(elementView, 'default');
     });

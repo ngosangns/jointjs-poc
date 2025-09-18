@@ -284,6 +284,7 @@ export class DiagramEngine {
   public zoomIn(step: number = 1.2, smooth: boolean = false): void {
     const paper = this.paper;
     if (!paper) return;
+
     const { sx } = this.paperManager.getScale(paper);
     const newScale = sx * step;
     const clampedScale = this.clampZoom(newScale);
@@ -453,7 +454,8 @@ export class DiagramEngine {
   public pan(dx: number, dy: number): void {
     const paper = this.paper;
     if (!paper) return;
-    this.paperManager.translate(paper, dx, dy);
+    const origin = paper.translate();
+    this.paperManager.translate(paper, origin.tx + dx, origin.ty + dy);
     this.emitViewportChanged();
   }
 
@@ -466,7 +468,7 @@ export class DiagramEngine {
       // Smooth transition using requestAnimationFrame
       this.smoothPanTo(paper, x - origin.tx, y - origin.ty);
     } else {
-      this.paperManager.translate(paper, x - origin.tx, y - origin.ty);
+      this.paperManager.translate(paper, x, y);
     }
 
     this.emitViewportChanged();
@@ -600,19 +602,11 @@ export class DiagramEngine {
       this.zoomToSelection();
     });
 
-    // Element drag handlers
-    this.eventManager.addEventListener('element:dragging', (event: any) => {
-      this.handleElementDrag(event.data);
-    });
-
-    this.eventManager.addEventListener('element:drag-end', (event: any) => {
-      this.handleElementDragEnd(event.data);
-    });
-
     // Element selection handlers
     this.eventManager.addEventListener('element:selected', (event: any) => {
       this.handleElementSelection(event.data);
     });
+    // Element drag events are disabled; no drag handlers registered
   }
 
   private emitViewportChanged(): void {
@@ -833,38 +827,7 @@ export class DiagramEngine {
     }
   }
 
-  private dragState: {
-    isDragging: boolean;
-    startPosition: { x: number; y: number };
-    elementId: string | null;
-  } = {
-    isDragging: false,
-    startPosition: { x: 0, y: 0 },
-    elementId: null,
-  };
-
-  private handleElementDrag(data: any): void {
-    if (!this.dragState.isDragging) {
-      this.dragState.isDragging = true;
-      this.dragState.startPosition = data.position || { x: 0, y: 0 };
-      this.dragState.elementId = data.id;
-    }
-
-    const dx = (data.position?.x || 0) - this.dragState.startPosition.x;
-    const dy = (data.position?.y || 0) - this.dragState.startPosition.y;
-
-    if (this.dragState.elementId) {
-      this.moveElement(this.dragState.elementId, dx, dy);
-    }
-  }
-
-  private handleElementDragEnd(data: any): void {
-    if (this.dragState.isDragging) {
-      this.dragState.isDragging = false;
-      this.dragState.elementId = null;
-      this.dragState.startPosition = { x: 0, y: 0 };
-    }
-  }
+  // Drag state and handlers removed because element dragging is disabled on paper
 
   private handleElementSelection(data: any): void {
     this.selectedElements.add(data.id);
