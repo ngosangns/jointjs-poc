@@ -7,6 +7,7 @@ export interface DiagramConfig {
   height: number;
   gridSize?: number;
   interactive?: boolean;
+  collisionDetection?: boolean;
   background?: {
     color?: string;
     image?: string;
@@ -66,23 +67,50 @@ export type DiagramEventType =
   | 'element:added'
   | 'element:removed'
   | 'element:changed'
+  | 'element:updated'
+  | 'elements:batch-updated'
   | 'element:resized'
   | 'element:moved'
   | 'element:selected'
   | 'element:double-click'
+  | 'element:dragging'
+  | 'element:drag-end'
   // Link events
   | 'link:added'
   | 'link:removed'
   | 'link:changed'
+  | 'link:updated'
   | 'link:selected'
   | 'link:double-click'
   | 'link:connected'
   | 'link:disconnected'
   // Canvas events
   | 'canvas:clicked'
+  | 'canvas:tap'
   // Cell events (generic for both elements and links)
   | 'cell:hover'
-  | 'cell:unhover';
+  | 'cell:unhover'
+  // Document lifecycle events
+  | 'document:saved'
+  | 'document:loaded'
+  // Viewport events
+  | 'viewport:changed'
+  // Keyboard events
+  | 'keyboard:zoom-in'
+  | 'keyboard:zoom-out'
+  | 'keyboard:reset-zoom'
+  | 'keyboard:undo'
+  | 'keyboard:redo'
+  | 'keyboard:toggle-grid'
+  | 'keyboard:delete-selected'
+  | 'keyboard:move-selected'
+  | 'keyboard:select-all'
+  | 'keyboard:deselect-all'
+  | 'keyboard:pan-canvas'
+  | 'keyboard:fit-viewport'
+  | 'keyboard:fit-selection'
+  // Selection events
+  | 'selection:changed';
 
 export interface DiagramEvent {
   type: DiagramEventType;

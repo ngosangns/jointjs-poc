@@ -7,5 +7,5 @@
     "types": []
   },
   "include": ["src/**/*.ts", "lib/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts"]
+  "exclude": ["src/**/*.spec.ts", "lib/tests/**/*.ts", "lib/dist/**/*.d.ts"]
 }

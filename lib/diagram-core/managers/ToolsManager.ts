@@ -3,12 +3,14 @@
  */
 
 import { dia, elementTools, linkTools } from '@joint/core';
-import { IToolsManager } from '../interfaces';
+import type { IToolsManager } from '../interfaces';
 
 export class ToolsManager implements IToolsManager {
   private elementToolsRegistry: Map<string, dia.ToolView[]> = new Map();
   private linkToolsRegistry: Map<string, dia.ToolView[]> = new Map();
   private paper: dia.Paper | null = null;
+  private gridEnabled: boolean = true;
+  private gridSize: number = 10;
 
   /**
    * Initialize tools manager with paper instance
@@ -17,24 +19,99 @@ export class ToolsManager implements IToolsManager {
     this.paper = paper;
     this.registerDefaultTools();
     this.setupToolEvents();
+    const currentGrid = paper.options.gridSize as number | undefined;
+    if (typeof currentGrid === 'number') this.gridSize = currentGrid;
   }
 
   /**
-   * Register default element and link tools
+   * Register default element and link tools with enhanced functionality
    */
   private registerDefaultTools(): void {
-    // Default element tools
+    // Enhanced element tools with better UX
     const defaultElementTools = [
       new elementTools.Remove({
         x: '100%',
         y: 0,
-        offset: { x: 10, y: -10 },
-        action: function (evt: dia.Event, elementView: dia.ElementView) {
+        offset: { x: -5, y: 5 },
+        markup: [
+          {
+            tagName: 'circle',
+            selector: 'button',
+            attributes: {
+              r: 10,
+              fill: '#ff4757',
+              stroke: '#ffffff',
+              'stroke-width': 2,
+              cursor: 'pointer',
+            },
+          },
+          {
+            tagName: 'path',
+            selector: 'icon',
+            attributes: {
+              d: 'M -5 -5 L 5 5 M 5 -5 L -5 5',
+              stroke: '#ffffff',
+              'stroke-width': 2,
+              'pointer-events': 'none',
+            },
+          },
+        ],
+        action: (evt: dia.Event, elementView: dia.ElementView) => {
           elementView.model.remove();
         },
       }),
       new elementTools.Boundary({
-        padding: 10,
+        padding: 8,
+        useModelGeometry: true,
+        markup: [
+          {
+            tagName: 'rect',
+            selector: 'body',
+            attributes: {
+              fill: 'none',
+              stroke: '#3498db',
+              'stroke-width': 2,
+              'stroke-dasharray': '4,4',
+              'pointer-events': 'none',
+            },
+          },
+        ],
+      }),
+      new elementTools.Button({
+        x: '100%',
+        y: '100%',
+        offset: { x: -5, y: -5 },
+        markup: [
+          {
+            tagName: 'circle',
+            selector: 'button',
+            attributes: {
+              r: 10,
+              fill: '#2ed573',
+              stroke: '#ffffff',
+              'stroke-width': 2,
+              cursor: 'pointer',
+            },
+          },
+          {
+            tagName: 'path',
+            selector: 'icon',
+            attributes: {
+              d: 'M -4 -4 L 4 4 M 4 -4 L -4 4',
+              stroke: '#ffffff',
+              'stroke-width': 2,
+              'pointer-events': 'none',
+            },
+          },
+        ],
+        action: (evt: dia.Event, elementView: dia.ElementView) => {
+          // Clone element functionality
+          const model = elementView.model;
+          const bbox = model.getBBox();
+          const newElement = model.clone();
+          newElement.translate(bbox.width + 20, 0);
+          this.paper?.model.addCell(newElement);
+        },
       }),
     ];
     this.elementToolsRegistry.set('default', defaultElementTools);
@@ -70,9 +147,17 @@ export class ToolsManager implements IToolsManager {
       this.showElementTools(elementView, 'default');
     });
 
-    // Hide tools on element leave
+    // Keep tools visible during element interaction
+    this.paper.on('element:pointerdown', (elementView: dia.ElementView) => {
+      this.showElementTools(elementView, 'default');
+    });
+
+    // Hide tools on element leave (with delay to allow tool interaction)
     this.paper.on('element:mouseleave', (elementView: dia.ElementView) => {
-      this.hideElementTools(elementView);
+      // Add a small delay to allow users to interact with tools
+      setTimeout(() => {
+        this.hideElementTools(elementView);
+      }, 150);
     });
 
     // Show tools on link hover
@@ -82,7 +167,9 @@ export class ToolsManager implements IToolsManager {
 
     // Hide tools on link leave
     this.paper.on('link:mouseleave', (linkView: dia.LinkView) => {
-      this.hideLinkTools(linkView);
+      setTimeout(() => {
+        this.hideLinkTools(linkView);
+      }, 150);
     });
 
     // Hide all tools when clicking on blank area
@@ -157,6 +244,43 @@ export class ToolsManager implements IToolsManager {
     if (this.paper) {
       this.paper.hideTools();
     }
+  }
+
+  /** Enhanced Grid controls with better visual feedback */
+  public setGridEnabled(enabled: boolean) {
+    this.gridEnabled = enabled;
+    if (this.paper) {
+      // Use JointJS grid visibility control
+      if (enabled) {
+        this.paper.setGridSize(this.gridSize);
+        this.paper.options.drawGrid = true;
+      } else {
+        this.paper.options.drawGrid = false;
+      }
+      // Trigger re-render to show/hide grid
+      this.paper.render();
+    }
+  }
+
+  public setGridSize(size: number) {
+    this.gridSize = Math.max(1, size);
+    if (this.paper && this.gridEnabled) {
+      this.paper.setGridSize(this.gridSize);
+      this.paper.render();
+    }
+  }
+
+  public getGridEnabled(): boolean {
+    return this.gridEnabled;
+  }
+
+  public getGridSize(): number {
+    return this.gridSize;
+  }
+
+  public toggleGrid(): boolean {
+    this.setGridEnabled(!this.gridEnabled);
+    return this.gridEnabled;
   }
 
   /**

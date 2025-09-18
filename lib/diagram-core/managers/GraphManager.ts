@@ -3,9 +3,9 @@
  */
 
 import { dia, shapes } from '@joint/core';
-import { IGraphManager, IEventManager, IShapeFactory, ILinkFactory } from '../interfaces';
 import { DiagramElement, DiagramLink } from '../../types';
 import { generateId, validateElement, validateLink } from '../../utils';
+import { IEventManager, IGraphManager, ILinkFactory, IShapeFactory } from '../interfaces';
 
 export class GraphManager implements IGraphManager {
   /**
@@ -86,6 +86,46 @@ export class GraphManager implements IGraphManager {
     const link = graph.getCell(linkId);
     if (link && link.isLink()) {
       link.remove();
+    }
+  }
+
+  /**
+   * Update an element's basic properties (position, size, attrs/properties)
+   */
+  public updateElement(
+    graph: dia.Graph,
+    elementId: string,
+    updates: Partial<DiagramElement>
+  ): void {
+    const element = this.getElement(graph, elementId);
+    if (!element) throw new Error('Element not found');
+
+    if (updates.position) {
+      element.position(updates.position.x, updates.position.y);
+    }
+    if (updates.size) {
+      element.resize(updates.size.width, updates.size.height);
+    }
+    if (updates.properties) {
+      element.set(updates.properties as any);
+    }
+  }
+
+  /**
+   * Update a link's endpoints or attributes
+   */
+  public updateLink(graph: dia.Graph, linkId: string, updates: Partial<DiagramLink>): void {
+    const link = this.getLink(graph, linkId);
+    if (!link) throw new Error('Link not found');
+
+    if (updates.source !== undefined) {
+      link.set('source', updates.source as any);
+    }
+    if (updates.target !== undefined) {
+      link.set('target', updates.target as any);
+    }
+    if (updates.properties) {
+      link.set(updates.properties as any);
     }
   }
 

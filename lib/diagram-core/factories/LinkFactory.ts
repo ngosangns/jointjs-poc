@@ -1,7 +1,7 @@
 import { dia, shapes } from '@joint/core';
-import { ILinkFactory } from '../interfaces';
 import { DiagramLink } from '../../types';
 import { generateId } from '../../utils';
+import { ILinkFactory } from '../interfaces';
 
 // Type for link constructor
 type LinkConstructor = new (attributes?: any) => dia.Link;

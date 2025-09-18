@@ -1,4 +1,6 @@
 export { DiagramEngine } from './diagram-core/DiagramEngine';
+export * from './diagram-core/interfaces';
+export * from './diagram-core/managers';
 export type {
   DiagramConfig,
   ElementConfig,

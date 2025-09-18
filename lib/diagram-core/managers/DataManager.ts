@@ -3,9 +3,9 @@
  */
 
 import { dia } from '@joint/core';
-import { IDataManager, IShapeFactory, ILinkFactory } from '../interfaces';
 import { DiagramData, DiagramElement, DiagramLink } from '../../types';
 import { deepClone } from '../../utils';
+import { IDataManager, ILinkFactory, IShapeFactory } from '../interfaces';
 
 export class DataManager implements IDataManager {
   /**
@@ -93,7 +93,8 @@ export class DataManager implements IDataManager {
     try {
       // Add elements first
       data.elements.forEach((elementData) => {
-        const element = shapeFactory.createShape(elementData.type, elementData);
+        const type = this.normalizeShapeType(elementData.type);
+        const element = shapeFactory.createShape(type, elementData);
         graph.addCell(element);
         createdElements.add(elementData.id);
       });
@@ -115,6 +116,23 @@ export class DataManager implements IDataManager {
       graph.clear();
       throw new Error(`Failed to deserialize diagram data: ${error}`);
     }
+  }
+
+  /**
+   * Normalize JointJS type names to factory keys
+   */
+  private normalizeShapeType(type: string): string {
+    if (!type) return 'rectangle';
+    // Map common JointJS standard types to our registered keys
+    if (type === 'standard.Rectangle' || type.endsWith('.Rectangle')) return 'rectangle';
+    if (type === 'standard.Circle' || type.endsWith('.Circle')) return 'circle';
+    if (type === 'standard.Ellipse' || type.endsWith('.Ellipse')) return 'ellipse';
+    if (type === 'standard.Polygon' || type.endsWith('.Polygon')) return 'polygon';
+    if (type === 'standard.Path' || type.endsWith('.Path')) return 'path';
+    if (type === 'standard.Image' || type.endsWith('.Image')) return 'image';
+    if (type === 'standard.HeaderedRectangle' || type.endsWith('.HeaderedRectangle'))
+      return 'header';
+    return type;
   }
 
   /**
