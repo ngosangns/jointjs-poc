@@ -4,17 +4,10 @@
     <div class="toolbar-section">
       <div class="section-header">
         <h3 class="section-title">Shapes</h3>
-        <button
-          class="collapse-btn"
-          (click)="toggleShapesCollapse()"
-          [attr.aria-label]="isShapesCollapsed ? 'Expand shapes' : 'Collapse shapes'"
-        >
-          <span class="collapse-icon" [class.rotated]="isShapesCollapsed">‹</span>
-        </button>
       </div>
 
       <!-- Search Bar -->
-      <div class="search-container" *ngIf="!isShapesCollapsed">
+      <div class="search-container">
         <input
           type="text"
           class="search-input"
@@ -26,7 +19,7 @@
       </div>
 
       <!-- Category Tabs -->
-      <div class="category-tabs" *ngIf="!isShapesCollapsed">
+      <div class="category-tabs">
         <button
           *ngFor="let category of categories"
           class="category-tab"
@@ -40,7 +33,7 @@
       </div>
 
       <!-- Shapes Grid -->
-      <div class="shapes-container" *ngIf="!isShapesCollapsed">
+      <div class="shapes-container">
         <div class="shapes-grid">
           <div
             *ngFor="let shape of filteredShapes"
@@ -72,21 +65,6 @@
           <small>Try adjusting your search or select a different category</small>
         </div>
       </div>
-
-      <!-- Collapsed State Content -->
-      <div class="collapsed-content" *ngIf="isShapesCollapsed">
-        <div class="collapsed-categories">
-          <button
-            *ngFor="let category of categories"
-            class="collapsed-category-btn"
-            [class.active]="selectedCategory === category.id"
-            (click)="onCategorySelect(category.id)"
-            [attr.aria-label]="'Select ' + category.name + ' category'"
-          >
-            <span class="category-icon" [ngClass]="getCategoryIconClass(category)"></span>
-          </button>
-        </div>
-      </div>
     </div>
 
     <hr />
@@ -98,17 +76,19 @@
       </div>
       <button class="btn" (click)="onClearDiagram()">Clear</button>
       <hr />
-      <div class="flex gap-3">
+      <div class="flex gap-1">
         <button class="btn" (click)="onUndo()" [disabled]="!canUndo">Undo</button>
         <button class="btn" (click)="onRedo()" [disabled]="!canRedo">Redo</button>
       </div>
       <hr />
-      <button class="btn" (click)="onZoomIn()" data-testid="btn-zoom-in" aria-label="Zoom in">
-        Zoom-in
-      </button>
-      <button class="btn" (click)="onZoomOut()" data-testid="btn-zoom-out" aria-label="Zoom out">
-        Zoom-out
-      </button>
+      <div class="flex gap-1">
+        <button class="btn" (click)="onZoomIn()" data-testid="btn-zoom-in" aria-label="Zoom in">
+          Zoom-in
+        </button>
+        <button class="btn" (click)="onZoomOut()" data-testid="btn-zoom-out" aria-label="Zoom out">
+          Zoom-out
+        </button>
+      </div>
       <div class="zoom-display">{{ currentZoom * 100 | number : '1.0-0' }}%</div>
       <hr />
       <button

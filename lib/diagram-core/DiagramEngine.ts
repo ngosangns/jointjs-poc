@@ -751,15 +751,40 @@ export class DiagramEngine {
   public grid = {
     enable: (enabled: boolean): void => {
       this.toolsManager.setGridEnabled(enabled);
-      if (this.paper) this.paperManager.setGrid(this.paper, enabled);
+      if (this.paper) {
+        // snapshot viewport
+        const currentScale = this.paper.scale().sx;
+        const currentTranslate = this.paper.translate();
+        // apply grid change safely (only background/grid layer)
+        this.paperManager.setGrid(this.paper, enabled);
+        // restore viewport
+        this.paper.scale(currentScale);
+        this.paper.translate(currentTranslate.tx, currentTranslate.ty);
+        this.emitViewportChanged();
+      }
     },
     setSpacing: (size: number): void => {
       this.toolsManager.setGridSize(size);
-      if (this.paper)
+      if (this.paper) {
+        const currentScale = this.paper.scale().sx;
+        const currentTranslate = this.paper.translate();
         this.paperManager.setGrid(this.paper, this.toolsManager.getGridEnabled(), size);
+        this.paper.scale(currentScale);
+        this.paper.translate(currentTranslate.tx, currentTranslate.ty);
+        this.emitViewportChanged();
+      }
     },
     toggle: (): boolean => {
-      return this.toolsManager.toggleGrid();
+      const next = this.toolsManager.toggleGrid();
+      if (this.paper) {
+        const currentScale = this.paper.scale().sx;
+        const currentTranslate = this.paper.translate();
+        this.paperManager.setGrid(this.paper, next);
+        this.paper.scale(currentScale);
+        this.paper.translate(currentTranslate.tx, currentTranslate.ty);
+        this.emitViewportChanged();
+      }
+      return next;
     },
     isEnabled: (): boolean => {
       return this.toolsManager.getGridEnabled();

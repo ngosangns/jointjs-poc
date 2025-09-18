@@ -45,7 +45,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   selectedCategory: string = 'basic';
   searchQuery: string = '';
   filteredShapes: ShapeMetadata[] = [];
-  isShapesCollapsed: boolean = false;
   hoveredShape: string | null = null;
 
   constructor(
@@ -153,10 +152,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   onShapeHoverEnd(): void {
     this.hoveredShape = null;
-  }
-
-  toggleShapesCollapse(): void {
-    this.isShapesCollapsed = !this.isShapesCollapsed;
   }
 
   getShapeIconClass(shape: ShapeMetadata): string {

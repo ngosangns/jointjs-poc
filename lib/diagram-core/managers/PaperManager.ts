@@ -20,6 +20,11 @@ export class PaperManager implements IPaperManager {
       drawGrid: true,
       interactive: config.interactive !== false,
       background: config.background || { color: '#f8f9fa' },
+      // Custom interaction options for drag threshold and press-hold
+      interaction: {
+        dragStartThresholdPx: config.interaction?.dragStartThresholdPx ?? 4,
+        pressHoldMs: config.interaction?.pressHoldMs ?? 200,
+      } as any,
       snapLinks: true,
       linkPinning: false,
       // Enable element dragging
@@ -86,19 +91,50 @@ export class PaperManager implements IPaperManager {
    * Setup paper-specific events including touch gestures
    */
   public setupEvents(paper: dia.Paper, eventManager: IEventManager): void {
-    // Element events
-    paper.on('element:pointerdown', (elementView, evt) => {
+    // Element events with drag threshold and press-hold activation
+    let potentialDrag = false;
+    let dragStarted = false;
+    let origin = { x: 0, y: 0 };
+    let holdTimer: any = null;
+    const dragThreshold = (paper.options as any).interaction?.dragStartThresholdPx ?? 4;
+    const pressHoldMs = (paper.options as any).interaction?.pressHoldMs ?? 200;
+
+    paper.on('element:pointerdown', (elementView: any, evt: any) => {
+      potentialDrag = true;
+      dragStarted = false;
+      origin = { x: evt.clientX, y: evt.clientY };
+
+      // emit selection immediately on down (no clearing selection here)
       eventManager.emitEvent('element:selected', {
         id: elementView.model.id,
         element: elementView.model,
         position: { x: evt.clientX, y: evt.clientY },
       });
+
+      // start press-hold timer to initiate drag without movement
+      if (holdTimer) clearTimeout(holdTimer);
+      holdTimer = setTimeout(() => {
+        if (potentialDrag && !dragStarted) {
+          dragStarted = true;
+          eventManager.emitEvent('element:dragging', {
+            id: elementView.model.id,
+            element: elementView.model,
+            position: { x: evt.clientX, y: evt.clientY },
+          });
+        }
+      }, pressHoldMs);
     });
 
-    // Element drag events for movement
-    paper.on('element:pointermove', (elementView, evt) => {
-      if (evt.buttons === 1) {
-        // Left mouse button is pressed
+    // Element drag events for movement with threshold
+    paper.on('element:pointermove', (elementView: any, evt: any) => {
+      if (evt.buttons !== 1) return;
+      const dx = Math.abs(evt.clientX - origin.x);
+      const dy = Math.abs(evt.clientY - origin.y);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (potentialDrag && !dragStarted && dist >= dragThreshold) {
+        dragStarted = true;
+      }
+      if (dragStarted) {
         eventManager.emitEvent('element:dragging', {
           id: elementView.model.id,
           element: elementView.model,
@@ -107,12 +143,17 @@ export class PaperManager implements IPaperManager {
       }
     });
 
-    paper.on('element:pointerup', (elementView, evt) => {
-      eventManager.emitEvent('element:drag-end', {
-        id: elementView.model.id,
-        element: elementView.model,
-        position: { x: evt.clientX, y: evt.clientY },
-      });
+    paper.on('element:pointerup', (elementView: any, evt: any) => {
+      if (holdTimer) clearTimeout(holdTimer);
+      if (dragStarted) {
+        eventManager.emitEvent('element:drag-end', {
+          id: elementView.model.id,
+          element: elementView.model,
+          position: { x: evt.clientX, y: evt.clientY },
+        });
+      }
+      potentialDrag = false;
+      dragStarted = false;
     });
 
     paper.on('element:pointerdblclick', (elementView, evt) => {

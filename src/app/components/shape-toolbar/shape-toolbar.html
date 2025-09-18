@@ -1,30 +1,11 @@
-<div class="shape-toolbar" [class.collapsed]="isCollapsed">
+<div class="shape-toolbar">
   <!-- Toolbar Header -->
   <div class="toolbar-header">
     <h3 class="toolbar-title">Shapes</h3>
-    <button
-      class="collapse-btn"
-      (click)="toggleCollapse()"
-      [attr.aria-label]="isCollapsed ? 'Expand toolbar' : 'Collapse toolbar'"
-    >
-      <span class="collapse-icon" [class.rotated]="isCollapsed">‹</span>
-    </button>
-  </div>
-
-  <!-- Search Bar -->
-  <div class="search-container" *ngIf="!isCollapsed">
-    <input
-      type="text"
-      class="search-input"
-      placeholder="Search shapes..."
-      [(ngModel)]="searchQuery"
-      (input)="onSearchChange()"
-      aria-label="Search shapes"
-    />
   </div>
 
   <!-- Category Tabs -->
-  <div class="category-tabs" *ngIf="!isCollapsed">
+  <div class="category-tabs">
     <button
       *ngFor="let category of categories"
       class="category-tab"
@@ -70,7 +51,7 @@
   </div>
 
   <!-- Shapes Grid -->
-  <div class="shapes-container" *ngIf="!isCollapsed">
+  <div class="shapes-container">
     <div class="shapes-grid">
       <div
         *ngFor="let shape of filteredShapes"
@@ -98,21 +79,6 @@
     <div class="no-results" *ngIf="filteredShapes.length === 0">
       <p>No shapes found</p>
       <small>Try adjusting your search or select a different category</small>
-    </div>
-  </div>
-
-  <!-- Collapsed State Content -->
-  <div class="collapsed-content" *ngIf="isCollapsed">
-    <div class="collapsed-categories">
-      <button
-        *ngFor="let category of categories"
-        class="collapsed-category-btn"
-        [class.active]="selectedCategory === category.id"
-        (click)="onCategorySelect(category.id)"
-        [attr.aria-label]="'Select ' + category.name + ' category'"
-      >
-        <span class="category-icon" [ngClass]="getCategoryIconClass(category)"></span>
-      </button>
     </div>
   </div>
 </div>

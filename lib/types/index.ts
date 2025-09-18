@@ -12,6 +12,15 @@ export interface DiagramConfig {
     color?: string;
     image?: string;
   };
+  /**
+   * Interaction tuning options for element dragging behavior
+   */
+  interaction?: {
+    /** Movement in pixels before a drag starts when the pointer moves */
+    dragStartThresholdPx?: number;
+    /** Press-and-hold duration in milliseconds to begin drag without moving */
+    pressHoldMs?: number;
+  };
 }
 
 export interface ElementConfig {

@@ -17,7 +17,6 @@ export class ShapeToolbarComponent implements OnInit, OnDestroy {
   selectedCategory: string = 'basic';
   searchQuery: string = '';
   filteredShapes: ShapeMetadata[] = [];
-  isCollapsed: boolean = false;
   hoveredShape: string | null = null;
 
   constructor(
@@ -117,13 +116,6 @@ export class ShapeToolbarComponent implements OnInit, OnDestroy {
 
   onDuplicateSelection(): void {
     this.diagramService.duplicateSelected(20, 20);
-  }
-
-  /**
-   * Toggle toolbar collapse state
-   */
-  toggleCollapse(): void {
-    this.isCollapsed = !this.isCollapsed;
   }
 
   /**

@@ -17,3 +17,6 @@ export * from './factories';
 // Re-export types for convenience
 export * from '../types';
 export * from '../utils';
+
+// Public re-export of interaction option shape for docs/discovery
+export type { DiagramConfig } from '../types';
