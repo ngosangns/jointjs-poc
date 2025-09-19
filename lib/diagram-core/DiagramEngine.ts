@@ -237,10 +237,71 @@ export class DiagramEngine {
     }
   }
 
-  // View controls with enhanced bounds checking and smooth transitions
-  public zoomIn(step: number = 1.2, smooth: boolean = false): void {
+  // Cursor-centered zoom methods
+  public zoomInAtCursor(step: number = 1.2): void {
     const paper = this.paper;
     if (!paper) return;
+
+    const { sx } = this.paperManager.getScale(paper);
+    const newScale = sx * step;
+    const clampedScale = this.clampZoom(newScale);
+
+    // Use provided cursor position or get current mouse position
+    const cursorPos = this.paperManager.getMousePosition();
+
+    // Convert screen coordinates to paper coordinates
+    const paperCoords = this.screenToPaperCoordinates(cursorPos.x, cursorPos.y);
+
+    // Calculate new pan offset to keep cursor position fixed
+    const scaleChange = clampedScale / sx;
+    const currentTranslate = paper.translate();
+
+    const newTx = currentTranslate.tx - paperCoords.x * (scaleChange - 1);
+    const newTy = currentTranslate.ty - paperCoords.y * (scaleChange - 1);
+
+    paper.scale(clampedScale);
+    paper.translate(newTx, newTy);
+
+    this.emitViewportChanged();
+  }
+
+  public zoomOutAtCursor(step: number = 1 / 1.2): void {
+    const paper = this.paper;
+    if (!paper) return;
+
+    const { sx } = this.paperManager.getScale(paper);
+    const newScale = sx * step;
+    const clampedScale = this.clampZoom(newScale);
+
+    // Use provided cursor position or get current mouse position
+    const cursorPos = this.paperManager.getMousePosition();
+
+    // Convert screen coordinates to paper coordinates
+    const paperCoords = this.screenToPaperCoordinates(cursorPos.x, cursorPos.y);
+
+    // Calculate new pan offset to keep cursor position fixed
+    const scaleChange = clampedScale / sx;
+    const currentTranslate = paper.translate();
+
+    const newTx = currentTranslate.tx - paperCoords.x * (scaleChange - 1);
+    const newTy = currentTranslate.ty - paperCoords.y * (scaleChange - 1);
+
+    paper.scale(clampedScale);
+    paper.translate(newTx, newTy);
+
+    this.emitViewportChanged();
+  }
+
+  // View controls with enhanced bounds checking and smooth transitions
+  public zoomIn(step: number = 1.2, smooth: boolean = false, useCursor: boolean = true): void {
+    const paper = this.paper;
+    if (!paper) return;
+
+    // Use cursor-centered zoom if enabled and cursor position is available
+    if (useCursor) {
+      this.zoomInAtCursor(step);
+      return;
+    }
 
     const { sx } = this.paperManager.getScale(paper);
     const newScale = sx * step;
@@ -255,9 +316,16 @@ export class DiagramEngine {
     this.emitViewportChanged();
   }
 
-  public zoomOut(step: number = 1 / 1.2, smooth: boolean = false): void {
+  public zoomOut(step: number = 1 / 1.2, smooth: boolean = false, useCursor: boolean = true): void {
     const paper = this.paper;
     if (!paper) return;
+
+    // Use cursor-centered zoom if enabled and cursor position is available
+    if (useCursor) {
+      this.zoomOutAtCursor(step);
+      return;
+    }
+
     const { sx } = this.paperManager.getScale(paper);
     const newScale = sx * step;
     const clampedScale = this.clampZoom(newScale);
@@ -355,6 +423,28 @@ export class DiagramEngine {
   }
 
   /**
+   * Convert screen coordinates to paper coordinates for zoom centering
+   */
+  private screenToPaperCoordinates(screenX: number, screenY: number): { x: number; y: number } {
+    const paper = this.paper;
+    if (!paper) return { x: 0, y: 0 };
+
+    const paperElement = paper.el;
+    if (!paperElement) return { x: 0, y: 0 };
+
+    // Get current zoom and pan
+    const scale = paper.scale().sx;
+    const translate = paper.translate();
+
+    // Convert coordinates to paper coordinates
+    // screenX and screenY are now relative to paper element
+    const paperX = (screenX - translate.tx) / scale;
+    const paperY = (screenY - translate.ty) / scale;
+
+    return { x: paperX, y: paperY };
+  }
+
+  /**
    * Smooth pan animation using requestAnimationFrame
    */
   private smoothPanTo(paper: dia.Paper, dx: number, dy: number, duration: number = 300): void {
@@ -402,6 +492,49 @@ export class DiagramEngine {
 
       if (progress < 1) {
         requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }
+
+  /**
+   * Smooth cursor-centered zoom animation
+   */
+  private smoothZoomToAtCursor(
+    paper: dia.Paper,
+    targetScale: number,
+    cursorPosition: { x: number; y: number },
+    duration: number = 300
+  ): void {
+    const startTime = performance.now();
+    const startScale = paper.scale().sx;
+    const startTranslate = paper.translate();
+
+    // Convert cursor position to paper coordinates at start
+    const paperCoords = this.screenToPaperCoordinates(cursorPosition.x, cursorPosition.y);
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing function (ease-out)
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      const currentScale = startScale + (targetScale - startScale) * easeOut;
+      const scaleChange = currentScale / startScale;
+
+      // Calculate new pan offset to keep cursor position fixed
+      const newTx = startTranslate.tx - paperCoords.x * (scaleChange - 1);
+      const newTy = startTranslate.ty - paperCoords.y * (scaleChange - 1);
+
+      paper.scale(currentScale);
+      paper.translate(newTx, newTy);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        this.emitViewportChanged();
       }
     };
 
@@ -546,6 +679,16 @@ export class DiagramEngine {
     this.eventManager.addEventListener('element:selected', (event: any) => {
       this.handleElementSelection(event.data);
     });
+
+    // Mouse wheel zoom handler
+    this.eventManager.addEventListener('wheel:zoom', (event: any) => {
+      const { zoomFactor } = event.data;
+      if (zoomFactor > 1) {
+        this.zoomInAtCursor(zoomFactor);
+      } else {
+        this.zoomOutAtCursor(zoomFactor);
+      }
+    });
     // Element drag events are disabled; no drag handlers registered
   }
 
@@ -688,6 +831,102 @@ export class DiagramEngine {
     this.config = { ...this.config, ...newConfig };
   }
 
+  /**
+   * Validate and adjust element positions when grid is toggled
+   */
+  private validateElementPositionsOnGridToggle(): void {
+    if (!this.paper) return;
+
+    // Use performance optimization for large diagrams
+    this.optimizeGridToggleForLargeDiagrams();
+  }
+
+  /**
+   * Optimize grid toggle performance for large diagrams
+   */
+  private optimizeGridToggleForLargeDiagrams(): void {
+    if (!this.paper) return;
+
+    const elements = this.graph.getElements();
+    const paperWidth = this.paper.options.width as number;
+    const paperHeight = this.paper.options.height as number;
+    const padding = 50; // Keep elements within paper bounds with padding
+
+    // Use viewport culling for large diagrams
+    const useViewportCulling = elements.length > 100 && this.performanceMonitor.viewportCulling;
+    let elementsToProcess = elements;
+
+    if (useViewportCulling) {
+      // Only process elements visible in current viewport
+      const viewport = this.getViewportBounds();
+      elementsToProcess = elements.filter((element) => {
+        const bbox = element.getBBox();
+        return this.bboxIntersectsViewport(bbox, viewport);
+      });
+    }
+
+    // Batch operations for better performance
+    const updates: Array<{ id: string | number; position: { x: number; y: number } }> = [];
+
+    elementsToProcess.forEach((element) => {
+      const bbox = element.getBBox();
+      let needsAdjustment = false;
+      let newX = bbox.x;
+      let newY = bbox.y;
+
+      // Check if element is outside paper bounds
+      if (bbox.x < -padding) {
+        newX = -padding;
+        needsAdjustment = true;
+      } else if (bbox.x + bbox.width > paperWidth + padding) {
+        newX = paperWidth + padding - bbox.width;
+        needsAdjustment = true;
+      }
+
+      if (bbox.y < -padding) {
+        newY = -padding;
+        needsAdjustment = true;
+      } else if (bbox.y + bbox.height > paperHeight + padding) {
+        newY = paperHeight + padding - bbox.height;
+        needsAdjustment = true;
+      }
+
+      // Apply grid snapping if grid is enabled
+      if (this.toolsManager.getGridEnabled()) {
+        const gridSize = this.toolsManager.getGridSize();
+        newX = Math.round(newX / gridSize) * gridSize;
+        newY = Math.round(newY / gridSize) * gridSize;
+        needsAdjustment = true;
+      }
+
+      // Collect updates for batch processing
+      if (needsAdjustment) {
+        updates.push({
+          id: element.id,
+          position: { x: newX, y: newY },
+        });
+      }
+    });
+
+    // Apply all updates in a single batch
+    if (updates.length > 0) {
+      updates.forEach(({ id, position }) => {
+        const element = this.graph.getCell(id);
+        if (element) {
+          element.set('position', position);
+        }
+      });
+
+      // Emit batch update event for better performance
+      this.eventManager.emitEvent('elements:batch-updated', {
+        elements: updates.map(({ id, position }) => ({
+          id,
+          patch: { position },
+        })),
+      });
+    }
+  }
+
   // Grid controls exposed on engine
   public grid = {
     enable: (enabled: boolean): void => {
@@ -698,6 +937,8 @@ export class DiagramEngine {
         const currentTranslate = this.paper.translate();
         // apply grid change safely (only background/grid layer)
         this.paperManager.setGrid(this.paper, enabled);
+        // validate and adjust element positions
+        this.validateElementPositionsOnGridToggle();
         // restore viewport
         this.paper.scale(currentScale);
         this.paper.translate(currentTranslate.tx, currentTranslate.ty);
@@ -721,6 +962,8 @@ export class DiagramEngine {
         const currentScale = this.paper.scale().sx;
         const currentTranslate = this.paper.translate();
         this.paperManager.setGrid(this.paper, next);
+        // validate and adjust element positions to preserve visibility
+        this.validateElementPositionsOnGridToggle();
         this.paper.scale(currentScale);
         this.paper.translate(currentTranslate.tx, currentTranslate.ty);
         this.emitViewportChanged();

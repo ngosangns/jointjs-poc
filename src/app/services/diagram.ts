@@ -189,12 +189,14 @@ export class DiagramService {
   // Enhanced View APIs
   zoomIn(factor: number = 1.2): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    this.diagramEngine.zoomIn(factor);
+    // Use cursor-centered zoom by default
+    this.diagramEngine.zoomIn(factor, false, true);
   }
 
   zoomOut(factor: number = 1 / 1.2): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    this.diagramEngine.zoomOut(factor);
+    // Use cursor-centered zoom by default
+    this.diagramEngine.zoomOut(factor, false, true);
   }
 
   pan(dx: number, dy: number): void {
@@ -270,6 +272,7 @@ export class DiagramService {
 
   toggleGrid(): boolean {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
+    // Grid toggle now includes element position preservation
     return this.diagramEngine.grid.toggle();
   }
 
@@ -346,6 +349,42 @@ export class DiagramService {
     const centerY = (Number(paperHeight) / 2 - Number(pan.ty)) / Number(zoom);
 
     return { x: centerX, y: centerY };
+  }
+
+  /**
+   * Get paper size for center calculation
+   */
+  getPaperSize(): { width: number; height: number } {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+
+    const paper = this.diagramEngine.getPaper();
+    if (!paper) {
+      throw new Error('Paper not initialized.');
+    }
+
+    return {
+      width: Number(paper.options.width) || 800,
+      height: Number(paper.options.height) || 600,
+    };
+  }
+
+  /**
+   * Get current pan position
+   */
+  getPan(): { x: number; y: number } {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+
+    const paper = this.diagramEngine.getPaper();
+    if (!paper) {
+      throw new Error('Paper not initialized.');
+    }
+
+    const translate = paper.translate();
+    return { x: translate.tx, y: translate.ty };
   }
 
   /**
@@ -452,25 +491,25 @@ export class DiagramService {
    * Get shape type from shape metadata
    */
   private getShapeTypeFromMetadata(shapeMetadata: ShapeMetadata): string {
-    // Map shape metadata to diagram element types
+    // Map shape metadata to ShapeFactory registered keys
     const typeMap: Record<string, string> = {
-      rectangle: 'basic.Rect',
-      circle: 'basic.Circle',
-      ellipse: 'basic.Ellipse',
-      polygon: 'basic.Polygon',
-      path: 'basic.Path',
-      diamond: 'basic.Diamond',
-      parallelogram: 'basic.Parallelogram',
-      stickman: 'basic.Stickman',
-      folder: 'basic.Folder',
-      router: 'network.Router',
-      server: 'network.Server',
-      database: 'network.Database',
-      cloud: 'network.Cloud',
-      firewall: 'network.Firewall',
+      rectangle: 'rectangle',
+      circle: 'circle',
+      ellipse: 'ellipse',
+      polygon: 'polygon',
+      path: 'path',
+      diamond: 'diamond',
+      parallelogram: 'parallelogram',
+      stickman: 'stickman',
+      folder: 'folder',
+      router: 'router',
+      server: 'server',
+      database: 'database',
+      cloud: 'cloud',
+      firewall: 'firewall',
     };
 
-    return typeMap[shapeMetadata.icon] || 'basic.Rect';
+    return typeMap[shapeMetadata.icon] || 'rectangle';
   }
 
   // Autosave internals

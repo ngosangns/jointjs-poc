@@ -20,8 +20,8 @@
 
       <!-- Category Tabs -->
       <div class="category-tabs">
+        @for (category of categories; track category.id) {
         <button
-          *ngFor="let category of categories"
           class="category-tab"
           [class.active]="selectedCategory === category.id"
           (click)="onCategorySelect(category.id)"
@@ -30,18 +30,20 @@
           <span class="category-icon" [ngClass]="getCategoryIconClass(category)"></span>
           <span class="category-name">{{ category.name }}</span>
         </button>
+        }
       </div>
 
       <!-- Shapes Grid -->
       <div class="shapes-container">
         <div class="shapes-grid">
+          @for (shape of filteredShapes; track getShapeType(shape)) {
           <div
-            *ngFor="let shape of filteredShapes"
             class="shape-item"
             [class.hovered]="isShapeHovered(getShapeType(shape))"
             [attr.data-shape-type]="getShapeType(shape)"
             (mouseenter)="onShapeHover(getShapeType(shape))"
             (mouseleave)="onShapeHoverEnd()"
+            (click)="onShapeClick(shape)"
             [title]="shape.description"
           >
             <div class="shape-preview">
@@ -49,18 +51,21 @@
             </div>
             <div class="shape-info">
               <span class="shape-name">{{ shape.name }}</span>
-              <span class="shape-shortcut" *ngIf="shape.shortcut">{{
-                getShortcutText(shape)
-              }}</span>
+              @if (shape.shortcut) {
+              <span class="shape-shortcut">{{ getShortcutText(shape) }}</span>
+              }
             </div>
           </div>
+          }
         </div>
 
         <!-- No Results Message -->
-        <div class="no-results" *ngIf="filteredShapes.length === 0">
+        @if (filteredShapes.length === 0) {
+        <div class="no-results">
           <p>No shapes found</p>
           <small>Try adjusting your search or select a different category</small>
         </div>
+        }
       </div>
     </div>
 
@@ -74,10 +79,22 @@
       <button class="btn" (click)="onClearDiagram()">Clear</button>
       <hr />
       <div class="flex gap-1">
-        <button class="btn" (click)="onZoomIn()" data-testid="btn-zoom-in" aria-label="Zoom in">
+        <button
+          class="btn"
+          (click)="onZoomIn()"
+          data-testid="btn-zoom-in"
+          [attr.aria-label]="'Zoom in at cursor position'"
+          title="Zoom in at cursor position"
+        >
           Zoom-in
         </button>
-        <button class="btn" (click)="onZoomOut()" data-testid="btn-zoom-out" aria-label="Zoom out">
+        <button
+          class="btn"
+          (click)="onZoomOut()"
+          data-testid="btn-zoom-out"
+          [attr.aria-label]="'Zoom out at cursor position'"
+          title="Zoom out at cursor position"
+        >
           Zoom-out
         </button>
       </div>

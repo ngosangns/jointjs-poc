@@ -55,6 +55,10 @@ When creating this spec from a user prompt:
    - Integration requirements
    - Security/compliance needs
 
+### Testing Strategy
+
+**IMPORTANT**: Tests should only be generated AFTER code implementation is complete. The specification focuses on defining requirements and acceptance criteria, not on test generation. Test creation is a separate phase that occurs after the feature has been fully implemented and validated.
+
 ---
 
 ## User Scenarios & Testing (mandatory)

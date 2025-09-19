@@ -26,10 +26,12 @@
 9. STOP - Ready for /tasks command
 ```
 
-**IMPORTANT**: The /plan command STOPS at step 7. Phases 2-4 are executed by other commands:
+**IMPORTANT**: The /plan command STOPS at step 8. Phases 2-5 are executed by other commands:
 
-- Phase 2: /tasks command creates tasks.md
-- Phase 3-4: Implementation execution (manual or via tools)
+- Phase 2: /tasks command creates tasks.md (implementation tasks only)
+- Phase 3: Implementation execution (manual or via tools)
+- Phase 4: Test generation (AFTER implementation is complete)
+- Phase 5: Validation and testing
 
 ## Summary
 
@@ -97,7 +99,8 @@ lib (diagram core library)
 
 ## Phase 2: Task Planning Approach
 
-- Use template’s strategy; tasks will be TDD-ordered, models → services → UI; parallelize independent contracts.
+- Use template's strategy; tasks will be implementation-focused, models → services → UI; parallelize independent contracts.
+- **IMPORTANT**: Tasks will focus on code implementation only. Test generation is a separate phase that occurs AFTER implementation is complete.
 
 ## Phase 3+: Future Implementation
 
@@ -116,9 +119,10 @@ lib (diagram core library)
 - [x] Phase 0: Research complete (/plan command)
 - [x] Phase 1: Design complete (/plan command)
 - [x] Phase 2: Task planning complete (/plan command - describe approach only)
-- [ ] Phase 3: Tasks generated (/tasks command)
+- [ ] Phase 3: Tasks generated (/tasks command - implementation tasks only)
 - [ ] Phase 4: Implementation complete
-- [ ] Phase 5: Validation passed
+- [ ] Phase 5: Test generation (AFTER implementation)
+- [ ] Phase 6: Validation and testing
 
 **Gate Status**:
 

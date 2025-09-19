@@ -190,6 +190,27 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     return shape.name.toLowerCase().replace(/\s+/g, '-');
   }
 
+  // Add shape click handler
+  onShapeClick(shape: ShapeMetadata): void {
+    // Calculate center position of paper and add shape
+    const centerPosition = this.calculatePaperCenter();
+    this.diagramService.insertShapeAtPosition(shape, centerPosition);
+  }
+
+  // Add method to calculate paper center
+  private calculatePaperCenter(): { x: number; y: number } {
+    // Get paper dimensions and current pan/zoom to calculate center
+    const paperSize = this.diagramService.getPaperSize();
+    const currentPan = this.diagramService.getPan();
+    const currentZoom = this.diagramService.getZoom();
+
+    // Calculate center position accounting for pan and zoom
+    return {
+      x: (paperSize.width / 2 - currentPan.x) / currentZoom,
+      y: (paperSize.height / 2 - currentPan.y) / currentZoom,
+    };
+  }
+
   // Diagram methods
 
   private setupEventListeners(): void {
@@ -214,30 +235,10 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
       // Shape created event handled
     });
 
-    // Setup mouse wheel zoom
-    this.setupMouseWheelZoom();
+    // Mouse wheel zoom is now handled by PaperManager
 
     // Setup performance monitoring
     this.setupPerformanceMonitoring();
-  }
-
-  private setupMouseWheelZoom(): void {
-    const container = this.diagramContainer.nativeElement;
-
-    container.addEventListener(
-      'wheel',
-      (event: WheelEvent) => {
-        event.preventDefault();
-
-        const delta = event.deltaY;
-        if (delta < 0) {
-          this.diagramService.zoomIn();
-        } else {
-          this.diagramService.zoomOut();
-        }
-      },
-      { passive: false }
-    );
   }
 
   private setupPerformanceMonitoring(): void {
@@ -284,10 +285,12 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   onZoomIn(): void {
+    // Use cursor-centered zoom
     this.diagramService.zoomIn();
   }
 
   onZoomOut(): void {
+    // Use cursor-centered zoom
     this.diagramService.zoomOut();
   }
 

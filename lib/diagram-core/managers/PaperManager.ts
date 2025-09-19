@@ -7,6 +7,9 @@ import { DiagramConfig } from '../../types';
 import { IEventManager, IPaperManager } from '../interfaces';
 
 export class PaperManager implements IPaperManager {
+  // Mouse position tracking for cursor-centered zoom
+  private mousePosition: { x: number; y: number } = { x: 0, y: 0 };
+
   /**
    * Initialize a new paper instance
    */
@@ -48,10 +51,67 @@ export class PaperManager implements IPaperManager {
       },
     });
 
+    // Setup mouse position tracking
+    this.setupMouseTracking(paper);
+
     return paper;
   }
 
+  /**
+   * Setup mouse position tracking for cursor-centered zoom
+   */
+  private setupMouseTracking(paper: dia.Paper): void {
+    const paperElement = paper.el;
+    if (!paperElement) return;
+
+    paperElement.addEventListener('mousemove', (event: MouseEvent) => {
+      // Get paper element's bounding rectangle for accurate positioning
+      const paperRect = paperElement.getBoundingClientRect();
+
+      // Calculate mouse position relative to paper element
+      this.mousePosition = {
+        x: event.clientX - paperRect.left,
+        y: event.clientY - paperRect.top,
+      };
+    });
+  }
+
+  /**
+   * Get current mouse position
+   */
+  public getMousePosition(): { x: number; y: number } {
+    return { ...this.mousePosition };
+  }
+
+  /**
+   * Setup mouse wheel zoom support with cursor centering
+   */
+  private setupMouseWheelZoom(paper: dia.Paper, eventManager: IEventManager): void {
+    const paperElement = paper.el;
+    if (!paperElement) return;
+
+    paperElement.addEventListener(
+      'wheel',
+      (event: WheelEvent) => {
+        event.preventDefault();
+
+        const delta = event.deltaY;
+        const zoomFactor = 1.1; // Smaller steps for smoother zoom
+
+        // Emit wheel zoom event with cursor position relative to paper
+        eventManager.emitEvent('wheel:zoom', {
+          delta,
+          zoomFactor: delta < 0 ? zoomFactor : 1 / zoomFactor,
+        });
+      },
+      { passive: false }
+    );
+  }
+
   public setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void {
+    // Setup mouse wheel zoom support
+    this.setupMouseWheelZoom(paper, eventManager);
+
     // Manual panning over blank area with LEFT mouse button
     let isBlankPanning = false;
     let blankPanStart = { x: 0, y: 0 };

@@ -106,6 +106,8 @@ export type DiagramEventType =
   | 'document:loaded'
   // Viewport events
   | 'viewport:changed'
+  // Mouse wheel events
+  | 'wheel:zoom'
   // Keyboard events
   | 'keyboard:zoom-in'
   | 'keyboard:zoom-out'

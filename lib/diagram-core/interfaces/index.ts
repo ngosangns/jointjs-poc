@@ -66,6 +66,7 @@ export interface IPaperManager {
   getScale(paper: dia.Paper): { sx: number; sy: number };
   translate(paper: dia.Paper, dx: number, dy: number): void;
   setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void;
+  getMousePosition(): { x: number; y: number };
 }
 
 /**

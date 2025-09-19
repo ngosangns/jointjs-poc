@@ -2,7 +2,7 @@
 
 **Status**: ✅ All contracts implemented and validated
 
-This directory describes the expected behavior of the library APIs and events. Contract tests live under `lib/tests/contract` and validate the implemented features.
+This directory describes the expected behavior of the library APIs and events. These contracts define the public interface that the implementation must satisfy. Contract validation occurs through manual testing and integration verification after implementation is complete.
 
 ## ✅ Implemented Contracts
 
@@ -19,3 +19,7 @@ The contracts are now fully implemented in:
 - `src/app/services/diagram.ts` - Main DiagramService API
 - `src/app/components/shape-toolbar/` - Shape toolbar component
 - `lib/diagram-core/` - Enhanced JointJS integration library
+
+## Testing Strategy
+
+**IMPORTANT**: These contracts define the expected behavior and API surface. Automated tests for these contracts will be generated AFTER the implementation is complete and validated. The contracts serve as the specification for what the implementation must provide, not as test generation templates.

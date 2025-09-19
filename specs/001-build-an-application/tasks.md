@@ -1,13 +1,20 @@
-# Tasks: Toolbar Element Insertion Feature
+# Tasks: Enhanced Zoom and Grid Features
 
-**Feature**: Click toolbar elements to insert shapes at center of paper  
+**Feature**: Cursor-centered zooming and grid toggle element preservation  
 **Branch**: `001-build-an-application`  
 **Date**: 2025-01-27  
-**Status**: ✅ COMPLETED
+**Status**: 🔄 IN PROGRESS
 
 ## Overview
 
-Implement the functionality to click on toolbar elements and insert them at the center of the diagram paper. This feature bridges the shape library service with the diagram engine to provide seamless shape insertion.
+Implement two key enhancements to improve the user experience:
+
+1. **Cursor-centered zooming**: Zoom operations should center on the mouse cursor position instead of the paper center
+2. **Grid toggle element preservation**: When toggling the grid, ensure all elements remain visible and properly positioned on the paper
+
+## Testing Strategy
+
+**IMPORTANT**: This task list focuses on code implementation only. Test generation is a separate phase that occurs AFTER all implementation tasks are completed and the feature is fully functional. Tests will be generated based on the implemented code and acceptance criteria.
 
 ## Task Dependencies
 
@@ -18,86 +25,278 @@ Implement the functionality to click on toolbar elements and insert them at the 
 
 ## Tasks
 
-### T001: Setup - Add Click Handler to Shape Toolbar Component
+### T001: Setup - Add Mouse Position Tracking to Paper Manager
 
-**File**: `src/app/components/shape-toolbar/shape-toolbar.ts`  
+**File**: `lib/diagram-core/managers/PaperManager.ts`  
 **Dependencies**: None  
-**Description**: Add click event handler to shape items in the toolbar that will trigger element insertion.
+**Description**: Add mouse position tracking to capture cursor coordinates for zoom operations.
 
 ```typescript
-// Add method to handle shape click
-onShapeClick(shape: ShapeMetadata): void {
-  // TODO: Implement shape insertion logic
+// Add mouse position tracking
+private mousePosition: { x: number; y: number } = { x: 0, y: 0 };
+
+private setupMouseTracking(paper: dia.Paper): void {
+  const paperElement = paper.el;
+  if (!paperElement) return;
+
+  paperElement.addEventListener('mousemove', (event: MouseEvent) => {
+    this.mousePosition = { x: event.clientX, y: event.clientY };
+  });
 }
 ```
 
-### T002: Setup - Add Center Position Calculation Method
+### T002: Setup - Add Cursor-Centered Zoom Method to Diagram Engine
 
-**File**: `src/app/services/diagram.ts`  
-**Dependencies**: None  
-**Description**: Add method to calculate center position of the current viewport for element placement.
+**File**: `lib/diagram-core/DiagramEngine.ts`  
+**Dependencies**: T001  
+**Description**: Add new zoom methods that center on cursor position instead of paper center.
 
 ```typescript
-// Add method to get center position
-getCenterPosition(): { x: number; y: number } {
-  // TODO: Calculate center of current viewport
+// Add cursor-centered zoom methods
+public zoomInAtCursor(step: number = 1.2): void {
+  // TODO: Implement cursor-centered zoom in
+}
+
+public zoomOutAtCursor(step: number = 1 / 1.2): void {
+  // TODO: Implement cursor-centered zoom out
 }
 ```
 
-### T005: Core - Implement Shape Insertion Logic in Diagram Service
+### T003: Core - Implement Cursor Position to Paper Coordinates Conversion
 
-**File**: `src/app/services/diagram.ts`  
+**File**: `lib/diagram-core/DiagramEngine.ts`  
 **Dependencies**: T002  
-**Description**: Add method to insert shape at specified position using shape metadata.
+**Description**: Add method to convert screen cursor position to paper coordinates for zoom centering.
 
 ```typescript
-// Add method to insert shape from metadata
-insertShapeAtPosition(shapeMetadata: ShapeMetadata, position: { x: number; y: number }): string {
-  // TODO: Create element from metadata and insert at position
+// Add coordinate conversion method
+private screenToPaperCoordinates(screenX: number, screenY: number): { x: number; y: number } {
+  // TODO: Convert screen coordinates to paper coordinates
 }
 ```
 
-### T006: Core - Connect Shape Click to Insertion Logic
+### T004: Core - Update Zoom Methods to Use Cursor Position
 
-**File**: `src/app/components/shape-toolbar/shape-toolbar.ts`  
-**Dependencies**: T001, T005  
-**Description**: Implement the shape click handler to call diagram service insertion method.
+**File**: `lib/diagram-core/DiagramEngine.ts`  
+**Dependencies**: T003  
+**Description**: Modify existing zoom methods to use cursor position when available.
 
-### T007: Core - Add Shape Metadata to Element Creation
+```typescript
+// Update existing zoom methods
+public zoomIn(step: number = 1.2, smooth: boolean = false, useCursor: boolean = true): void {
+  // TODO: Use cursor position if useCursor is true
+}
+```
+
+### T005: Core - Add Element Position Validation for Grid Toggle
+
+**File**: `lib/diagram-core/DiagramEngine.ts`  
+**Dependencies**: None  
+**Description**: Add method to validate and adjust element positions when grid is toggled.
+
+```typescript
+// Add element position validation
+private validateElementPositionsOnGridToggle(): void {
+  // TODO: Ensure all elements remain on paper when grid is toggled
+}
+```
+
+### T006: Core - Update Grid Toggle to Preserve Element Positions
+
+**File**: `lib/diagram-core/DiagramEngine.ts`  
+**Dependencies**: T005  
+**Description**: Modify grid toggle functionality to maintain element positions and visibility.
+
+```typescript
+// Update grid toggle method
+public grid = {
+  toggle: (): boolean => {
+    // TODO: Preserve element positions during grid toggle
+  }
+};
+```
+
+### T007: Integration - Update Diagram Service Zoom Methods
 
 **File**: `src/app/services/diagram.ts`  
-**Dependencies**: T005  
-**Description**: Map shape metadata to diagram element properties (type, size, style).
+**Dependencies**: T004  
+**Description**: Update diagram service to use cursor-centered zoom methods.
 
-### T008: Integration - Add Visual Feedback for Shape Insertion
+```typescript
+// Update zoom methods in diagram service
+zoomIn(factor: number = 1.2): void {
+  // TODO: Use cursor-centered zoom
+}
 
-**File**: `src/app/components/shape-toolbar/shape-toolbar.html`  
-**Dependencies**: T006  
-**Description**: Add visual feedback (loading state, success animation) when shape is inserted.
+zoomOut(factor: number = 1 / 1.2): void {
+  // TODO: Use cursor-centered zoom
+}
+```
 
-### T009: Integration - Handle Insertion Errors
+### T008: Integration - Add Mouse Wheel Zoom Support
+
+**File**: `lib/diagram-core/managers/PaperManager.ts`  
+**Dependencies**: T004  
+**Description**: Add mouse wheel event handling for cursor-centered zooming.
+
+```typescript
+// Add mouse wheel zoom support
+private setupMouseWheelZoom(paper: dia.Paper, eventManager: IEventManager): void {
+  // TODO: Implement mouse wheel zoom with cursor centering
+}
+```
+
+### T009: Integration - Update Canvas Component Zoom Controls
+
+**File**: `src/app/components/diagram-canvas/diagram-canvas.ts`  
+**Dependencies**: T007  
+**Description**: Update canvas component to support cursor-centered zoom operations.
+
+```typescript
+// Update zoom control methods
+onZoomIn(): void {
+  // TODO: Use cursor-centered zoom
+}
+
+onZoomOut(): void {
+  // TODO: Use cursor-centered zoom
+}
+```
+
+### T010: Integration - Add Grid Toggle Element Preservation
 
 **File**: `src/app/services/diagram.ts`  
-**Dependencies**: T005  
-**Description**: Add error handling for shape insertion failures with user feedback.
-
-### T010: Integration - Add Keyboard Shortcut Support
-
-**File**: `src/app/components/shape-toolbar/shape-toolbar.ts`  
 **Dependencies**: T006  
-**Description**: Implement keyboard shortcuts for shape insertion (e.g., pressing 'R' for rectangle).
+**Description**: Update grid toggle method to ensure element preservation.
 
-### T012: Polish [P] - Add Performance Optimization
+```typescript
+// Update grid toggle method
+toggleGrid(): boolean {
+  // TODO: Ensure elements remain on paper during grid toggle
+}
+```
+
+### T011: Polish [P] - Add Smooth Cursor-Centered Zoom Animation
+
+**File**: `lib/diagram-core/DiagramEngine.ts`  
+**Dependencies**: T004  
+**Description**: Add smooth animation support for cursor-centered zoom operations.
+
+```typescript
+// Add smooth cursor-centered zoom animation
+private smoothZoomToAtCursor(paper: dia.Paper, targetScale: number, cursorPosition: { x: number; y: number }): void {
+  // TODO: Implement smooth zoom animation centered on cursor
+}
+```
+
+### T012: Polish [P] - Add Performance Optimization for Grid Toggle
+
+**File**: `lib/diagram-core/DiagramEngine.ts`  
+**Dependencies**: T006  
+**Description**: Optimize grid toggle performance for large diagrams.
+
+```typescript
+// Add performance optimization
+private optimizeGridToggleForLargeDiagrams(): void {
+  // TODO: Batch operations and viewport culling for grid toggle
+}
+```
+
+### T013: Core - Add Toolbar Shape Click Handler
+
+**File**: `src/app/components/diagram-canvas/diagram-canvas.ts`  
+**Dependencies**: None  
+**Description**: Add click handler to toolbar shape items to add shapes to the center of the paper.
+
+```typescript
+// Add shape click handler
+onShapeClick(shape: ShapeMetadata): void {
+  // TODO: Calculate center position of paper and add shape
+  const centerPosition = this.calculatePaperCenter();
+  this.diagramService.insertShapeAtPosition(shape, centerPosition);
+}
+
+// Add method to calculate paper center
+private calculatePaperCenter(): { x: number; y: number } {
+  // TODO: Calculate center position based on current viewport
+}
+```
+
+### T014: Core - Add Click Event to Toolbar Shape Items
+
+**File**: `src/app/components/diagram-canvas/diagram-canvas.html`  
+**Dependencies**: T013  
+**Description**: Add click event handler to shape items in the toolbar.
+
+```html
+<!-- Add click handler to shape items -->
+<div
+  class="shape-item"
+  [class.hovered]="isShapeHovered(getShapeType(shape))"
+  [attr.data-shape-type]="getShapeType(shape)"
+  (mouseenter)="onShapeHover(getShapeType(shape))"
+  (mouseleave)="onShapeHoverEnd()"
+  (click)="onShapeClick(shape)"
+  [title]="shape.description"
+></div>
+```
+
+### T015: Core - Implement Paper Center Calculation
+
+**File**: `src/app/components/diagram-canvas/diagram-canvas.ts`  
+**Dependencies**: T013  
+**Description**: Implement method to calculate the center position of the paper viewport.
+
+```typescript
+// Implement paper center calculation
+private calculatePaperCenter(): { x: number; y: number } {
+  // TODO: Get paper dimensions and current pan/zoom to calculate center
+  const paperSize = this.diagramService.getPaperSize();
+  const currentPan = this.diagramService.getPan();
+  const currentZoom = this.diagramService.getZoom();
+
+  // Calculate center position accounting for pan and zoom
+  return {
+    x: (paperSize.width / 2 - currentPan.x) / currentZoom,
+    y: (paperSize.height / 2 - currentPan.y) / currentZoom
+  };
+}
+```
+
+### T016: Integration - Add Paper Size and Pan Methods to Diagram Service
 
 **File**: `src/app/services/diagram.ts`  
-**Dependencies**: T005  
-**Description**: Optimize shape insertion for large diagrams with viewport culling.
+**Dependencies**: None  
+**Description**: Add methods to get paper size and current pan position for center calculation.
 
-### T013: Polish [P] - Add Accessibility Support
+```typescript
+// Add paper size and pan methods
+getPaperSize(): { width: number; height: number } {
+  // TODO: Get current paper dimensions
+}
 
-**File**: `src/app/components/shape-toolbar/shape-toolbar.html`  
-**Dependencies**: T006  
-**Description**: Add ARIA labels and keyboard navigation for shape insertion.
+getPan(): { x: number; y: number } {
+  // TODO: Get current pan position
+}
+```
+
+### T017: Polish [P] - Add Accessibility Support for Cursor Zoom
+
+**File**: `src/app/components/diagram-canvas/diagram-canvas.html`  
+**Dependencies**: T009  
+**Description**: Add ARIA labels and keyboard alternatives for cursor-centered zoom.
+
+```html
+<!-- Add accessibility attributes -->
+<button
+  class="btn"
+  (click)="onZoomIn()"
+  [attr.aria-label]="'Zoom in at cursor position'"
+  title="Zoom in at cursor position"
+>
+  Zoom-in
+</button>
+```
 
 ## Parallel Execution Examples
 
@@ -105,113 +304,111 @@ insertShapeAtPosition(shapeMetadata: ShapeMetadata, position: { x: number; y: nu
 
 ```bash
 # Complete setup tasks first
-Task T001: Add click handler to shape toolbar
-Task T002: Add center position calculation
+Task T001: Add mouse position tracking to paper manager
+Task T002: Add cursor-centered zoom method to diagram engine
 ```
 
-### Phase 3: Core Implementation (Sequential)
+### Phase 2: Core Implementation (Sequential)
 
 ```bash
 # Core tasks must be sequential due to dependencies
-Task T005: Implement shape insertion logic
-Task T006: Connect shape click to insertion
-Task T007: Add shape metadata mapping
+Task T003: Implement cursor position to paper coordinates conversion
+Task T004: Update zoom methods to use cursor position
+Task T005: Add element position validation for grid toggle
+Task T006: Update grid toggle to preserve element positions
+Task T013: Add toolbar shape click handler
+Task T014: Add click event to toolbar shape items
+Task T015: Implement paper center calculation
 ```
 
-### Phase 4: Integration (Sequential)
+### Phase 3: Integration (Sequential)
 
 ```bash
 # Integration tasks build on core
-Task T008: Add visual feedback
-Task T009: Handle insertion errors
-Task T010: Add keyboard shortcuts
+Task T007: Update diagram service zoom methods
+Task T008: Add mouse wheel zoom support
+Task T009: Update canvas component zoom controls
+Task T010: Add grid toggle element preservation
+Task T016: Add paper size and pan methods to diagram service
 ```
 
-### Phase 5: Polish (Parallel)
+### Phase 4: Polish (Parallel)
 
 ```bash
 # Polish tasks can run in parallel
-Task T012: Performance optimization [P]
-Task T013: Accessibility support [P]
+Task T011: Add smooth cursor-centered zoom animation [P]
+Task T012: Add performance optimization for grid toggle [P]
+Task T017: Add accessibility support for cursor zoom [P]
 ```
 
 ## Implementation Notes
 
-1. **Shape Metadata Integration**: Use existing `ShapeMetadata` interface from `ShapeLibraryService`
-2. **Center Calculation**: Consider current zoom level and pan position when calculating center
-3. **Element Creation**: Map shape metadata to `DiagramElement` interface from the library
-4. **Error Handling**: Provide user feedback for insertion failures
-5. **Performance**: Consider viewport culling for large diagrams
-6. **Accessibility**: Ensure keyboard navigation and screen reader support
+1. **Cursor Position Tracking**: Track mouse position relative to paper element for accurate coordinate conversion
+2. **Coordinate Conversion**: Convert screen coordinates to paper coordinates accounting for zoom and pan
+3. **Zoom Centering**: Calculate new pan offset to keep cursor position fixed during zoom
+4. **Element Preservation**: Ensure elements remain within paper bounds when grid is toggled
+5. **Toolbar Shape Addition**: Click toolbar shapes to add them to the center of the paper viewport
+6. **Paper Center Calculation**: Calculate center position accounting for current pan and zoom state
+7. **Performance**: Use viewport culling and batch operations for large diagrams
+8. **Accessibility**: Provide keyboard alternatives and clear ARIA labels
 
 ## Success Criteria
 
-- [x] Clicking on toolbar shape inserts element at paper center
-- [x] Shape appears with correct size and default styling
-- [x] Insertion works with different zoom levels and pan positions
-- [x] Visual feedback provided during insertion
-- [x] Error handling for edge cases
-- [x] Keyboard shortcuts functional
-- [x] Accessibility requirements met
+- [ ] Zoom operations center on mouse cursor position
+- [ ] Mouse wheel zoom works with cursor centering
+- [ ] Grid toggle preserves all element positions
+- [ ] Elements remain visible and properly positioned after grid toggle
+- [ ] Clicking toolbar shape items adds shapes to center of paper
+- [ ] Paper center calculation accounts for current pan and zoom
+- [ ] Smooth animations for cursor-centered zoom
+- [ ] Performance optimized for large diagrams
+- [ ] Accessibility requirements met
+- [ ] Backward compatibility maintained
 
 ## File Structure
 
 ```
+lib/diagram-core/
+├── DiagramEngine.ts              # T002, T003, T004, T005, T006, T011, T012
+└── managers/
+    └── PaperManager.ts           # T001, T008
+
 src/app/
-├── components/
-│   └── shape-toolbar/
-│       ├── shape-toolbar.html      # T008, T013
-│       ├── shape-toolbar.ts        # T001, T006, T010
-│       └── shape-toolbar.spec.ts   # T003
-    └── services/
-        ├── diagram.ts                  # T002, T005, T007, T009, T012
-        └── diagram.spec.ts             # T004
+├── services/
+│   └── diagram.ts                # T007, T010, T016
+└── components/
+    └── diagram-canvas/
+        ├── diagram-canvas.ts     # T009, T013, T015
+        └── diagram-canvas.html   # T014, T017
 ```
 
----
-
-## ✅ Implementation Summary
-
-**COMPLETED**: All tasks have been successfully implemented and tested.
-
-### Key Features Delivered:
-
-1. **Shape Toolbar Component** (`src/app/components/shape-toolbar/`)
-
-   - ✅ Category-based shape organization with tabs
-   - ✅ Search functionality across all shapes
-   - ✅ Click-to-insert shapes at viewport center
-   - ✅ Visual feedback (loading, success, error states)
-   - ✅ Keyboard shortcuts for shape insertion
-   - ✅ Accessibility support (ARIA labels, keyboard navigation)
-
-2. **Diagram Service** (`src/app/services/diagram.ts`)
-
-   - ✅ `getCenterPosition()` - Calculates viewport center for placement
-   - ✅ `insertShapeAtPosition()` - Inserts shapes with metadata mapping
-   - ✅ Viewport management (zoom, pan, fit operations)
-   - ✅ Selection management with RxJS observables
-   - ✅ Autosave functionality with configurable thresholds
-   - ✅ Performance optimizations (viewport culling, batch operations)
-
-3. **Enhanced Features**
-   - ✅ Shape metadata to element type mapping
-   - ✅ Error handling with user feedback
-   - ✅ Performance optimization for large diagrams
-   - ✅ Integration with existing diagram engine
-
-### Technical Implementation:
-
-- **Shape Insertion**: Shapes are inserted at the center of the current viewport, accounting for zoom and pan
-- **Metadata Mapping**: Shape metadata is mapped to JointJS element types (e.g., 'rectangle' → 'basic.Rect')
-- **Visual Feedback**: Loading states, success animations, and error handling with timeout-based cleanup
-- **Keyboard Support**: Global keyboard shortcuts for shape insertion (e.g., 'R' for rectangle)
-- **Accessibility**: Full ARIA support, keyboard navigation, and screen reader compatibility
+**Note**: Test files (.spec.ts) will be generated in a separate phase after implementation is complete.
 
 ---
 
-**Total Tasks**: 13  
-**Completed Tasks**: 13 ✅  
-**Parallel Tasks**: 5  
-**Sequential Tasks**: 8  
-**Actual Implementation Time**: Completed
+## Technical Details
+
+### Cursor-Centered Zooming
+
+The cursor-centered zoom feature requires:
+
+1. **Mouse Position Tracking**: Continuous tracking of mouse position relative to the paper element
+2. **Coordinate Conversion**: Converting screen coordinates to paper coordinates accounting for current zoom and pan
+3. **Zoom Calculation**: Calculating new zoom level and pan offset to keep cursor position fixed
+4. **Smooth Animation**: Optional smooth transitions for better user experience
+
+### Grid Toggle Element Preservation
+
+The grid toggle element preservation requires:
+
+1. **Element Position Validation**: Checking all elements remain within paper bounds
+2. **Position Adjustment**: Moving elements that would go off-paper back to valid positions
+3. **Viewport Preservation**: Maintaining current zoom and pan during grid toggle
+4. **Performance Optimization**: Efficient handling of large numbers of elements
+
+---
+
+**Total Tasks**: 17  
+**Sequential Tasks**: 14  
+**Parallel Tasks**: 3  
+**Estimated Implementation Time**: 3-4 days
