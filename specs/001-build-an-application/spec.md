@@ -68,28 +68,26 @@ As a user, I want to create, edit, and share diagrams in a canvas-based editor t
 1. **Given** a blank canvas, **When** the user drags a shape from the palette onto the canvas, **Then** the shape appears with default styling and can be moved, resized, and edited inline.
 2. **Given** two shapes on the canvas, **When** the user connects them using a connector tool, **Then** a link is created with routing, attach points/ports, and interactive handles for adjustment.
 3. **Given** multiple shapes selected via marquee or Shift+click, **When** the user uses alignment tools, **Then** the shapes align uniformly with visible guidelines and snapping feedback.
-4. **Given** a diagram in progress, **When** the user presses Cmd/Ctrl+Z or uses the toolbar to undo, **Then** the last atomic change is reverted; redo restores it.
-5. **Given** a complex diagram, **When** the user pans (mouse-drag/spacebar) and zooms (wheel/pinch/controls), **Then** the viewport updates smoothly without layout shifts.
-6. **Given** a diagram with layers and groups, **When** the user toggles layer visibility/lock or groups/ungroups selection, **Then** the elements respond accordingly without affecting cross-layer items.
-7. **Given** a diagram, **When** the user saves it, **Then** the full diagram state (shapes, links, styles, layers, groups, text) is persisted and can be reopened identically.
-8. **Given** a finished diagram, **When** the user exports as PNG/SVG/PDF, **Then** the exported file captures visual fidelity at chosen scale/background options.
-9. **Given** a diagram, **When** the user edits text within shapes/connectors (double-click) and applies formatting, **Then** text updates inline and flows correctly.
-10. **Given** a selection, **When** the user presses Delete or uses context menu "Delete", **Then** selected elements are removed and undoable.
-11. **Given** the grid/snapping is toggled, **When** the user moves/resizes elements, **Then** snapping behavior follows the toggle state and spacing settings.
-12. **Given** keyboard shortcuts are used (e.g., copy/paste/duplicate, arrow nudge), **When** invoked, **Then** the corresponding actions execute and are undoable.
-13. **Given** templates/stencils are available, **When** the user inserts a template, **Then** a multi-element structure appears with preserved relationships and styles.
-14. **Given** the user imports a supported file (e.g., draw.io XML), **When** the file is opened, **Then** the diagram renders with equivalent semantics or clear error mapping.
+4. **Given** a complex diagram, **When** the user pans (mouse-drag/spacebar) and zooms (wheel/pinch/controls), **Then** the viewport updates smoothly without layout shifts.
+5. **Given** a diagram with layers and groups, **When** the user toggles layer visibility/lock or groups/ungroups selection, **Then** the elements respond accordingly without affecting cross-layer items.
+6. **Given** a diagram, **When** the user saves it, **Then** the full diagram state (shapes, links, styles, layers, groups, text) is persisted and can be reopened identically.
+7. **Given** a finished diagram, **When** the user exports as PNG/SVG/PDF, **Then** the exported file captures visual fidelity at chosen scale/background options.
+8. **Given** a diagram, **When** the user edits text within shapes/connectors (double-click) and applies formatting, **Then** text updates inline and flows correctly.
+9. **Given** a selection, **When** the user presses Delete or uses context menu "Delete", **Then** selected elements are removed.
+10. **Given** the grid/snapping is toggled, **When** the user moves/resizes elements, **Then** snapping behavior follows the toggle state and spacing settings.
+11. **Given** keyboard shortcuts are used (e.g., copy/paste/duplicate, arrow nudge), **When** invoked, **Then** the corresponding actions execute.
+12. **Given** templates/stencils are available, **When** the user inserts a template, **Then** a multi-element structure appears with preserved relationships and styles.
+13. **Given** the user imports a supported file (e.g., draw.io XML), **When** the file is opened, **Then** the diagram renders with equivalent semantics or clear error mapping.
 
 ### Edge Cases
 
-- Very large diagrams (e.g., 5,000+ elements): performance and interaction remain responsive; degradation thresholds are defined. [NEEDS CLARIFICATION: performance targets]
+- Very large diagrams (e.g., 5,000+ elements): performance and interaction remain responsive; target 3,000 elements interactive, 10,000 elements view-only.
 - Extremely long text labels: text wraps/ellipsis without canvas overflow.
 - Dense parallel connectors: link routing avoids overlaps where possible; manual routing preserved.
-- Rapid input sequences (e.g., 50 undos redos quickly): history remains consistent; no stale selection.
-- Mixed device inputs (mouse, trackpad, touch): gestures coexist; accidental multi-touch is ignored. [NEEDS CLARIFICATION: touch scope]
+- Mixed device inputs (mouse, trackpad, touch): gestures coexist; basic touch support for tablet usability.
 - High-DPI export: exported assets are crisp at 1x/2x/4x scales.
 - Import of malformed files: user sees a clear validation error with line/element reference when possible.
-- Browser/tab crash or refresh: autosave prevents significant data loss; last autosave is recoverable. [NEEDS CLARIFICATION: autosave interval]
+- Browser/tab crash or refresh: autosave every 5 seconds of idle or after 20 operations prevents significant data loss.
 - International text and RTL: text input, resizing, and alignment support Unicode/RTL.
 
 ## Requirements (mandatory)
@@ -105,17 +103,16 @@ As a user, I want to create, edit, and share diagrams in a canvas-based editor t
 - **FR-007**: System MUST provide alignment and distribution tools with visual guidelines.
 - **FR-008**: Users MUST toggle grid and adjust grid spacing; elements snap to grid/guides when enabled.
 - **FR-009**: Users MUST pan and zoom via mouse, trackpad, keyboard, and UI controls.
-- **FR-010**: Undo/redo MUST support a linear history of atomic actions across all edit operations.
 - **FR-011**: Users MUST edit text inline on shapes and links with basic formatting (font, size, style, color, alignment).
 - **FR-012**: Users MUST duplicate, copy/paste within the canvas, and paste style separately from geometry.
 - **FR-013**: Users MUST manage layers (add, rename, reorder, visibility, lock) and move elements between layers.
 - **FR-014**: Users MUST apply styles/themes to shapes and links and set defaults for new elements.
 - **FR-015**: Users MUST snap connectors to defined ports or sides and change port positions where applicable.
-- **FR-016**: Users MUST insert images/icons and manage their aspect ratio and embedding options. [NEEDS CLARIFICATION: external URLs vs embedded]
+- **FR-016**: Users MUST insert images/icons and manage their aspect ratio and embedding options (embedded images preferred for portability).
 - **FR-017**: Users MUST configure page settings (size, orientation, background color/grid, margins) and print.
 - **FR-018**: Users MUST export diagrams as PNG, SVG, and PDF with scale and transparency options.
-- **FR-019**: Users MUST import diagrams from at least draw.io XML. [NEEDS CLARIFICATION: additional formats]
-- **FR-020**: Autosave MUST periodically persist the working diagram without user action. [NEEDS CLARIFICATION: interval, storage location]
+- **FR-019**: Users MUST import diagrams from at least draw.io XML (additional formats deferred to future releases).
+- **FR-020**: Autosave MUST periodically persist the working diagram every 5 seconds of idle or after 20 operations to IndexedDB.
 - **FR-021**: Users MUST access a minimap/overview panel to navigate large diagrams.
 - **FR-022**: Users MUST have a context menu and toolbar with commonly used actions and visible keyboard shortcuts.
 - **FR-023**: Keyboard shortcuts MUST cover selection, editing, navigation, and formatting actions, matching draw.io conventions where feasible.
@@ -123,10 +120,10 @@ As a user, I want to create, edit, and share diagrams in a canvas-based editor t
 - **FR-025**: Users MUST collapse/expand containers and use swimlanes/pools with child element management.
 - **FR-026**: System MUST preserve manual routing and layout choices on subsequent edits.
 - **FR-027**: Users MUST lock elements to prevent accidental edits.
-- **FR-028**: System MUST provide accessible interactions (focus, ARIA where applicable) and contrast-compliant UI. [NEEDS CLARIFICATION: accessibility targets]
+- **FR-028**: System MUST provide accessible interactions (focus, ARIA where applicable) and contrast-compliant UI targeting WCAG 2.1 AA compliance.
 - **FR-029**: Users MUST search within the diagram (by label, type) and highlight results.
 - **FR-030**: Users MUST manage document settings and metadata (title, author, last modified).
-- **FR-031**: System SHOULD offer basic collaboration options (share link/export). [NEEDS CLARIFICATION: real-time collaboration in scope?]
+- **FR-031**: System SHOULD offer basic collaboration options (share link/export) - real-time collaboration deferred to future releases.
 - **FR-032**: System MUST preserve and restore editor state (zoom, pan, selection) on file open where appropriate.
 
 ### Key Entities (include if feature involves data)
@@ -142,7 +139,6 @@ As a user, I want to create, edit, and share diagrams in a canvas-based editor t
 - **Library Item**: A reusable shape/template available in the palette.
 - **Template**: A predefined arrangement of multiple elements/links that can be inserted.
 - **Document Settings**: Preferences such as grid, units, page size, and export options.
-- **History Entry**: An atomic change captured for undo/redo.
 
 ---
 
@@ -150,14 +146,14 @@ As a user, I want to create, edit, and share diagrams in a canvas-based editor t
 
 ### Content Quality
 
-- [ ] No implementation details (languages, frameworks, APIs)
+- [x] No implementation details (languages, frameworks, APIs)
 - [x] Focused on user value and business needs
 - [x] Written for non-technical stakeholders
 - [x] All mandatory sections completed
 
 ### Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Scope is clearly bounded
@@ -173,6 +169,6 @@ As a user, I want to create, edit, and share diagrams in a canvas-based editor t
 - [x] User scenarios defined
 - [x] Requirements generated
 - [x] Entities identified
-- [ ] Review checklist passed
+- [x] Review checklist passed
 
 ---

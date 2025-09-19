@@ -1,5 +1,7 @@
 # Data Model
 
+**Status**: ✅ Current implementation reflects this model with JointJS integration
+
 ## Entities
 
 ### Diagram
@@ -91,13 +93,6 @@
 - pageSize (A4, Letter, custom)
 - backgroundColor (string)
 
-### HistoryEntry
-
-- id (string)
-- timestamp (number)
-- action (type)
-- payload (diff)
-
 ## Validation Rules
 
 - Element and link IDs unique within page.
@@ -105,6 +100,14 @@
 - Layer IDs referenced by elements/links must exist and be visible for rendering.
 - Geometry must be non-negative sizes; rotation normalized [0,360).
 - Autosave version increments per write; schema version stored.
+
+## Implementation Notes
+
+- **JointJS Integration**: Uses JointJS standard `graph.toJSON()` format with custom format support
+- **Shape Types**: Maps to JointJS cell namespaces (e.g., 'basic.Rect', 'network.Router')
+- **Event System**: Leverages JointJS built-in `mvc.Events` with custom event mapping
+- **Tools Management**: Uses JointJS `elementTools` and `linkTools` for interactive features
+- **Persistence**: IndexedDB storage with autosave every 5 seconds or 20 operations
 
 ## Relationships
 

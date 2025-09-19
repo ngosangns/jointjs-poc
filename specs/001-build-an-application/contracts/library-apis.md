@@ -1,53 +1,76 @@
 # Library API Contracts
 
-## Initialization
+## Initialization (DiagramService)
 
-- create(options): DiagramEngine
-  - options.host: HTMLElement
-  - options.page?: PageInit
+- initialize(config: DiagramConfig): void
+- attachToElement(element: HTMLElement): void
 
 ## Persistence
 
-- load({ documentId }): Promise<void>
-- save({ documentId }): Promise<void>
-- export({ format: 'png'|'svg'|'pdf', scale?: number }): Promise<Blob>
-- import({ format: 'drawio-xml', data: string|ArrayBuffer }): Promise<void>
+- load(documentId: string): Promise<void>
+- save(documentId?: string): Promise<void>
+- exportData(): DiagramData | null
+- loadData(data: DiagramData): void
 
 ## Editing
 
-- addShape(shapeInit): Id
-- updateShape(id, patch): void
-- removeShape(id): void
-- connect({ sourceId, targetId, sourcePortId?, targetPortId? }): Id
-- updateLink(id, patch): void
-- removeLink(id): void
-- group(ids): GroupId
-- ungroup(groupId): void
-- layer: add, rename, reorder, setVisible, setLocked, moveElements
+- addElement(element: Partial<DiagramElement>): string
+- addLink(link: Partial<DiagramLink>): string
+- insertShapeAtPosition(shapeMetadata: ShapeMetadata, position: { x: number; y: number }): string
+- getCenterPosition(): { x: number; y: number }
+- clear(): void
+
+## Selection & Movement
+
+- selectAll(): void
+- deselectAll(): void
+- deleteSelected(): void
+- duplicateSelected(dx?: number, dy?: number): string[]
+- moveSelected(dx: number, dy: number): void
+- getSelectedElements(): any[]
 
 ## View & Interaction
 
-- zoomIn(), zoomOut(), setZoom(z)
-- panTo(x,y), fitToViewport()
-- grid: enable(bool), setSpacing(n)
+- zoomIn(factor?: number): void
+- zoomOut(factor?: number): void
+- setZoom(z: number): void
+- getZoom(): number
+- pan(dx: number, dy: number): void
+- panTo(x: number, y: number, smooth?: boolean): void
+- fitToViewport(padding?: number): void
+- zoomToFit(padding?: number): void
+- zoomToSelection(padding?: number): void
 
-## History
+## Grid Controls
 
-- undo(), redo(), canUndo(), canRedo()
+- setGridEnabled(enabled: boolean): void
+- setGridSize(size: number): void
+- toggleGrid(): boolean
+- isGridEnabled(): boolean
+- getGridSize(): number
 
 ## Events
 
-- on(eventName, handler): unsubscribe
-- off(eventName, handler)
+- addEventListener(eventType: any, callback: Function): void
+- removeEventListener(eventType: any, callback: Function): void
+- selection$: Observable<{ hasSelection: boolean; elementIds: string[]; linkIds: string[] }>
 
 ### Event Names
 
 - selection:changed
+- selection:cleared
 - element:added | element:updated | element:removed
 - link:added | link:updated | link:removed
 - viewport:changed
 - document:saved | document:loaded
 
+## Performance
+
+- getPerformanceStats(): any
+- setPerformanceOptimizations(options: object): void
+- enableShapeInsertionOptimizations(): void
+
 ## Error Handling
 
-- Methods reject with ValidationError | NotFoundError | PersistenceError
+- Methods throw Error with descriptive messages
+- Shape insertion includes viewport validation and error feedback

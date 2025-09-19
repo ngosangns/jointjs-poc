@@ -150,7 +150,6 @@ export * from './Group';
 export * from './Style';
 export * from './Template';
 export * from './DocumentSettings';
-export * from './HistoryEntry';
 
 /**
  * Interface for shape factory

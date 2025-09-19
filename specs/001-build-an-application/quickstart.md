@@ -37,45 +37,51 @@ await this.engine.save('current');
 ## Commands
 
 ```ts
-// Elements & links (API varies by app wrappers)
-this.engine.addElement({
-  type: 'rectangle',
+// Elements & links (via DiagramService)
+this.diagramService.addElement({
+  type: 'basic.Rect',
   position: { x: 100, y: 100 },
   size: { width: 100, height: 60 },
 });
-this.engine.addLink({ source: { id: 'a' }, target: { id: 'b' } });
+this.diagramService.addLink({
+  source: { id: 'element1' },
+  target: { id: 'element2' },
+});
 
-// History
-this.engine.undo();
-this.engine.redo();
-const canUndo = this.engine.canUndo();
-const canRedo = this.engine.canRedo();
+// Shape insertion from toolbar
+const centerPosition = this.diagramService.getCenterPosition();
+const elementId = this.diagramService.insertShapeAtPosition(shapeMetadata, centerPosition);
 
-// View
-this.engine.zoomIn();
-this.engine.zoomOut();
-this.engine.setZoom(1.25);
-this.engine.pan(10, 0);
-this.engine.panTo(0, 0);
-this.engine.fitToViewport(20);
+// View (via DiagramService)
+this.diagramService.zoomIn();
+this.diagramService.zoomOut();
+this.diagramService.setZoom(1.25);
+this.diagramService.pan(10, 0);
+this.diagramService.panTo(0, 0);
+this.diagramService.fitToViewport(20);
 
 // Grid
-this.engine.grid.enable(true);
-this.engine.grid.setSpacing(20);
+this.diagramService.setGridEnabled(true);
+this.diagramService.setGridSize(20);
 ```
 
 ## Events
 
 ```ts
-this.engine.addEventListener('selection:changed', (e) => {
+// Via DiagramService (recommended)
+this.diagramService.addEventListener('selection:changed', (e) => {
   const { elementIds, linkIds, hasSelection } = e.data;
   console.log('selection changed', { elementIds, linkIds, hasSelection });
 });
-this.engine.addEventListener('selection:cleared', () => {
-  console.log('selection cleared');
+
+// Via RxJS Observable (for reactive patterns)
+this.diagramService.selection$.subscribe((selection) => {
+  console.log('selection changed', selection);
 });
-this.engine.addEventListener('document:saved', (e) => console.log(e));
-this.engine.addEventListener('viewport:changed', (e) => {
+
+// Direct engine access (advanced)
+const engine = this.diagramService.getEngine();
+engine.addEventListener('viewport:changed', (e) => {
   const { zoom, pan } = e.data;
   console.log({ zoom, pan });
 });
@@ -83,9 +89,11 @@ this.engine.addEventListener('viewport:changed', (e) => {
 
 ## Toolbar Integration
 
-- Bind buttons to engine commands (undo, redo, align, distribute, group)
-- Toggle grid and snapping via engine settings
-- Delete/Duplicate buttons should only render when selection exists; subscribe to selection events or a service `selection$` observable to drive visibility.
+- ✅ **Shape Toolbar**: Click shapes to insert at viewport center
+- ✅ **Selection Actions**: Delete/Duplicate buttons show only when selection exists
+- ✅ **Grid Controls**: Toggle grid and adjust spacing via DiagramService
+- ✅ **Keyboard Shortcuts**: Global shortcuts for shape insertion (e.g., 'R' for rectangle)
+- ✅ **Visual Feedback**: Loading states and success/error animations
 
 ## Persistence
 

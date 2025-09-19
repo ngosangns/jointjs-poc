@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { DiagramConfig, DiagramData, DiagramElement, DiagramEngine, DiagramLink } from 'lib';
+import { ShapeMetadata } from './shape-library';
 
 @Injectable({
   providedIn: 'root',
@@ -235,6 +236,17 @@ export class DiagramService {
     this.diagramEngine.setPerformanceOptimizations(options);
   }
 
+  /**
+   * Enable performance optimizations for shape insertion
+   */
+  enableShapeInsertionOptimizations(): void {
+    this.setPerformanceOptimizations({
+      viewportCulling: true,
+      batchOperations: true,
+      viewportChangeThrottle: 16, // ~60fps
+    });
+  }
+
   zoomToFit(padding?: number): void {
     if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
     this.diagramEngine.zoomToFit(padding);
@@ -304,6 +316,161 @@ export class DiagramService {
 
   getEngine(): any {
     return this.diagramEngine;
+  }
+
+  /**
+   * Get center position of the current viewport for element placement
+   */
+  getCenterPosition(): { x: number; y: number } {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+
+    // Get the current viewport dimensions and position
+    const paper = this.diagramEngine.getPaper();
+    if (!paper) {
+      throw new Error('Paper not initialized.');
+    }
+
+    // Get paper dimensions
+    const paperWidth = paper.options.width || 800;
+    const paperHeight = paper.options.height || 600;
+
+    // Get current zoom and pan
+    const zoom = this.getZoom();
+    const pan = paper.translate();
+
+    // Calculate center position in paper coordinates
+    // Account for zoom and pan to get the center of the visible viewport
+    const centerX = (Number(paperWidth) / 2 - Number(pan.tx)) / Number(zoom);
+    const centerY = (Number(paperHeight) / 2 - Number(pan.ty)) / Number(zoom);
+
+    return { x: centerX, y: centerY };
+  }
+
+  /**
+   * Insert shape at specified position using shape metadata
+   */
+  insertShapeAtPosition(shapeMetadata: ShapeMetadata, position: { x: number; y: number }): string {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+
+    try {
+      // Check if position is within viewport for performance optimization
+      if (!this.isPositionInViewport(position)) {
+        console.warn('Shape insertion position is outside viewport, may impact performance');
+      }
+
+      // Map shape metadata to diagram element properties
+      const elementData = this.mapShapeMetadataToElement(shapeMetadata, position);
+
+      // Add element to diagram
+      const elementId = this.addElement(elementData);
+
+      // Mark as dirty for autosave
+      this.markDirty();
+
+      return elementId;
+    } catch (error) {
+      console.error('Failed to insert shape:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to insert shape: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Check if position is within current viewport for performance optimization
+   */
+  private isPositionInViewport(position: { x: number; y: number }): boolean {
+    if (!this.diagramEngine) {
+      return true; // Assume in viewport if engine not available
+    }
+
+    try {
+      const paper = this.diagramEngine.getPaper();
+      if (!paper) {
+        return true;
+      }
+
+      const paperWidth = paper.options.width || 800;
+      const paperHeight = paper.options.height || 600;
+      const zoom = this.getZoom();
+      const pan = paper.translate();
+
+      // Calculate viewport bounds in paper coordinates
+      const viewportLeft = -Number(pan.tx) / Number(zoom);
+      const viewportTop = -Number(pan.ty) / Number(zoom);
+      const viewportRight = viewportLeft + Number(paperWidth) / Number(zoom);
+      const viewportBottom = viewportTop + Number(paperHeight) / Number(zoom);
+
+      return (
+        position.x >= viewportLeft &&
+        position.x <= viewportRight &&
+        position.y >= viewportTop &&
+        position.y <= viewportBottom
+      );
+    } catch (error) {
+      console.warn('Failed to check viewport bounds:', error);
+      return true; // Assume in viewport on error
+    }
+  }
+
+  /**
+   * Map shape metadata to diagram element properties
+   */
+  private mapShapeMetadataToElement(
+    shapeMetadata: ShapeMetadata,
+    position: { x: number; y: number }
+  ): Partial<DiagramElement> {
+    // Map shape type from metadata
+    const shapeType = this.getShapeTypeFromMetadata(shapeMetadata);
+
+    // Create element data
+    const elementData: Partial<DiagramElement> = {
+      type: shapeType,
+      position: {
+        x: position.x - shapeMetadata.defaultSize.width / 2, // Center the shape
+        y: position.y - shapeMetadata.defaultSize.height / 2,
+      },
+      size: {
+        width: shapeMetadata.defaultSize.width,
+        height: shapeMetadata.defaultSize.height,
+      },
+      properties: {
+        name: shapeMetadata.name,
+        description: shapeMetadata.description,
+        category: shapeMetadata.category,
+        icon: shapeMetadata.icon,
+      },
+    };
+
+    return elementData;
+  }
+
+  /**
+   * Get shape type from shape metadata
+   */
+  private getShapeTypeFromMetadata(shapeMetadata: ShapeMetadata): string {
+    // Map shape metadata to diagram element types
+    const typeMap: Record<string, string> = {
+      rectangle: 'basic.Rect',
+      circle: 'basic.Circle',
+      ellipse: 'basic.Ellipse',
+      polygon: 'basic.Polygon',
+      path: 'basic.Path',
+      diamond: 'basic.Diamond',
+      parallelogram: 'basic.Parallelogram',
+      stickman: 'basic.Stickman',
+      folder: 'basic.Folder',
+      router: 'network.Router',
+      server: 'network.Server',
+      database: 'network.Database',
+      cloud: 'network.Cloud',
+      firewall: 'network.Firewall',
+    };
+
+    return typeMap[shapeMetadata.icon] || 'basic.Rect';
   }
 
   // Autosave internals

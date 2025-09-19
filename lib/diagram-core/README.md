@@ -5,12 +5,14 @@ A comprehensive diagram library built on top of JointJS with enhanced features a
 ## 🚀 Key Improvements
 
 ### ✅ **JointJS Best Practices Integration**
+
 - **Event System**: Leverages JointJS built-in `mvc.Events` instead of custom implementation
 - **Serialization**: Uses JointJS standard `graph.toJSON()` format with backward compatibility
 - **Cell Namespaces**: Supports JointJS cell namespace pattern for custom shapes
 - **Tools Management**: Comprehensive tools system using JointJS `elementTools` and `linkTools`
 
 ### 🏗️ **Enhanced Architecture**
+
 - **Dependency Injection**: Full DI support for all managers and factories
 - **Modular Design**: Clean separation of concerns with dedicated managers
 - **Interface-based**: Comprehensive interfaces for testing and extensibility
@@ -19,45 +21,55 @@ A comprehensive diagram library built on top of JointJS with enhanced features a
 ## 📦 Core Components
 
 ### Managers
+
 - **EventManager**: JointJS event integration with custom event mapping
 - **DataManager**: Standard JointJS serialization with custom format support
 - **PaperManager**: Paper lifecycle and configuration management
 - **GraphManager**: Graph operations with embedding/grouping support
 - **ToolsManager**: Interactive tools for elements and links
+- **PersistenceManager**: Document persistence and storage management
+- **KeyboardManager**: Keyboard shortcuts and input handling
 
 ### Factories
+
 - **ShapeFactory**: Enhanced shape creation with cell namespaces and ports
 - **LinkFactory**: Link creation with advanced connection handling
 
 ## 🎯 New Features
 
 ### 1. Advanced Shape Management
+
 ```typescript
 // Custom shape with namespace
 const CustomShape = shapeFactory.defineShape('MyShape', 'custom', {
   attrs: {
     body: { fill: '#e74c3c' },
-    label: { text: 'Custom Shape' }
-  }
+    label: { text: 'Custom Shape' },
+  },
 });
 
 // Shape with ports
-const elementWithPorts = shapeFactory.createShapeWithPorts('rectangle', {
-  position: { x: 100, y: 100 }
-}, {
-  groups: {
-    'in': { position: 'left' },
-    'out': { position: 'right' }
+const elementWithPorts = shapeFactory.createShapeWithPorts(
+  'rectangle',
+  {
+    position: { x: 100, y: 100 },
+  },
+  {
+    groups: {
+      in: { position: 'left' },
+      out: { position: 'right' },
+    },
   }
-});
+);
 ```
 
 ### 2. Tools Management
+
 ```typescript
 // Custom element tools
 const customTools = [
   toolsManager.createElementTool('Remove'),
-  toolsManager.createElementTool('Boundary')
+  toolsManager.createElementTool('Boundary'),
 ];
 toolsManager.registerElementTools('custom', customTools);
 
@@ -66,15 +78,16 @@ toolsManager.showElementTools(elementView, 'custom');
 ```
 
 ### 3. Embedding & Grouping
+
 ```typescript
 // Create group from elements
 const groupId = graphManager.createGroup(graph, ['elem1', 'elem2'], {
   properties: {
     attrs: {
       body: { fill: 'rgba(0,0,0,0.1)' },
-      label: { text: 'My Group' }
-    }
-  }
+      label: { text: 'My Group' },
+    },
+  },
 });
 
 // Embed element
@@ -85,6 +98,7 @@ graphManager.fitParentToChildren(graph, parentId, 15);
 ```
 
 ### 4. Enhanced Event System
+
 ```typescript
 // JointJS events are automatically mapped to custom events
 diagramEngine.addEventListener('element:selected', (event) => {
@@ -99,6 +113,7 @@ paper.on('element:pointerdown', (elementView) => {
 ```
 
 ### 5. Standard Serialization
+
 ```typescript
 // JointJS standard format (recommended)
 const data = dataManager.serialize(graph);
@@ -119,32 +134,36 @@ const engine = new DiagramEngine({
   width: 800,
   height: 600,
   gridSize: 10,
-  interactive: true
+  interactive: true,
 });
 
 // Initialize paper
 engine.initializePaper(document.getElementById('diagram'));
 
 // Create elements with ports
-const rect = engine.getShapeFactory().createShapeWithPorts('rectangle', {
-  position: { x: 100, y: 100 },
-  size: { width: 120, height: 80 }
-}, {
-  groups: {
-    'in': { position: 'left', attrs: { circle: { fill: '#16A085' } } },
-    'out': { position: 'right', attrs: { circle: { fill: '#E74C3C' } } }
+const rect = engine.getShapeFactory().createShapeWithPorts(
+  'rectangle',
+  {
+    position: { x: 100, y: 100 },
+    size: { width: 120, height: 80 },
   },
-  items: [
-    { group: 'in', id: 'input' },
-    { group: 'out', id: 'output' }
-  ]
-});
+  {
+    groups: {
+      in: { position: 'left', attrs: { circle: { fill: '#16A085' } } },
+      out: { position: 'right', attrs: { circle: { fill: '#E74C3C' } } },
+    },
+    items: [
+      { group: 'in', id: 'input' },
+      { group: 'out', id: 'output' },
+    ],
+  }
+);
 
 // Add to diagram
 const elementId = engine.addElement({
   type: 'rectangle',
   position: { x: 100, y: 100 },
-  size: { width: 120, height: 80 }
+  size: { width: 120, height: 80 },
 });
 
 // Setup event handling
@@ -153,11 +172,9 @@ engine.addEventListener('element:selected', (event) => {
 });
 
 // Create group
-const groupId = engine.getGraphManager().createGroup(
-  engine.getGraph(),
-  [elementId],
-  { properties: { attrs: { label: { text: 'My Group' } } } }
-);
+const groupId = engine.getGraphManager().createGroup(engine.getGraph(), [elementId], {
+  properties: { attrs: { label: { text: 'My Group' } } },
+});
 ```
 
 ## 🎨 Architecture Benefits
@@ -203,7 +220,9 @@ diagram-core/
 ├── factories/           # Object creation factories
 ├── shapes/             # Custom shape definitions
 ├── links/              # Custom link definitions
-├── examples/           # Usage examples
+├── mappers/            # Data format mappers
+├── persistence/        # Persistence adapters
+├── validators/         # Data validation utilities
 ├── DiagramEngine.ts    # Main orchestrator
 └── index.ts           # Main export file
 ```
@@ -226,50 +245,95 @@ Define contracts for all major components:
 - `IDataManager`: Data serialization/deserialization interface
 - `IPaperManager`: JointJS paper management interface
 - `IGraphManager`: JointJS graph operations interface
+- `IToolsManager`: Tools management interface
 - `IShapeFactory`: Shape creation interface
 - `ILinkFactory`: Link creation interface
 
 ### Managers
 
 #### EventManager
+
 Handles all event-related operations:
+
 - Event listener registration/removal
 - Event emission
 - Cross-component communication
 
 #### DataManager
+
 Manages data serialization and persistence:
+
 - Serialize graph to JSON
 - Deserialize JSON to graph
 - Data validation
 - Import/export functionality
 
 #### PaperManager
+
 Manages JointJS paper operations:
+
 - Paper initialization
 - Event setup
 - Resize operations
 - Interaction management
 
 #### GraphManager
+
 Manages JointJS graph operations:
+
 - Element/link addition/removal
 - Graph event handling
 - Cell management
+- Embedding and grouping operations
+- Element querying and relationships
+
+#### ToolsManager
+
+Manages interactive tools:
+
+- Element and link tool registration
+- Tool visibility and interaction
+- Grid controls and settings
+- Custom tool creation
+
+#### PersistenceManager
+
+Handles document persistence:
+
+- Document saving and loading
+- Storage adapter management
+- Data serialization for persistence
+
+#### KeyboardManager
+
+Manages keyboard interactions:
+
+- Keyboard shortcuts registration
+- Platform-specific key handling
+- Shortcut execution and management
 
 ### Factories
 
 #### ShapeFactory
+
 Creates and manages custom shapes:
+
 - Registry pattern for shape types
 - Default shape configurations
 - Shape creation with validation
+- Cell namespace management
+- Port configuration and creation
+- Custom shape definition with JointJS patterns
 
 #### LinkFactory
+
 Creates and manages custom links:
+
 - Registry pattern for link types
 - Default link configurations
 - Link creation with validation
+- Advanced connection handling
+- Router and connector configuration
 
 ## Usage Examples
 
@@ -282,7 +346,7 @@ const config: DiagramConfig = {
   width: 800,
   height: 600,
   gridSize: 10,
-  interactive: true
+  interactive: true,
 };
 
 const engine = new DiagramEngine(config);
@@ -292,14 +356,14 @@ engine.initializePaper(document.getElementById('diagram-container'));
 const elementId = engine.addElement({
   type: 'rectangle',
   position: { x: 100, y: 100 },
-  size: { width: 120, height: 60 }
+  size: { width: 120, height: 60 },
 });
 
 // Add links
 engine.addLink({
   source: elementId,
   target: anotherId,
-  type: 'standard'
+  type: 'standard',
 });
 ```
 
@@ -316,7 +380,7 @@ shapeFactory.registerShape('process', ProcessShape);
 const processId = engine.addElement({
   type: 'process',
   position: { x: 200, y: 150 },
-  size: { width: 140, height: 80 }
+  size: { width: 140, height: 80 },
 });
 ```
 
@@ -333,7 +397,7 @@ linkFactory.registerLink('dataflow', DataFlowLink);
 engine.addLink({
   source: sourceId,
   target: targetId,
-  type: 'dataflow'
+  type: 'dataflow',
 });
 ```
 
@@ -361,8 +425,12 @@ const dataManager = engine.getDataManager();
 const jsonData = dataManager.exportToJSON(engine.getGraph(), true);
 
 // Import diagram
-dataManager.importFromJSON(jsonData, engine.getGraph(), 
-  engine.getShapeFactory(), engine.getLinkFactory());
+dataManager.importFromJSON(
+  jsonData,
+  engine.getGraph(),
+  engine.getShapeFactory(),
+  engine.getLinkFactory()
+);
 ```
 
 ## Dependency Injection
@@ -370,19 +438,34 @@ dataManager.importFromJSON(jsonData, engine.getGraph(),
 For testing or custom implementations, you can inject your own managers:
 
 ```typescript
-import { 
-  DiagramEngine, 
-  EventManager, 
-  CustomDataManager 
+import {
+  DiagramEngine,
+  EventManager,
+  DataManager,
+  PaperManager,
+  GraphManager,
+  ToolsManager,
+  ShapeFactory,
+  LinkFactory,
 } from './diagram-core';
 
 const customEventManager = new EventManager();
-const customDataManager = new CustomDataManager();
+const customDataManager = new DataManager();
+const customPaperManager = new PaperManager();
+const customGraphManager = new GraphManager();
+const customToolsManager = new ToolsManager();
+const customShapeFactory = new ShapeFactory();
+const customLinkFactory = new LinkFactory();
 
 const engine = new DiagramEngine(
   config,
   customEventManager,
-  customDataManager
+  customDataManager,
+  customPaperManager,
+  customGraphManager,
+  customToolsManager,
+  customShapeFactory,
+  customLinkFactory
 );
 ```
 
@@ -395,13 +478,12 @@ const engine = new DiagramEngine(
 
 ## Available Custom Links
 
-- **DataFlowLink**: Link with data label
-- **ControlFlowLink**: Dashed link for control flow
+- **DataFlowLink**: Link with data label and orthogonal routing
+- **ControlFlowLink**: Dashed link for control flow with condition labels
 - **DependencyLink**: Dotted link for dependencies
-- **InheritanceLink**: Link with triangle arrow
-- **CompositionLink**: Link with diamond marker
-- **MessageLink**: Link with message label
-- **BidirectionalLink**: Link with arrows on both ends
+- **InheritanceLink**: Link with triangle arrow for inheritance
+- **CompositionLink**: Link with diamond marker for composition
+- **MessageLink**: Link with message label and sequence numbers
 
 ## Migration from Old Architecture
 
@@ -421,23 +503,24 @@ The modular architecture makes testing much easier:
 
 ```typescript
 import { EventManager } from './diagram-core/managers/EventManager';
+import { DiagramEventType } from './diagram-core/types';
 
 describe('EventManager', () => {
   let eventManager: EventManager;
-  
+
   beforeEach(() => {
     eventManager = new EventManager();
   });
-  
+
   it('should add event listeners', () => {
     const callback = jest.fn();
-    eventManager.addEventListener('element:added', callback);
-    
-    eventManager.emitEvent('element:added', { id: 'test' });
-    
+    eventManager.addEventListener('element:added' as DiagramEventType, callback);
+
+    eventManager.emitEvent('element:added' as DiagramEventType, { id: 'test' });
+
     expect(callback).toHaveBeenCalledWith({
       type: 'element:added',
-      data: { id: 'test' }
+      data: { id: 'test' },
     });
   });
 });
@@ -450,15 +533,19 @@ The modular architecture makes it easy to add new features:
 1. **Custom Managers**: Implement new managers for specific behaviors
 2. **Plugin System**: Create plugins that extend functionality
 3. **Theme System**: Add theme management for consistent styling
-4. **Validation System**: Add comprehensive validation for diagrams
+4. **Validation System**: Comprehensive validation for diagrams (already implemented)
 5. **Collaboration**: Add real-time collaboration features
+6. **Performance Optimization**: Advanced viewport culling and batch operations
+7. **Keyboard Shortcuts**: Platform-aware keyboard interaction system
 
 ## Best Practices
 
 1. **Use Interfaces**: Always program against interfaces, not concrete implementations
 2. **Register Custom Types**: Use the factory pattern to register custom shapes and links
 3. **Handle Events**: Use the event system for loose coupling between components
-4. **Validate Data**: Always validate data before processing
-5. **Test Components**: Write unit tests for individual components
+4. **Validate Data**: Always validate data before processing (validation utilities available)
+5. **Test Components**: Write unit tests for individual components with dependency injection
+6. **Leverage JointJS**: Use JointJS built-in features and patterns for optimal performance
+7. **Namespace Management**: Use cell namespaces for custom shape organization
 
 This refactored architecture provides a solid foundation for building complex diagram applications while maintaining clean, maintainable code.
