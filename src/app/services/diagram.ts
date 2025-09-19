@@ -81,28 +81,6 @@ export class DiagramService {
   }
 
   /**
-   * Remove an element
-   */
-  removeElement(elementId: string): void {
-    if (!this.diagramEngine) {
-      throw new Error('Diagram engine not initialized.');
-    }
-    this.diagramEngine.removeElement(elementId);
-    this.markDirty();
-  }
-
-  /**
-   * Remove a link
-   */
-  removeLink(linkId: string): void {
-    if (!this.diagramEngine) {
-      throw new Error('Diagram engine not initialized.');
-    }
-    this.diagramEngine.removeLink(linkId);
-    this.markDirty();
-  }
-
-  /**
    * Get diagram data
    */
   getData(): DiagramData | null {
@@ -205,17 +183,6 @@ export class DiagramService {
 
   setDocumentId(documentId: string): void {
     this.currentDocumentId = documentId;
-  }
-
-  // History APIs
-  undo(): void {
-    if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    this.diagramEngine.undo();
-  }
-
-  redo(): void {
-    if (!this.diagramEngine) throw new Error('Diagram engine not initialized.');
-    this.diagramEngine.redo();
   }
 
   // Enhanced View APIs
@@ -337,16 +304,6 @@ export class DiagramService {
 
   getEngine(): any {
     return this.diagramEngine;
-  }
-
-  canUndo(): boolean {
-    if (!this.diagramEngine) return false;
-    return this.diagramEngine.canUndo();
-  }
-
-  canRedo(): boolean {
-    if (!this.diagramEngine) return false;
-    return this.diagramEngine.canRedo();
   }
 
   // Autosave internals

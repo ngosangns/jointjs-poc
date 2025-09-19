@@ -11,8 +11,6 @@ import {
 import { FormsModule } from '@angular/forms';
 import type { DiagramElement } from 'lib';
 import { DiagramService } from '../../services/diagram';
-import { DragDropService } from '../../services/drag-drop';
-import { DropZoneService } from '../../services/drop-zone';
 import {
   type ShapeCategory,
   ShapeLibraryService,
@@ -31,8 +29,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   @ViewChild('diagramContainer', { static: true }) diagramContainer!: ElementRef<HTMLDivElement>;
 
   // Diagram state
-  canUndo: boolean = false;
-  canRedo: boolean = false;
   currentZoom: number = 1;
   currentPan: { x: number; y: number } = { x: 0, y: 0 };
   isGridEnabled: boolean = true;
@@ -71,8 +67,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   constructor(
     private diagramService: DiagramService,
     private cdr: ChangeDetectorRef,
-    private dragDropService: DragDropService,
-    private dropZoneService: DropZoneService,
     private shapeLibraryService: ShapeLibraryService
   ) {}
 
@@ -103,9 +97,7 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
       // Cache current size
       this.lastContainerSize = { width: clientWidth, height: clientHeight };
 
-      this.updateHistoryState();
       this.setupEventListeners();
-      this.setupDragDropHandlers();
 
       // Listen to window resize and resize diagram based on container size
       window.addEventListener('resize', this.onWindowResize, { passive: true });
@@ -118,8 +110,7 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   ngOnDestroy(): void {
     this.diagramService.destroy();
-    this.dropZoneService.clearAllDropZones();
-    window.removeEventListener('resize', this.onWindowResize as any);
+    window.removeEventListener('resize', this.onWindowResize);
     if (this.resizeRafId != null) {
       cancelAnimationFrame(this.resizeRafId);
       this.resizeRafId = null;
@@ -144,40 +135,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   onSearchChange(): void {
     this.updateFilteredShapes();
-  }
-
-  onShapeDragStart(event: DragEvent, shapeType: string): void {
-    if (!event.dataTransfer) return;
-
-    const shapeMetadata = this.shapeLibraryService.getShapeMetadata(shapeType);
-    if (!shapeMetadata) return;
-
-    const dragData = {
-      type: 'shape' as const,
-      shapeType: shapeType,
-      metadata: shapeMetadata,
-    };
-
-    // Set drag data
-    event.dataTransfer.setData('application/json', JSON.stringify(dragData));
-
-    // Set drag effect
-    event.dataTransfer.effectAllowed = 'copy';
-
-    // Set active drag data in service
-    this.dragDropService.setActiveDragData(dragData);
-
-    // Add visual feedback
-    if (event.target instanceof HTMLElement) {
-      event.target.classList.add('dragging');
-    }
-  }
-
-  onShapeDragEnd(event: DragEvent): void {
-    // Remove visual feedback
-    if (event.target instanceof HTMLElement) {
-      event.target.classList.remove('dragging');
-    }
   }
 
   onShapeHover(shapeType: string): void {
@@ -234,13 +191,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   // Diagram methods
-  private updateHistoryState(): void {
-    setTimeout(() => {
-      this.canUndo = this.diagramService.canUndo();
-      this.canRedo = this.diagramService.canRedo();
-      this.cdr.detectChanges();
-    }, 0);
-  }
 
   private setupEventListeners(): void {
     // Listen for viewport changes to update zoom and pan display
@@ -261,99 +211,14 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
     // Listen for shape creation events
     this.diagramService.addEventListener('shape:created', (event: any) => {
-      this.updateHistoryState();
+      // Shape created event handled
     });
 
     // Setup mouse wheel zoom
     this.setupMouseWheelZoom();
 
-    // Setup drag-to-pan
-    this.setupDragToPan();
-
     // Setup performance monitoring
     this.setupPerformanceMonitoring();
-  }
-
-  private setupDragDropHandlers(): void {
-    const container = this.diagramContainer.nativeElement;
-
-    // Register canvas as drop zone
-    this.dropZoneService.registerDropZone('canvas', container, {
-      gridSnap: this.isGridEnabled,
-      gridSize: this.diagramService.getGridSize(),
-    });
-
-    // Handle drag over
-    container.addEventListener('dragover', (event: DragEvent) => {
-      const isValid = this.dragDropService.handleDragOver(event, container);
-      if (isValid) {
-        event.preventDefault();
-      }
-    });
-
-    // Handle drag leave
-    container.addEventListener('dragleave', (event: DragEvent) => {
-      this.dragDropService.handleDragLeave(event, container);
-    });
-
-    // Handle drop
-    container.addEventListener('drop', (event: DragEvent) => {
-      const dropPosition = this.dragDropService.handleDrop(event, container);
-      if (dropPosition && dropPosition.isValid) {
-        this.handleShapeDrop(dropPosition);
-      }
-    });
-
-    // Handle drag end
-    container.addEventListener('dragend', () => {
-      this.dragDropService.handleDragEnd();
-    });
-  }
-
-  private handleShapeDrop(dropPosition: { x: number; y: number }): void {
-    const dragData = this.dragDropService.getActiveDragData();
-    if (!dragData || dragData.type !== 'shape') {
-      return;
-    }
-
-    try {
-      // Get paper for coordinate transformation
-      const engine = this.diagramService.getEngine();
-      const paper = engine.getPaper();
-
-      if (!paper) {
-        console.error('Paper not available for drop operation');
-        return;
-      }
-
-      // Convert canvas coordinates to paper coordinates
-      const paperCoords = this.dragDropService.canvasToPaperCoordinates(
-        dropPosition.x,
-        dropPosition.y,
-        paper
-      );
-
-      // Apply grid snapping if enabled
-      const finalCoords = this.dragDropService.applyGridSnapping(
-        paperCoords.x,
-        paperCoords.y,
-        this.diagramService.getGridSize(),
-        this.isGridEnabled
-      );
-
-      // Create shape at position
-      const shapeId = (engine as any).addShapeAtPosition(dragData.shapeType, finalCoords, {
-        properties: {
-          label: {
-            text: dragData.metadata.name,
-          },
-        },
-      });
-      // Update history state
-      this.updateHistoryState();
-    } catch (error) {
-      console.error('Error creating shape from drag-drop:', error);
-    }
   }
 
   private setupMouseWheelZoom(): void {
@@ -373,60 +238,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
       },
       { passive: false }
     );
-  }
-
-  private setupDragToPan(): void {
-    const container = this.diagramContainer.nativeElement;
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    let startPan = { x: 0, y: 0 };
-
-    container.addEventListener('mousedown', (event: MouseEvent) => {
-      // Only pan with middle mouse button or right mouse button
-      if (event.button === 1 || event.button === 2) {
-        event.preventDefault();
-        isDragging = true;
-        this.isPanning = true;
-        startX = event.clientX;
-        startY = event.clientY;
-        startPan = { ...this.currentPan };
-
-        // Change cursor
-        container.style.cursor = 'grabbing';
-      }
-    });
-
-    container.addEventListener('mousemove', (event: MouseEvent) => {
-      if (isDragging) {
-        event.preventDefault();
-        const dx = event.clientX - startX;
-        const dy = event.clientY - startY;
-
-        this.diagramService.panTo(startPan.x + dx, startPan.y + dy);
-      }
-    });
-
-    container.addEventListener('mouseup', () => {
-      if (isDragging) {
-        isDragging = false;
-        this.isPanning = false;
-        container.style.cursor = 'default';
-      }
-    });
-
-    container.addEventListener('mouseleave', () => {
-      if (isDragging) {
-        isDragging = false;
-        this.isPanning = false;
-        container.style.cursor = 'default';
-      }
-    });
-
-    // Prevent context menu on right click
-    container.addEventListener('contextmenu', (event: MouseEvent) => {
-      event.preventDefault();
-    });
   }
 
   private setupPerformanceMonitoring(): void {
@@ -461,27 +272,15 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     };
 
     this.diagramService.addElement(element);
-    this.updateHistoryState();
   }
 
   onClearDiagram(): void {
     this.diagramService.clear();
-    this.updateHistoryState();
   }
 
   onExportData(): void {
     const data = this.diagramService.exportData();
     alert('Check console for diagram data');
-  }
-
-  onUndo(): void {
-    this.diagramService.undo();
-    this.updateHistoryState();
-  }
-
-  onRedo(): void {
-    this.diagramService.redo();
-    this.updateHistoryState();
   }
 
   onZoomIn(): void {
@@ -494,12 +293,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   onToggleGrid(): void {
     this.isGridEnabled = this.diagramService.toggleGrid();
-    // Update drop zone grid settings
-    this.dropZoneService.updateDropZoneGrid(
-      'canvas',
-      this.isGridEnabled,
-      this.diagramService.getGridSize()
-    );
   }
 
   onZoomToFit(): void {
@@ -522,13 +315,11 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   onDeleteSelected(): void {
     this.diagramService.deleteSelected();
-    this.updateHistoryState();
     this.updateSelectionState();
   }
 
   onMoveSelected(dx: number, dy: number): void {
     this.diagramService.moveSelected(dx, dy);
-    this.updateHistoryState();
   }
 
   onSetZoom(zoom: number): void {
@@ -537,8 +328,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   onSetGridSize(size: number): void {
     this.diagramService.setGridSize(size);
-    // Update drop zone grid settings
-    this.dropZoneService.updateDropZoneGrid('canvas', this.isGridEnabled, size);
   }
 
   onPanTo(x: number, y: number): void {

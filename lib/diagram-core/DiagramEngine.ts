@@ -25,7 +25,6 @@ import {
   DataManager,
   EventManager,
   GraphManager,
-  HistoryManager,
   PaperManager,
   PersistenceManager,
   ToolsManager,
@@ -44,7 +43,6 @@ export class DiagramEngine {
   private graphManager: IGraphManager;
   private toolsManager: IToolsManager;
   private persistence: PersistenceManager;
-  private history: HistoryManager<string>;
   private keyboardManager: KeyboardManager;
 
   // Factories
@@ -76,7 +74,7 @@ export class DiagramEngine {
     toolsManager?: IToolsManager,
     shapeFactory?: IShapeFactory,
     linkFactory?: ILinkFactory,
-    options?: { persistence?: PersistenceManager; history?: HistoryManager<string> }
+    options?: { persistence?: PersistenceManager }
   ) {
     this.config = { ...config };
     this.graph = new dia.Graph();
@@ -88,21 +86,6 @@ export class DiagramEngine {
     this.graphManager = graphManager || new GraphManager();
     this.toolsManager = toolsManager || new ToolsManager();
     this.persistence = options?.persistence || new PersistenceManager();
-    this.history =
-      options?.history ||
-      new HistoryManager<string>({
-        createSnapshot: () => JSON.stringify(this.dataManager.serializeToCustomFormat(this.graph)),
-        restoreSnapshot: (snapshot) => {
-          this.graph.clear();
-          this.dataManager.deserializeCustomFormat(
-            JSON.parse(snapshot),
-            this.graph,
-            this.shapeFactory,
-            this.linkFactory
-          );
-        },
-        limit: 100,
-      });
 
     // Initialize factories
     this.shapeFactory = shapeFactory || new ShapeFactory();
@@ -110,8 +93,6 @@ export class DiagramEngine {
 
     // Initialize keyboard manager
     this.keyboardManager = new KeyboardManager();
-
-    this.initializeEventListeners();
   }
 
   /**
@@ -152,7 +133,6 @@ export class DiagramEngine {
    * Add an element to the diagram
    */
   public addElement(elementConfig: Partial<DiagramElement>): string {
-    this.history.push();
     return this.graphManager.addElement(this.graph, elementConfig, this.shapeFactory);
   }
 
@@ -164,8 +144,6 @@ export class DiagramEngine {
     position: { x: number; y: number },
     options: Partial<DiagramElement> = {}
   ): string {
-    this.history.push();
-
     // Get default size from shape factory
     const defaultConfig = this.shapeFactory.getDefaultConfig(shapeType);
     const defaultSize = defaultConfig?.size || { width: 100, height: 60 };
@@ -200,7 +178,6 @@ export class DiagramEngine {
    * Add a link between two elements
    */
   public addLink(linkConfig: Partial<DiagramLink>): string {
-    this.history.push();
     return this.graphManager.addLink(this.graph, linkConfig, this.linkFactory);
   }
 
@@ -208,7 +185,6 @@ export class DiagramEngine {
    * Remove an element from the diagram
    */
   public removeElement(elementId: string): void {
-    this.history.push();
     this.graphManager.removeElement(this.graph, elementId);
   }
 
@@ -216,7 +192,6 @@ export class DiagramEngine {
    * Remove a link from the diagram
    */
   public removeLink(linkId: string): void {
-    this.history.push();
     this.graphManager.removeLink(this.graph, linkId);
   }
 
@@ -238,7 +213,6 @@ export class DiagramEngine {
    * Clear the entire diagram
    */
   public clear(): void {
-    this.history.push();
     this.graphManager.clear(this.graph);
   }
 
@@ -261,23 +235,6 @@ export class DiagramEngine {
       );
       this.eventManager.emitEvent('document:loaded', { id: documentId });
     }
-  }
-
-  // History
-  public undo(): void {
-    this.history.undo();
-  }
-
-  public redo(): void {
-    this.history.redo();
-  }
-
-  public canUndo(): boolean {
-    return this.history.canUndo();
-  }
-
-  public canRedo(): boolean {
-    return this.history.canRedo();
   }
 
   // View controls with enhanced bounds checking and smooth transitions
@@ -533,14 +490,6 @@ export class DiagramEngine {
   }
 
   /**
-   * Initialize event listeners for graph changes
-   */
-  private initializeEventListeners(): void {
-    // Event listeners will be initialized when paper is created
-    // through eventManager.initialize() in initializePaper()
-  }
-
-  /**
    * Setup keyboard event handlers
    */
   private setupKeyboardEventHandlers(): void {
@@ -555,15 +504,6 @@ export class DiagramEngine {
 
     this.eventManager.addEventListener('keyboard:reset-zoom', () => {
       this.setZoom(1);
-    });
-
-    // History handlers
-    this.eventManager.addEventListener('keyboard:undo', () => {
-      this.undo();
-    });
-
-    this.eventManager.addEventListener('keyboard:redo', () => {
-      this.redo();
     });
 
     // Grid handlers
@@ -853,7 +793,6 @@ export class DiagramEngine {
     const newIds: string[] = [];
     if (selectedElements.length === 0) return newIds;
 
-    this.history.push();
     selectedElements.forEach((element: any) => {
       const clone = element.clone();
       clone.translate(offset.dx, offset.dy);
@@ -883,8 +822,6 @@ export class DiagramEngine {
       return;
     }
 
-    this.history.push();
-
     // Simple movement implementation that works
     selectedElements.forEach((element: any) => {
       const currentPosition = element.get('position') || { x: 0, y: 0 };
@@ -913,8 +850,6 @@ export class DiagramEngine {
     if (!element || !element.isElement()) {
       throw new Error(`Element with id ${id} not found`);
     }
-
-    this.history.push();
 
     // Check if geometry is being updated (position change)
     const wasGeometryUpdated = patch.geometry !== undefined;
@@ -971,8 +906,6 @@ export class DiagramEngine {
       throw new Error(`Link with id ${linkId} not found`);
     }
 
-    this.history.push();
-
     // Get current vertices
     const vertices = link.get('vertices') || [];
     if (vertexIndex >= 0 && vertexIndex < vertices.length) {
@@ -996,8 +929,6 @@ export class DiagramEngine {
       throw new Error(`Link with id ${linkId} not found`);
     }
 
-    this.history.push();
-
     // Get current vertices and add new one
     const vertices = link.get('vertices') || [];
     vertices.push({ x, y });
@@ -1018,8 +949,6 @@ export class DiagramEngine {
     if (!link || !link.isLink()) {
       throw new Error(`Link with id ${linkId} not found`);
     }
-
-    this.history.push();
 
     // Get current vertices and remove specified one
     const vertices = link.get('vertices') || [];
@@ -1043,8 +972,6 @@ export class DiagramEngine {
     if (!element || !element.isElement()) {
       throw new Error(`Element with id ${id} not found`);
     }
-
-    this.history.push();
 
     // Calculate constrained position
     const newPosition = this.calculateConstrainedPosition(element, dx, dy);

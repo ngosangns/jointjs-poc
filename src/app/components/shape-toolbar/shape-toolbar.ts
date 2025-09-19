@@ -63,44 +63,6 @@ export class ShapeToolbarComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle shape drag start
-   */
-  onShapeDragStart(event: DragEvent, shapeType: string): void {
-    if (!event.dataTransfer) return;
-
-    const shapeMetadata = this.shapeLibraryService.getShapeMetadata(shapeType);
-    if (!shapeMetadata) return;
-
-    // Set drag data
-    event.dataTransfer.setData(
-      'application/json',
-      JSON.stringify({
-        type: 'shape',
-        shapeType: shapeType,
-        metadata: shapeMetadata,
-      })
-    );
-
-    // Set drag effect
-    event.dataTransfer.effectAllowed = 'copy';
-
-    // Add visual feedback
-    if (event.target instanceof HTMLElement) {
-      event.target.classList.add('dragging');
-    }
-  }
-
-  /**
-   * Handle shape drag end
-   */
-  onShapeDragEnd(event: DragEvent): void {
-    // Remove visual feedback
-    if (event.target instanceof HTMLElement) {
-      event.target.classList.remove('dragging');
-    }
-  }
-
-  /**
    * Handle shape hover
    */
   onShapeHover(shapeType: string): void {

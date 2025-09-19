@@ -39,12 +39,9 @@
             *ngFor="let shape of filteredShapes"
             class="shape-item"
             [class.hovered]="isShapeHovered(getShapeType(shape))"
-            draggable="true"
-            (dragstart)="onShapeDragStart($event, getShapeType(shape))"
-            (dragend)="onShapeDragEnd($event)"
+            [attr.data-shape-type]="getShapeType(shape)"
             (mouseenter)="onShapeHover(getShapeType(shape))"
             (mouseleave)="onShapeHoverEnd()"
-            [attr.aria-label]="'Drag ' + shape.name + ' to canvas'"
             [title]="shape.description"
           >
             <div class="shape-preview">
@@ -75,11 +72,6 @@
         <h3 class="section-title">Tools</h3>
       </div>
       <button class="btn" (click)="onClearDiagram()">Clear</button>
-      <hr />
-      <div class="flex gap-1">
-        <button class="btn" (click)="onUndo()" [disabled]="!canUndo">Undo</button>
-        <button class="btn" (click)="onRedo()" [disabled]="!canRedo">Redo</button>
-      </div>
       <hr />
       <div class="flex gap-1">
         <button class="btn" (click)="onZoomIn()" data-testid="btn-zoom-in" aria-label="Zoom in">

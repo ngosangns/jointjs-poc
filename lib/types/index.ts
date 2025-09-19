@@ -110,8 +110,6 @@ export type DiagramEventType =
   | 'keyboard:zoom-in'
   | 'keyboard:zoom-out'
   | 'keyboard:reset-zoom'
-  | 'keyboard:undo'
-  | 'keyboard:redo'
   | 'keyboard:toggle-grid'
   | 'keyboard:delete-selected'
   | 'keyboard:move-selected'

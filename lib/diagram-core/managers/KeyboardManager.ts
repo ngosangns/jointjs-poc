@@ -78,29 +78,6 @@ export class KeyboardManager {
       description: 'Reset Zoom',
     });
 
-    // History shortcuts
-    this.registerShortcut({
-      key: 'z',
-      ctrlKey: true,
-      action: () => this.undo(),
-      description: 'Undo',
-    });
-
-    this.registerShortcut({
-      key: 'y',
-      ctrlKey: true,
-      action: () => this.redo(),
-      description: 'Redo',
-    });
-
-    this.registerShortcut({
-      key: 'z',
-      ctrlKey: true,
-      shiftKey: true,
-      action: () => this.redo(),
-      description: 'Redo (Shift+Ctrl+Z)',
-    });
-
     // Grid toggle
     this.registerShortcut({
       key: 'g',
@@ -335,14 +312,6 @@ export class KeyboardManager {
 
   private resetZoom(): void {
     this.eventManager?.emitEvent('keyboard:reset-zoom', {});
-  }
-
-  private undo(): void {
-    this.eventManager?.emitEvent('keyboard:undo', {});
-  }
-
-  private redo(): void {
-    this.eventManager?.emitEvent('keyboard:redo', {});
   }
 
   private toggleGrid(): void {

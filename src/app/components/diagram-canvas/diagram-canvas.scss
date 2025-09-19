@@ -298,6 +298,7 @@
 }
 
 .search-input {
+  width: 100%;
   padding: 0.5rem 2rem 0.5rem 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -374,7 +375,6 @@
   border: 1px solid #ddd;
   border-radius: 6px;
   background-color: #fff;
-  cursor: grab;
   transition: all 0.2s ease;
   position: relative;
 }
@@ -388,12 +388,6 @@
 .shape-item.hovered {
   border-color: #28a745;
   box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
-}
-
-.shape-item.dragging {
-  opacity: 0.7;
-  transform: rotate(5deg);
-  cursor: grabbing;
 }
 
 .shape-preview {
@@ -563,15 +557,4 @@
 
 .icon-network {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23333'%3E%3Ccircle cx='12' cy='12' r='3' stroke='%23333' stroke-width='1' fill='none'/%3E%3Ccircle cx='6' cy='6' r='2' stroke='%23333' stroke-width='1' fill='none'/%3E%3Ccircle cx='18' cy='6' r='2' stroke='%23333' stroke-width='1' fill='none'/%3E%3Ccircle cx='6' cy='18' r='2' stroke='%23333' stroke-width='1' fill='none'/%3E%3Ccircle cx='18' cy='18' r='2' stroke='%23333' stroke-width='1' fill='none'/%3E%3Cpath d='M8 8l4 4M16 8l-4 4M8 16l4-4M16 16l-4-4' stroke='%23333' stroke-width='1'/%3E%3C/svg%3E");
-}
-
-/* Drag and Drop Visual Feedback */
-.drag-over-valid {
-  background-color: rgba(40, 167, 69, 0.1) !important;
-  border: 2px dashed #28a745 !important;
-}
-
-.drag-over-invalid {
-  background-color: rgba(220, 53, 69, 0.1) !important;
-  border: 2px dashed #dc3545 !important;
 }

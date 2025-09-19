@@ -97,9 +97,8 @@ export class EventManager implements IEventManager {
     this.eventMappings.set('link:connected', ['link:connect']);
     this.eventMappings.set('link:disconnected', ['link:disconnect']);
     this.eventMappings.set('canvas:clicked', ['blank:pointerdown']);
-    this.eventMappings.set('cell:hover', ['cell:mouseenter']);
-    this.eventMappings.set('cell:unhover', ['cell:mouseleave']);
-    // Additional logical events (emitted manually by engine/managers)
+    // this.eventMappings.set('cell:hover', ['cell:mouseenter']);
+    // this.eventMappings.set('cell:unhover', ['cell:mouseleave']);
     this.eventMappings.set('document:saved', []);
     this.eventMappings.set('document:loaded', []);
     this.eventMappings.set('viewport:changed', []);

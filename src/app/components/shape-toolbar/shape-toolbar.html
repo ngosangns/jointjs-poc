@@ -57,12 +57,8 @@
         *ngFor="let shape of filteredShapes"
         class="shape-item"
         [class.hovered]="isShapeHovered(getShapeType(shape))"
-        draggable="true"
-        (dragstart)="onShapeDragStart($event, getShapeType(shape))"
-        (dragend)="onShapeDragEnd($event)"
         (mouseenter)="onShapeHover(getShapeType(shape))"
         (mouseleave)="onShapeHoverEnd()"
-        [attr.aria-label]="'Drag ' + shape.name + ' to canvas'"
         [title]="shape.description"
       >
         <div class="shape-preview">

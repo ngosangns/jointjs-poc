@@ -29,7 +29,6 @@ export class PaperManager implements IPaperManager {
       allowDrag: true,
       allowDrop: true,
       defaultLink: () => new shapes.standard.Link(),
-      // Enable panning on blank area by default; element drag remains enabled
       defaultInteraction: {
         blank: { pan: true },
         element: { move: true },
@@ -47,30 +46,11 @@ export class PaperManager implements IPaperManager {
           },
         },
       },
-      // Enable connection validation
-      validateConnection: function (cellViewS, magnetS, cellViewT, magnetT, end, linkView) {
-        // Prevent linking from input ports to input ports
-        // and from output ports to output ports
-        if (magnetS && magnetT) {
-          const sourcePortGroup = magnetS.getAttribute('port-group');
-          const targetPortGroup = magnetT.getAttribute('port-group');
-
-          if (sourcePortGroup === targetPortGroup) return false;
-        }
-
-        // Prevent self-linking
-        return cellViewS !== cellViewT;
-      },
-      // Restrict link connections to ports only
-      // Allow free element translation (no restriction)
     });
 
     return paper;
   }
 
-  /**
-   * Setup paper-specific events including drag thresholds and touch gestures
-   */
   public setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void {
     // Manual panning over blank area with LEFT mouse button
     let isBlankPanning = false;
@@ -84,8 +64,6 @@ export class PaperManager implements IPaperManager {
         position: { x: evt.clientX, y: evt.clientY },
       });
     });
-
-    // Note: element move interactions are disabled; no custom drag events
 
     // Link events
     paper.on('link:pointerdown', (linkView, evt) => {
@@ -181,7 +159,7 @@ export class PaperManager implements IPaperManager {
   }
 
   /**
-   * Setup touch gesture events for pan/zoom and element interaction
+   * Setup touch gesture events for zoom and element interaction
    */
   private setupTouchEvents(paper: dia.Paper, eventManager: IEventManager): void {
     const paperElement = paper.el;
@@ -190,40 +168,12 @@ export class PaperManager implements IPaperManager {
     // Shared gesture state
     let touchStartTime = 0;
 
-    // Pan state
-    let panStartTranslate = { tx: 0, ty: 0 };
-    let panLastPoint = { x: 0, y: 0 };
-    let isPanning = false;
-
     // Zoom state
     let zoomStartDistance = 0;
     let zoomStartScale = 1;
     let zoomStartTranslate = { tx: 0, ty: 0 };
     let zoomLastCenter = { x: 0, y: 0 };
     let isZooming = false;
-
-    // --- Pan helpers ---
-    const beginPan = (touch: Touch) => {
-      panLastPoint = { x: touch.clientX, y: touch.clientY };
-      panStartTranslate = paper.translate();
-      isPanning = true;
-      isZooming = false;
-    };
-
-    const updatePan = (touch: Touch) => {
-      const dx = touch.clientX - panLastPoint.x;
-      const dy = touch.clientY - panLastPoint.y;
-      paper.translate(panStartTranslate.tx + dx, panStartTranslate.ty + dy);
-      eventManager.emitEvent('viewport:changed', {
-        zoom: paper.scale().sx,
-        pan: { x: paper.translate().tx, y: paper.translate().ty },
-      });
-      panLastPoint = { x: touch.clientX, y: touch.clientY };
-    };
-
-    const endPan = () => {
-      isPanning = false;
-    };
 
     // --- Zoom helpers ---
     const beginZoom = (touch1: Touch, touch2: Touch) => {
@@ -235,7 +185,6 @@ export class PaperManager implements IPaperManager {
         y: (touch1.clientY + touch2.clientY) / 2,
       };
       isZooming = true;
-      isPanning = false;
     };
 
     const updateZoom = (touch1: Touch, touch2: Touch) => {
@@ -275,9 +224,8 @@ export class PaperManager implements IPaperManager {
         touchStartTime = Date.now();
 
         if (evt.touches.length === 1) {
-          // Single touch - begin pan and maybe element selection
+          // Single touch - element selection only
           const touch = evt.touches[0];
-          beginPan(touch);
 
           const elementViews = paper.findElementViewsAtPoint({
             x: touch.clientX,
@@ -305,9 +253,7 @@ export class PaperManager implements IPaperManager {
       (evt: TouchEvent) => {
         evt.preventDefault();
 
-        if (evt.touches.length === 1 && isPanning) {
-          updatePan(evt.touches[0]);
-        } else if (evt.touches.length === 2 && isZooming) {
+        if (evt.touches.length === 2 && isZooming) {
           updateZoom(evt.touches[0], evt.touches[1]);
         }
       },
@@ -324,21 +270,14 @@ export class PaperManager implements IPaperManager {
 
         if (evt.touches.length === 0) {
           // All touches ended
-          const wasPanning = isPanning;
           const wasZooming = isZooming;
-          endPan();
           endZoom();
 
           // Handle tap (short touch without movement)
-          if (touchDuration < 300 && !wasPanning && !wasZooming) {
-            // Emit canvas click event at the last known pan point or zoom center
-            const position = isZooming ? zoomLastCenter : panLastPoint;
-            eventManager.emitEvent('canvas:clicked', { position });
+          if (touchDuration < 300 && !wasZooming) {
+            // Emit canvas click event at the zoom center if available
+            eventManager.emitEvent('canvas:clicked', { position: zoomLastCenter });
           }
-        } else if (evt.touches.length === 1 && isZooming) {
-          // Transition from zoom to pan
-          endZoom();
-          beginPan(evt.touches[0]);
         }
       },
       { passive: false }
