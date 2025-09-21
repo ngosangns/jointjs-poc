@@ -161,7 +161,7 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   // Add shape click handler
   onShapeClick(shape: ShapeMetadata): void {
-    // Calculate center position of paper and add shape
+    // Calculate center position of paper in local coordinates and add shape
     const centerPosition = this.diagramService.getCenterPosition();
     this.diagramService.insertShapeAtPosition(shape, centerPosition);
   }

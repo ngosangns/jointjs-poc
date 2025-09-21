@@ -137,18 +137,29 @@ export class DiagramService {
   }
 
   /**
-   * Get center position of the current viewport for element placement
+   * Get center position of the current viewport for element placement in local coordinates
    */
   getCenterPosition(): { x: number; y: number } {
     if (!this.diagramEngine) {
       throw new Error('Diagram engine not initialized.');
     }
 
-    return this.diagramEngine.calculatePaperCenter();
+    return this.diagramEngine.getPaperCenterLocal();
   }
 
   /**
-   * Get paper size for center calculation
+   * Get center position of the current viewport in client coordinates
+   */
+  getCenterPositionClient(): { x: number; y: number } {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+
+    return this.diagramEngine.getPaperCenterClient();
+  }
+
+  /**
+   * Get paper size in local coordinates
    */
   getPaperSize(): { width: number; height: number } {
     if (!this.diagramEngine) {
@@ -160,10 +171,27 @@ export class DiagramService {
       throw new Error('Paper not initialized.');
     }
 
-    return {
-      width: Number(paper.options.width) || 800,
-      height: Number(paper.options.height) || 600,
-    };
+    // Use the paper manager to get dimensions in local coordinates
+    const paperManager = (this.diagramEngine as any).paperManager;
+    return paperManager.getPaperDimensions(paper);
+  }
+
+  /**
+   * Get paper size in client coordinates
+   */
+  getPaperSizeClient(): { width: number; height: number } {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+
+    const paper = this.diagramEngine.getPaper();
+    if (!paper) {
+      throw new Error('Paper not initialized.');
+    }
+
+    // Use the paper manager to get dimensions in client coordinates
+    const paperManager = (this.diagramEngine as any).paperManager;
+    return paperManager.getPaperDimensionsClient(paper);
   }
 
   /**

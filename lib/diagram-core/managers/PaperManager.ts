@@ -10,6 +10,14 @@ export class PaperManager implements IPaperManager {
   // Mouse position tracking for cursor-centered zoom
   private mousePosition: { x: number; y: number } = { x: 0, y: 0 };
 
+  // Coordinate system types
+  public static readonly COORDINATE_SYSTEMS = {
+    CLIENT: 'client',     // Browser viewport coordinates
+    LOCAL: 'local',       // Paper local coordinates (accounting for pan/zoom)
+    PAGE: 'page',         // Document page coordinates
+    PAPER: 'paper',       // Paper element coordinates (without transformations)
+  } as const;
+
   /**
    * Initialize a new paper instance
    */
@@ -196,32 +204,26 @@ export class PaperManager implements IPaperManager {
 
     // Cell click events
     paper.on('cell:pointerclick', (cellView, evt: MouseEvent | any) => {
-      const paperRect = paper.el?.getBoundingClientRect();
-      const clickPosition = paperRect ? {
-        x: evt.clientX - paperRect.left,
-        y: evt.clientY - paperRect.top
-      } : { x: evt.clientX, y: evt.clientY };
+      const localPosition = this.eventToLocal(paper, evt);
+      const clientPosition = { x: evt.clientX, y: evt.clientY };
 
       console.log('Cell clicked:', {
         id: cellView.model.id,
         type: cellView.model.isElement() ? 'element' : 'link',
-        position: clickPosition,
-        clientPosition: { x: evt.clientX, y: evt.clientY },
+        localPosition,
+        clientPosition,
         mousePosition: this.getMousePosition()
       });
     });
 
     // Blank area click events
     paper.on('blank:pointerclick', (evt: MouseEvent | any) => {
-      const paperRect = paper.el?.getBoundingClientRect();
-      const clickPosition = paperRect ? {
-        x: evt.clientX - paperRect.left,
-        y: evt.clientY - paperRect.top
-      } : { x: evt.clientX, y: evt.clientY };
+      const localPosition = this.eventToLocal(paper, evt);
+      const clientPosition = { x: evt.clientX, y: evt.clientY };
 
       console.log('Blank area clicked:', {
-        position: clickPosition,
-        clientPosition: { x: evt.clientX, y: evt.clientY },
+        localPosition,
+        clientPosition,
         mousePosition: this.getMousePosition()
       });
     });
@@ -316,10 +318,8 @@ export class PaperManager implements IPaperManager {
           // Single touch - element selection only
           const touch = evt.touches[0];
 
-          const elementViews = paper.findElementViewsAtPoint({
-            x: touch.clientX,
-            y: touch.clientY,
-          });
+          const localPosition = this.eventToLocal(paper, touch);
+          const elementViews = paper.findElementViewsAtPoint(localPosition);
           if (elementViews.length > 0 && elementViews[0].model.isElement()) {
             const elementView = elementViews[0];
             eventManager.emitEvent('element:selected', {
@@ -409,16 +409,10 @@ export class PaperManager implements IPaperManager {
 
   /**
    * Calculate the center position of the paper accounting for current pan and zoom
+   * @deprecated Use getPaperCenterLocal() instead
    */
   public calculatePaperCenter(paper: dia.Paper): { x: number; y: number } {
-    // Get paper dimensions and current pan/zoom to calculate center
-    const paperSize = paper.getComputedSize();
-
-    // Calculate center position accounting for pan and zoom
-    return {
-      x: (paperSize.width / 2),
-      y: (paperSize.height / 2),
-    };
+    return this.getPaperCenterLocal(paper);
   }
 
   /**
@@ -430,6 +424,154 @@ export class PaperManager implements IPaperManager {
    */
   public clampScale(scale: number, minScale: number = 0.1, maxScale: number = 5.0): number {
     return Math.max(minScale, Math.min(maxScale, scale));
+  }
+
+  // ==================== COORDINATE SYSTEM METHODS ====================
+
+  /**
+   * Convert client coordinates to local coordinates
+   * @param paper - The paper instance
+   * @param clientPoint - Client coordinates {x, y}
+   * @returns Local coordinates {x, y}
+   */
+  public clientToLocal(paper: dia.Paper, clientPoint: { x: number; y: number }): { x: number; y: number } {
+    return paper.clientToLocalPoint(clientPoint);
+  }
+
+  /**
+   * Convert local coordinates to client coordinates
+   * @param paper - The paper instance
+   * @param localPoint - Local coordinates {x, y}
+   * @returns Client coordinates {x, y}
+   */
+  public localToClient(paper: dia.Paper, localPoint: { x: number; y: number }): { x: number; y: number } {
+    return paper.localToClientPoint(localPoint);
+  }
+
+  /**
+   * Convert page coordinates to local coordinates
+   * @param paper - The paper instance
+   * @param pagePoint - Page coordinates {x, y}
+   * @returns Local coordinates {x, y}
+   */
+  public pageToLocal(paper: dia.Paper, pagePoint: { x: number; y: number }): { x: number; y: number } {
+    return paper.pageToLocalPoint(pagePoint);
+  }
+
+  /**
+   * Convert local coordinates to page coordinates
+   * @param paper - The paper instance
+   * @param localPoint - Local coordinates {x, y}
+   * @returns Page coordinates {x, y}
+   */
+  public localToPage(paper: dia.Paper, localPoint: { x: number; y: number }): { x: number; y: number } {
+    return paper.localToPagePoint(localPoint);
+  }
+
+  /**
+   * Convert paper coordinates to local coordinates
+   * @param paper - The paper instance
+   * @param paperPoint - Paper coordinates {x, y}
+   * @returns Local coordinates {x, y}
+   */
+  public paperToLocal(paper: dia.Paper, paperPoint: { x: number; y: number }): { x: number; y: number } {
+    return paper.paperToLocalPoint(paperPoint);
+  }
+
+  /**
+   * Convert local coordinates to paper coordinates
+   * @param paper - The paper instance
+   * @param localPoint - Local coordinates {x, y}
+   * @returns Paper coordinates {x, y}
+   */
+  public localToPaper(paper: dia.Paper, localPoint: { x: number; y: number }): { x: number; y: number } {
+    return paper.localToPaperPoint(localPoint);
+  }
+
+  /**
+   * Get the center position of the paper in local coordinates
+   * @param paper - The paper instance
+   * @returns Center position in local coordinates {x, y}
+   */
+  public getPaperCenterLocal(paper: dia.Paper): { x: number; y: number } {
+    const paperSize = paper.getComputedSize();
+    const paperCenter = {
+      x: paperSize.width / 2,
+      y: paperSize.height / 2
+    };
+    return this.paperToLocal(paper, paperCenter);
+  }
+
+  /**
+   * Get the center position of the paper in client coordinates
+   * @param paper - The paper instance
+   * @returns Center position in client coordinates {x, y}
+   */
+  public getPaperCenterClient(paper: dia.Paper): { x: number; y: number } {
+    const localCenter = this.getPaperCenterLocal(paper);
+    return this.localToClient(paper, localCenter);
+  }
+
+  /**
+   * Convert mouse event coordinates to local coordinates
+   * @param paper - The paper instance
+   * @param event - Mouse event or Touch
+   * @returns Local coordinates {x, y}
+   */
+  public eventToLocal(paper: dia.Paper, event: MouseEvent | Touch): { x: number; y: number } {
+    const clientPoint = {
+      x: event.clientX,
+      y: event.clientY
+    };
+    return this.clientToLocal(paper, clientPoint);
+  }
+
+  /**
+   * Get paper element's bounding rectangle in client coordinates
+   * @param paper - The paper instance
+   * @returns Bounding rectangle
+   */
+  public getPaperBounds(paper: dia.Paper): DOMRect | null {
+    return paper.el?.getBoundingClientRect() || null;
+  }
+
+  /**
+   * Check if a point is within paper bounds
+   * @param paper - The paper instance
+   * @param clientPoint - Client coordinates {x, y}
+   * @returns True if point is within paper bounds
+   */
+  public isPointInPaper(paper: dia.Paper, clientPoint: { x: number; y: number }): boolean {
+    const bounds = this.getPaperBounds(paper);
+    if (!bounds) return false;
+
+    return (
+      clientPoint.x >= bounds.left &&
+      clientPoint.x <= bounds.right &&
+      clientPoint.y >= bounds.top &&
+      clientPoint.y <= bounds.bottom
+    );
+  }
+
+  /**
+   * Get paper dimensions in local coordinates
+   * @param paper - The paper instance
+   * @returns Paper dimensions {width, height}
+   */
+  public getPaperDimensions(paper: dia.Paper): { width: number; height: number } {
+    const size = paper.getComputedSize();
+    return { width: size.width, height: size.height };
+  }
+
+  /**
+   * Get paper dimensions in client coordinates
+   * @param paper - The paper instance
+   * @returns Paper dimensions {width, height}
+   */
+  public getPaperDimensionsClient(paper: dia.Paper): { width: number; height: number } {
+    const bounds = this.getPaperBounds(paper);
+    if (!bounds) return { width: 0, height: 0 };
+    return { width: bounds.width, height: bounds.height };
   }
 
 }

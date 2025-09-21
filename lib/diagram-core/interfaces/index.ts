@@ -66,6 +66,21 @@ export interface IPaperManager {
   getMousePosition(): { x: number; y: number };
   calculatePaperCenter(paper: dia.Paper): { x: number; y: number };
   clampScale(scale: number, minScale?: number, maxScale?: number): number;
+
+  // Coordinate system methods
+  clientToLocal(paper: dia.Paper, clientPoint: { x: number; y: number }): { x: number; y: number };
+  localToClient(paper: dia.Paper, localPoint: { x: number; y: number }): { x: number; y: number };
+  pageToLocal(paper: dia.Paper, pagePoint: { x: number; y: number }): { x: number; y: number };
+  localToPage(paper: dia.Paper, localPoint: { x: number; y: number }): { x: number; y: number };
+  paperToLocal(paper: dia.Paper, paperPoint: { x: number; y: number }): { x: number; y: number };
+  localToPaper(paper: dia.Paper, localPoint: { x: number; y: number }): { x: number; y: number };
+  getPaperCenterLocal(paper: dia.Paper): { x: number; y: number };
+  getPaperCenterClient(paper: dia.Paper): { x: number; y: number };
+  eventToLocal(paper: dia.Paper, event: MouseEvent | Touch): { x: number; y: number };
+  getPaperBounds(paper: dia.Paper): DOMRect | null;
+  isPointInPaper(paper: dia.Paper, clientPoint: { x: number; y: number }): boolean;
+  getPaperDimensions(paper: dia.Paper): { width: number; height: number };
+  getPaperDimensionsClient(paper: dia.Paper): { width: number; height: number };
 }
 
 /**

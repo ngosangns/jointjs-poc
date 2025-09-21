@@ -131,8 +131,8 @@ export class DiagramEngine {
     const newScale = sx * step;
     const clampedScale = this.paperManager.clampScale(newScale);
 
-    // Use paper center position instead of cursor position
-    const centerPos = this.paperManager.calculatePaperCenter(paper);
+    // Use paper center position in local coordinates
+    const centerPos = this.paperManager.getPaperCenterLocal(paper);
 
     // Calculate new pan offset to keep center position fixed
     const scaleChange = clampedScale / sx;
@@ -153,8 +153,8 @@ export class DiagramEngine {
     const newScale = sx * step;
     const clampedScale = this.paperManager.clampScale(newScale);
 
-    // Use paper center position instead of cursor position
-    const centerPos = this.paperManager.calculatePaperCenter(paper);
+    // Use paper center position in local coordinates
+    const centerPos = this.paperManager.getPaperCenterLocal(paper);
 
     // Calculate new pan offset to keep center position fixed
     const scaleChange = clampedScale / sx;
@@ -225,12 +225,33 @@ export class DiagramEngine {
 
   /**
    * Calculate the center position of the paper accounting for current pan and zoom
+   * @deprecated Use getPaperCenterLocal() instead
    */
   public calculatePaperCenter(): { x: number; y: number } {
     if (!this.paper) {
       throw new Error('Paper not initialized.');
     }
-    return this.paperManager.calculatePaperCenter(this.paper);
+    return this.paperManager.getPaperCenterLocal(this.paper);
+  }
+
+  /**
+   * Get the center position of the paper in local coordinates
+   */
+  public getPaperCenterLocal(): { x: number; y: number } {
+    if (!this.paper) {
+      throw new Error('Paper not initialized.');
+    }
+    return this.paperManager.getPaperCenterLocal(this.paper);
+  }
+
+  /**
+   * Get the center position of the paper in client coordinates
+   */
+  public getPaperCenterClient(): { x: number; y: number } {
+    if (!this.paper) {
+      throw new Error('Paper not initialized.');
+    }
+    return this.paperManager.getPaperCenterClient(this.paper);
   }
 
 
