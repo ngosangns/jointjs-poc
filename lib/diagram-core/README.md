@@ -28,7 +28,6 @@ A comprehensive diagram library built on top of JointJS with enhanced features a
 - **GraphManager**: Graph operations with embedding/grouping support
 - **ToolsManager**: Interactive tools for elements and links
 - **PersistenceManager**: Document persistence and storage management
-- **KeyboardManager**: Keyboard shortcuts and input handling
 
 ### Factories
 
@@ -304,13 +303,6 @@ Handles document persistence:
 - Storage adapter management
 - Data serialization for persistence
 
-#### KeyboardManager
-
-Manages keyboard interactions:
-
-- Keyboard shortcuts registration
-- Platform-specific key handling
-- Shortcut execution and management
 
 ### Factories
 
@@ -536,7 +528,6 @@ The modular architecture makes it easy to add new features:
 4. **Validation System**: Comprehensive validation for diagrams (already implemented)
 5. **Collaboration**: Add real-time collaboration features
 6. **Performance Optimization**: Advanced viewport culling and batch operations
-7. **Keyboard Shortcuts**: Platform-aware keyboard interaction system
 
 ## Best Practices
 

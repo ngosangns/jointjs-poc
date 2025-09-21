@@ -22,7 +22,6 @@ import {
   PersistenceManager,
   ToolsManager,
 } from './managers';
-import { KeyboardManager } from './managers/KeyboardManager';
 
 export class DiagramEngine {
   private graph: dia.Graph;
@@ -36,7 +35,6 @@ export class DiagramEngine {
   private graphManager: IGraphManager;
   private toolsManager: IToolsManager;
   private persistence: PersistenceManager;
-  private keyboardManager: KeyboardManager;
 
   // Factories
   private shapeFactory: IShapeFactory;
@@ -69,8 +67,6 @@ export class DiagramEngine {
     this.shapeFactory = shapeFactory || new ShapeFactory();
     this.linkFactory = linkFactory || new LinkFactory();
 
-    // Initialize keyboard manager
-    this.keyboardManager = new KeyboardManager();
   }
 
   /**
@@ -97,12 +93,6 @@ export class DiagramEngine {
     // Initialize ToolsManager with paper for tools management
     this.toolsManager.initialize(this.paper);
 
-    // Initialize KeyboardManager with paper, graph, and event manager
-    try {
-      this.keyboardManager.initialize(this.paper, this.graph, this.eventManager);
-    } catch (error) {
-      console.error('KeyboardManager initialization error:', error);
-    }
   }
 
   /**
@@ -209,7 +199,6 @@ export class DiagramEngine {
     }
     this.eventManager.destroy();
     this.toolsManager.destroy();
-    this.keyboardManager.destroy();
     this.graph.clear();
   }
 

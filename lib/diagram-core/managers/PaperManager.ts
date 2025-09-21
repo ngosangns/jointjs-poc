@@ -7,17 +7,6 @@ import { DiagramConfig } from '../../types';
 import { IEventManager, IPaperManager } from '../interfaces';
 
 export class PaperManager implements IPaperManager {
-  // Mouse position tracking for cursor-centered zoom
-  private mousePosition: { x: number; y: number } = { x: 0, y: 0 };
-
-  // Coordinate system types
-  public static readonly COORDINATE_SYSTEMS = {
-    CLIENT: 'client',     // Browser viewport coordinates
-    LOCAL: 'local',       // Paper local coordinates (accounting for pan/zoom)
-    PAGE: 'page',         // Document page coordinates
-    PAPER: 'paper',       // Paper element coordinates (without transformations)
-  } as const;
-
   /**
    * Initialize a new paper instance
    */
@@ -59,36 +48,7 @@ export class PaperManager implements IPaperManager {
       },
     });
 
-    // Setup mouse position tracking
-    this.setupMouseTracking(paper);
-
     return paper;
-  }
-
-  /**
-   * Setup mouse position tracking for cursor-centered zoom
-   */
-  private setupMouseTracking(paper: dia.Paper): void {
-    const paperElement = paper.el;
-    if (!paperElement) return;
-
-    paperElement.addEventListener('mousemove', (event: MouseEvent) => {
-      // Get paper element's bounding rectangle for accurate positioning
-      const paperRect = paperElement.getBoundingClientRect();
-
-      // Calculate mouse position relative to paper element
-      this.mousePosition = {
-        x: event.clientX - paperRect.left,
-        y: event.clientY - paperRect.top,
-      };
-    });
-  }
-
-  /**
-   * Get current mouse position
-   */
-  public getMousePosition(): { x: number; y: number } {
-    return { ...this.mousePosition };
   }
 
   private setupMouseWheelZoom(paper: dia.Paper, eventManager: IEventManager): void {
@@ -212,7 +172,6 @@ export class PaperManager implements IPaperManager {
         type: cellView.model.isElement() ? 'element' : 'link',
         localPosition,
         clientPosition,
-        mousePosition: this.getMousePosition()
       });
     });
 
@@ -224,7 +183,6 @@ export class PaperManager implements IPaperManager {
       console.log('Blank area clicked:', {
         localPosition,
         clientPosition,
-        mousePosition: this.getMousePosition()
       });
     });
 

@@ -63,7 +63,6 @@ export interface IPaperManager {
   destroy(paper: dia.Paper): void;
   getScale(paper: dia.Paper): { sx: number; sy: number };
   setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void;
-  getMousePosition(): { x: number; y: number };
   calculatePaperCenter(paper: dia.Paper): { x: number; y: number };
   clampScale(scale: number, minScale?: number, maxScale?: number): number;
 

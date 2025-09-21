@@ -108,18 +108,6 @@ export type DiagramEventType =
   | 'viewport:changed'
   // Mouse wheel events
   | 'wheel:zoom'
-  // Keyboard events
-  | 'keyboard:zoom-in'
-  | 'keyboard:zoom-out'
-  | 'keyboard:reset-zoom'
-  | 'keyboard:toggle-grid'
-  | 'keyboard:delete-selected'
-  | 'keyboard:move-selected'
-  | 'keyboard:select-all'
-  | 'keyboard:deselect-all'
-  | 'keyboard:pan-canvas'
-  | 'keyboard:fit-viewport'
-  | 'keyboard:fit-selection'
   // Selection events
   | 'selection:changed'
   | 'selection:cleared';
