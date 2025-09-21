@@ -122,24 +122,24 @@ export class DiagramEngine {
   }
 
 
-  // Cursor-centered zoom methods
+  // Center-centered zoom methods
   public zoomIn(step: number = 1.2): void {
     const paper = this.paper;
     if (!paper) return;
 
     const { sx } = this.paperManager.getScale(paper);
     const newScale = sx * step;
-    const clampedScale = Math.max(0.1, Math.min(5.0, newScale));
+    const clampedScale = this.paperManager.clampScale(newScale);
 
-    // Use provided cursor position or get current mouse position
-    const cursorPos = this.paperManager.getMousePosition();
+    // Use paper center position instead of cursor position
+    const centerPos = this.paperManager.calculatePaperCenter(paper);
 
-    // Calculate new pan offset to keep cursor position fixed
+    // Calculate new pan offset to keep center position fixed
     const scaleChange = clampedScale / sx;
     const currentTranslate = paper.translate();
 
-    const newTx = currentTranslate.tx - cursorPos.x * (scaleChange - 1);
-    const newTy = currentTranslate.ty - cursorPos.y * (scaleChange - 1);
+    const newTx = currentTranslate.tx - centerPos.x * (scaleChange - 1);
+    const newTy = currentTranslate.ty - centerPos.y * (scaleChange - 1);
 
     paper.scale(clampedScale);
     paper.translate(newTx, newTy);
@@ -151,17 +151,17 @@ export class DiagramEngine {
 
     const { sx } = this.paperManager.getScale(paper);
     const newScale = sx * step;
-    const clampedScale = Math.max(0.1, Math.min(5.0, newScale));
+    const clampedScale = this.paperManager.clampScale(newScale);
 
-    // Use provided cursor position or get current mouse position
-    const cursorPos = this.paperManager.getMousePosition();
+    // Use paper center position instead of cursor position
+    const centerPos = this.paperManager.calculatePaperCenter(paper);
 
-    // Calculate new pan offset to keep cursor position fixed
+    // Calculate new pan offset to keep center position fixed
     const scaleChange = clampedScale / sx;
     const currentTranslate = paper.translate();
 
-    const newTx = currentTranslate.tx - cursorPos.x * (scaleChange - 1);
-    const newTy = currentTranslate.ty - cursorPos.y * (scaleChange - 1);
+    const newTx = currentTranslate.tx - centerPos.x * (scaleChange - 1);
+    const newTy = currentTranslate.ty - centerPos.y * (scaleChange - 1);
 
     paper.scale(clampedScale);
     paper.translate(newTx, newTy);

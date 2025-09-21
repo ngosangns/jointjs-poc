@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { DiagramConfig, DiagramElement, DiagramEngine } from 'lib';
-import { ShapeMetadataService } from './shape-library.service';
+import { ShapeMetadata } from './shape-library.service';
 
 @Injectable({
   providedIn: 'root',
@@ -186,13 +186,13 @@ export class DiagramService {
   /**
    * Insert shape at specified position using shape metadata
    */
-  insertShapeAtPosition(shapeMetadata: ShapeMetadataService, position: { x: number; y: number }): string {
+  insertShapeAtPosition(shapeMetadata: ShapeMetadata, position: { x: number; y: number }): string {
     if (!this.diagramEngine) {
       throw new Error('Diagram engine not initialized.');
     }
 
     try {
-      // Map shape metadata to diagram element properties
+      // Map shape metadata to diagram element properties 
       const elementData = this.mapShapeMetadataToElement(shapeMetadata, position);
 
       // Add element to diagram
@@ -210,7 +210,7 @@ export class DiagramService {
    * Map shape metadata to diagram element properties
    */
   private mapShapeMetadataToElement(
-    shapeMetadata: ShapeMetadataService,
+    shapeMetadata: ShapeMetadata,
     position: { x: number; y: number }
   ): Partial<DiagramElement> {
     // Map shape type from metadata
@@ -230,7 +230,6 @@ export class DiagramService {
       properties: {
         name: shapeMetadata.name,
         description: shapeMetadata.description,
-        category: shapeMetadata.category,
         icon: shapeMetadata.icon,
       },
     };
@@ -241,23 +240,11 @@ export class DiagramService {
   /**
    * Get shape type from shape metadata
    */
-  private getShapeTypeFromMetadata(shapeMetadata: ShapeMetadataService): string {
+  private getShapeTypeFromMetadata(shapeMetadata: ShapeMetadata): string {
     // Map shape metadata to ShapeFactory registered keys
     const typeMap: Record<string, string> = {
       rectangle: 'rectangle',
       circle: 'circle',
-      ellipse: 'ellipse',
-      polygon: 'polygon',
-      path: 'path',
-      diamond: 'diamond',
-      parallelogram: 'parallelogram',
-      stickman: 'stickman',
-      folder: 'folder',
-      router: 'router',
-      server: 'server',
-      database: 'database',
-      cloud: 'cloud',
-      firewall: 'firewall',
     };
 
     return typeMap[shapeMetadata.icon] || 'rectangle';

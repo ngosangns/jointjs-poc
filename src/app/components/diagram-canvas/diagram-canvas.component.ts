@@ -11,9 +11,8 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DiagramService } from '../../services/diagram.service';
 import {
-  type ShapeCategory,
   ShapeLibraryService,
-  type ShapeMetadataService,
+  type ShapeMetadata,
 } from '../../services/shape-library.service';
 
 @Component({
@@ -32,10 +31,8 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   isGridEnabled: boolean = true;
 
   // Shape toolbar state
-  categories: ShapeCategory[] = [];
-  selectedCategory: string = 'basic';
   searchQuery: string = '';
-  filteredShapes: ShapeMetadataService[] = [];
+  filteredShapes: ShapeMetadata[] = [];
   hoveredShape: string | null = null;
 
   private resizeRafId: number | null = null;
@@ -67,7 +64,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   ngOnInit(): void {
     // Initialize shape library
-    this.categories = this.shapeLibraryService.getCategories();
     this.updateFilteredShapes();
   }
 
@@ -85,9 +81,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
       });
 
       this.diagramService.attachToElement(container);
-
-      // Expose diagram engine to window for E2E tests
-      (window as any).diagramEngine = this.diagramService.getEngine();
 
       // Cache current size
       this.lastContainerSize = { width: clientWidth, height: clientHeight };
@@ -117,15 +110,9 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     if (this.searchQuery.trim()) {
       this.filteredShapes = this.shapeLibraryService.searchShapes(this.searchQuery);
     } else {
-      this.filteredShapes = this.shapeLibraryService.getShapesByCategory(this.selectedCategory);
+      this.filteredShapes = this.shapeLibraryService.getAllShapes();
     }
     this.cdr.detectChanges();
-  }
-
-  onCategorySelect(categoryId: string): void {
-    this.selectedCategory = categoryId;
-    this.searchQuery = ''; // Clear search when switching categories
-    this.updateFilteredShapes();
   }
 
   onSearchChange(): void {
@@ -140,7 +127,7 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     this.hoveredShape = null;
   }
 
-  getShapeIconClass(shape: ShapeMetadataService): string {
+  getShapeIconClass(shape: ShapeMetadata): string {
     // Map shape types to icon classes
     const iconMap: Record<string, string> = {
       rectangle: 'icon-rectangle',
@@ -162,28 +149,18 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     return iconMap[shape.icon] || 'icon-rectangle';
   }
 
-  getCategoryIconClass(category: ShapeCategory): string {
-    const iconMap: Record<string, string> = {
-      shapes: 'icon-shapes',
-      flow: 'icon-flow',
-      uml: 'icon-uml',
-      network: 'icon-network',
-    };
-
-    return iconMap[category.icon] || 'icon-shapes';
-  }
 
   isShapeHovered(shapeType: string): boolean {
     return this.hoveredShape === shapeType;
   }
 
 
-  getShapeType(shape: ShapeMetadataService): string {
+  getShapeType(shape: ShapeMetadata): string {
     return shape.name.toLowerCase().replace(/\s+/g, '-');
   }
 
   // Add shape click handler
-  onShapeClick(shape: ShapeMetadataService): void {
+  onShapeClick(shape: ShapeMetadata): void {
     // Calculate center position of paper and add shape
     const centerPosition = this.diagramService.getCenterPosition();
     this.diagramService.insertShapeAtPosition(shape, centerPosition);
@@ -226,9 +203,5 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     this.onSearchChange();
   }
 
-  // Category methods
-  getCategoryShapeCount(categoryId: string): number {
-    return this.shapeLibraryService.getShapesByCategory(categoryId).length;
-  }
 
 }

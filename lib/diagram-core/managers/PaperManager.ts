@@ -97,10 +97,11 @@ export class PaperManager implements IPaperManager {
 
     const oldscale = paper.scale().sx;
     const newscale = oldscale + 0.2 * delta * oldscale;
+    const clampedScale = this.clampScale(newscale, 0.2, 5.0);
 
-    if (newscale > 0.2 && newscale < 5) {
-      paper.scale(newscale, newscale);
-      paper.translate(-x * newscale + evt.offsetX!, -y * newscale + evt.offsetY!);
+    if (clampedScale !== oldscale) {
+      paper.scale(clampedScale, clampedScale);
+      paper.translate(-x * clampedScale + evt.offsetX!, -y * clampedScale + evt.offsetY!);
     }
   }
 
@@ -193,6 +194,38 @@ export class PaperManager implements IPaperManager {
       });
     });
 
+    // Cell click events
+    paper.on('cell:pointerclick', (cellView, evt: MouseEvent | any) => {
+      const paperRect = paper.el?.getBoundingClientRect();
+      const clickPosition = paperRect ? {
+        x: evt.clientX - paperRect.left,
+        y: evt.clientY - paperRect.top
+      } : { x: evt.clientX, y: evt.clientY };
+
+      console.log('Cell clicked:', {
+        id: cellView.model.id,
+        type: cellView.model.isElement() ? 'element' : 'link',
+        position: clickPosition,
+        clientPosition: { x: evt.clientX, y: evt.clientY },
+        mousePosition: this.getMousePosition()
+      });
+    });
+
+    // Blank area click events
+    paper.on('blank:pointerclick', (evt: MouseEvent | any) => {
+      const paperRect = paper.el?.getBoundingClientRect();
+      const clickPosition = paperRect ? {
+        x: evt.clientX - paperRect.left,
+        y: evt.clientY - paperRect.top
+      } : { x: evt.clientX, y: evt.clientY };
+
+      console.log('Blank area clicked:', {
+        position: clickPosition,
+        clientPosition: { x: evt.clientX, y: evt.clientY },
+        mousePosition: this.getMousePosition()
+      });
+    });
+
     // Connection events
     paper.on('link:connect', (linkView) => {
       eventManager.emitEvent('link:connected', {
@@ -246,7 +279,7 @@ export class PaperManager implements IPaperManager {
     const updateZoom = (touch1: Touch, touch2: Touch) => {
       const currentDistance = this.getTouchDistance(touch1, touch2);
       const scaleChange = currentDistance / zoomStartDistance;
-      const newScale = Math.max(0.1, Math.min(5.0, zoomStartScale * scaleChange));
+      const newScale = this.clampScale(zoomStartScale * scaleChange);
 
       const newCenter = {
         x: (touch1.clientX + touch2.clientX) / 2,
@@ -380,14 +413,23 @@ export class PaperManager implements IPaperManager {
   public calculatePaperCenter(paper: dia.Paper): { x: number; y: number } {
     // Get paper dimensions and current pan/zoom to calculate center
     const paperSize = paper.getComputedSize();
-    const currentPan = paper.translate();
-    const currentZoom = paper.scale().sx;
 
     // Calculate center position accounting for pan and zoom
     return {
-      x: (paperSize.width / 2 - currentPan.tx) / currentZoom,
-      y: (paperSize.height / 2 - currentPan.ty) / currentZoom,
+      x: (paperSize.width / 2),
+      y: (paperSize.height / 2),
     };
+  }
+
+  /**
+   * Clamp scale value within specified bounds
+   * @param scale - The scale value to clamp
+   * @param minScale - Minimum allowed scale (default: 0.1)
+   * @param maxScale - Maximum allowed scale (default: 5.0)
+   * @returns The clamped scale value
+   */
+  public clampScale(scale: number, minScale: number = 0.1, maxScale: number = 5.0): number {
+    return Math.max(minScale, Math.min(maxScale, scale));
   }
 
 }
