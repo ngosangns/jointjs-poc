@@ -1,79 +1,49 @@
-/**
- * Data manager for handling serialization and deserialization using JointJS standard format
- */
-
 import { dia } from '@joint/core';
 import { DiagramData, DiagramElement, DiagramLink } from '../../types';
 import { deepClone } from '../../utils';
 import { IDataManager, ILinkFactory, IShapeFactory } from '../interfaces';
 
 export class DataManager implements IDataManager {
-  /**
-   * Serialize graph to JointJS standard JSON format
-   */
   public serialize(graph: dia.Graph): any {
     return graph.toJSON();
   }
 
-  /**
-   * Serialize graph to custom DiagramData format (for backward compatibility)
-   */
-  public serializeToCustomFormat(graph: dia.Graph): DiagramData {
-    const elements: DiagramElement[] = [];
-    const links: DiagramLink[] = [];
-
-    graph.getCells().forEach((cell) => {
-      if (cell.isElement()) {
-        const element = cell as dia.Element;
-        elements.push({
-          id: String(element.id),
-          type: element.get('type') || 'element',
-          position: element.position(),
-          size: element.size(),
-          properties: this.sanitizeProperties(element.attributes),
-        });
-      } else if (cell.isLink()) {
-        const link = cell as dia.Link;
-        const source = link.source();
-        const target = link.target();
-
-        if (source.id && target.id) {
-          links.push({
-            id: String(link.id),
-            source: String(source.id),
-            target: String(target.id),
-            properties: this.sanitizeProperties(link.attributes),
-          });
-        }
-      }
-    });
-
-    return { elements, links };
-  }
-
-  /**
-   * Deserialize JointJS standard JSON format to graph
-   */
   public deserialize(
     data: any,
     graph: dia.Graph,
     shapeFactory?: IShapeFactory,
     linkFactory?: ILinkFactory
   ): void {
-    if (this.isJointJSFormat(data)) {
-      // Use JointJS standard deserialization
-      graph.fromJSON(data);
-    } else if (this.isCustomFormat(data)) {
-      // Handle custom format for backward compatibility
-      this.deserializeCustomFormat(data as DiagramData, graph, shapeFactory!, linkFactory!);
-    } else {
-      throw new Error('Invalid diagram data format');
+    // Validate required parameters
+    if (!graph) {
+      throw new Error('Graph instance is required for deserialization');
+    }
+
+    if (!data) {
+      throw new Error('Data is required for deserialization');
+    }
+
+    try {
+      if (this.isJointJSFormat(data)) {
+        // Use JointJS standard deserialization with cell namespaces for v4.0.0 compatibility
+        const cellNamespaces = shapeFactory?.getCellNamespaces() || {};
+        graph.fromJSON(data, { cellNamespaces });
+      } else if (this.isCustomFormat(data)) {
+        // Handle custom format for backward compatibility
+        if (!shapeFactory || !linkFactory) {
+          throw new Error('ShapeFactory and LinkFactory are required for custom format deserialization');
+        }
+        this.deserializeCustomFormat(data as DiagramData, graph, shapeFactory, linkFactory);
+      } else {
+        throw new Error('Invalid diagram data format: data must be either JointJS format (with cells array) or custom format (with elements and links arrays)');
+      }
+    } catch (error) {
+      // Clear graph on deserialization failure to prevent partial state
+      graph.clear();
+      throw new Error(`Deserialization failed: ${error}`);
     }
   }
 
-  /**
-   * Deserialize custom DiagramData format to graph (backward compatibility)
-   */
   public deserializeCustomFormat(
     data: DiagramData,
     graph: dia.Graph,
@@ -126,12 +96,6 @@ export class DataManager implements IDataManager {
     // Map common JointJS standard types to our registered keys
     if (type === 'standard.Rectangle' || type.endsWith('.Rectangle')) return 'rectangle';
     if (type === 'standard.Circle' || type.endsWith('.Circle')) return 'circle';
-    if (type === 'standard.Ellipse' || type.endsWith('.Ellipse')) return 'ellipse';
-    if (type === 'standard.Polygon' || type.endsWith('.Polygon')) return 'polygon';
-    if (type === 'standard.Path' || type.endsWith('.Path')) return 'path';
-    if (type === 'standard.Image' || type.endsWith('.Image')) return 'image';
-    if (type === 'standard.HeaderedRectangle' || type.endsWith('.HeaderedRectangle'))
-      return 'header';
     return type;
   }
 
@@ -191,9 +155,27 @@ export class DataManager implements IDataManager {
     linkFactory?: ILinkFactory
   ): void {
     try {
+      // Validate input
+      if (!jsonString || typeof jsonString !== 'string') {
+        throw new Error('Invalid JSON string provided');
+      }
+
+      if (!jsonString.trim()) {
+        throw new Error('Empty JSON string provided');
+      }
+
       const data = JSON.parse(jsonString);
+
+      // Additional validation for parsed data
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid JSON structure: data must be an object');
+      }
+
       this.deserialize(data, graph, shapeFactory, linkFactory);
     } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new Error(`Invalid JSON format: ${error.message}`);
+      }
       throw new Error(`Failed to import JSON data: ${error}`);
     }
   }
@@ -231,34 +213,6 @@ export class DataManager implements IDataManager {
     });
 
     return merged;
-  }
-
-  /**
-   * Get statistics about the diagram data
-   */
-  public getDataStatistics(data: DiagramData): {
-    elementCount: number;
-    linkCount: number;
-    elementTypes: Record<string, number>;
-    orphanedLinks: number;
-  } {
-    const elementIds = new Set(data.elements.map((e) => e.id));
-    const elementTypes: Record<string, number> = {};
-
-    data.elements.forEach((element) => {
-      elementTypes[element.type] = (elementTypes[element.type] || 0) + 1;
-    });
-
-    const orphanedLinks = data.links.filter(
-      (link) => !elementIds.has(String(link.source)) || !elementIds.has(String(link.target))
-    ).length;
-
-    return {
-      elementCount: data.elements.length,
-      linkCount: data.links.length,
-      elementTypes,
-      orphanedLinks,
-    };
   }
 
   /**
@@ -302,18 +256,5 @@ export class DataManager implements IDataManager {
     return (
       data && typeof data === 'object' && Array.isArray(data.elements) && Array.isArray(data.links)
     );
-  }
-
-  /**
-   * Sanitize properties to remove circular references and non-serializable data
-   */
-  private sanitizeProperties(properties: any): Record<string, any> {
-    try {
-      // Use JSON stringify/parse to remove circular references and functions
-      return JSON.parse(JSON.stringify(properties));
-    } catch (error) {
-      console.warn('Failed to sanitize properties:', error);
-      return {};
-    }
   }
 }

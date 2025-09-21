@@ -25,14 +25,14 @@ import {
 })
 export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('diagramContainer', { static: true }) diagramContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('fileInput', { static: false }) fileInput!: ElementRef<HTMLInputElement>;
 
   // Diagram state
   currentZoom: number = 1;
   isGridEnabled: boolean = true;
 
   // Shape toolbar state
-  searchQuery: string = '';
-  filteredShapes: ShapeMetadata[] = [];
+  allShapes: ShapeMetadata[] = [];
   hoveredShape: string | null = null;
 
   private resizeRafId: number | null = null;
@@ -64,16 +64,16 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   ngOnInit(): void {
     // Initialize shape library
-    this.updateFilteredShapes();
+    this.allShapes = this.shapeLibraryService.getAllShapes();
   }
 
-  ngAfterViewInit(): void {
+  async ngAfterViewInit(): Promise<void> {
     // Initialize and attach diagram based on container size
     if (this.diagramContainer?.nativeElement) {
       const container = this.diagramContainer.nativeElement;
       const { clientWidth, clientHeight } = container;
 
-      this.diagramService.initialize({
+      await this.diagramService.initialize({
         width: Math.max(0, clientWidth),
         height: Math.max(0, clientHeight),
         gridSize: 10,
@@ -106,18 +106,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   // Shape toolbar methods
-  updateFilteredShapes(): void {
-    if (this.searchQuery.trim()) {
-      this.filteredShapes = this.shapeLibraryService.searchShapes(this.searchQuery);
-    } else {
-      this.filteredShapes = this.shapeLibraryService.getAllShapes();
-    }
-    this.cdr.detectChanges();
-  }
-
-  onSearchChange(): void {
-    this.updateFilteredShapes();
-  }
 
   onShapeHover(shapeType: string): void {
     this.hoveredShape = shapeType;
@@ -191,11 +179,91 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     this.isGridEnabled = this.diagramService.toggleGrid();
   }
 
-  // Search methods
-  clearSearch(): void {
-    this.searchQuery = '';
-    this.onSearchChange();
+  // File Operations Methods
+
+  /**
+   * Save diagram to browser storage
+   */
+  async onSaveDiagram(): Promise<void> {
+    try {
+      await this.diagramService.saveDiagram();
+      console.log('Diagram saved successfully');
+      // You could add a toast notification here
+    } catch (error) {
+      console.error('Failed to save diagram:', error);
+      alert('Failed to save diagram. Please try again.');
+    }
   }
 
+  /**
+   * Load diagram from browser storage
+   */
+  async onLoadDiagram(): Promise<void> {
+    try {
+      await this.diagramService.loadDiagram();
+      console.log('Diagram loaded successfully');
+      // You could add a toast notification here
+    } catch (error) {
+      console.error('Failed to load diagram:', error);
+      alert('Failed to load diagram. Please try again.');
+    }
+  }
+
+  /**
+   * Export diagram as JSON file
+   */
+  onExportDiagram(): void {
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `diagram-${timestamp}.json`;
+      this.diagramService.downloadDiagramAsJSON(filename, true);
+      console.log('Diagram exported successfully');
+    } catch (error) {
+      console.error('Failed to export diagram:', error);
+      alert('Failed to export diagram. Please try again.');
+    }
+  }
+
+  /**
+   * Import diagram from JSON file
+   */
+  onImportDiagram(): void {
+    if (this.fileInput) {
+      this.fileInput.nativeElement.click();
+    }
+  }
+
+  /**
+   * Handle file selection for import
+   */
+  async onFileSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      alert('Please select a valid JSON file.');
+      input.value = '';
+      return;
+    }
+
+    // Show loading state (you could add a loading indicator here)
+    const originalButtonText = 'Import';
+
+    try {
+      await this.diagramService.loadDiagramFromFile(file);
+      console.log('Diagram imported successfully');
+      alert('Diagram imported successfully!');
+    } catch (error) {
+      console.error('Failed to import diagram:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Failed to import diagram: ${errorMessage}`);
+    } finally {
+      // Clear the input so the same file can be selected again
+      input.value = '';
+    }
+  }
 
 }

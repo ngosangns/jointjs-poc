@@ -90,7 +90,9 @@ paper.on('element:pointerdown', (elementView) => {
 ```typescript
 // JointJS standard format (recommended)
 const data = dataManager.serialize(graph);
-graph.fromJSON(data);
+// Note: JointJS v4.0.0 requires cell namespaces for fromJSON
+const cellNamespaces = shapeFactory.getCellNamespaces();
+graph.fromJSON(data, { cellNamespaces });
 
 // Custom format (backward compatibility)
 const customData = dataManager.serializeToCustomFormat(graph);

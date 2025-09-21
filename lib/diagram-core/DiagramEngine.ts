@@ -238,6 +238,52 @@ export class DiagramEngine {
     return [];
   }
 
+  /**
+   * Save the current diagram state
+   */
+  public async saveDiagram(documentId: string): Promise<void> {
+    const diagramData = this.dataManager.serialize(this.graph);
+    await this.persistence.saveDocument(documentId, diagramData);
+  }
+
+  /**
+   * Load diagram from storage
+   */
+  public async loadDiagram(documentId: string): Promise<void> {
+    const diagramData = await this.persistence.loadDocument(documentId);
+    if (diagramData) {
+      this.dataManager.deserialize(diagramData, this.graph, this.shapeFactory, this.linkFactory);
+    }
+  }
+
+  /**
+   * Export diagram data as JSON string
+   */
+  public exportToJSON(pretty: boolean = false): string {
+    return this.dataManager.exportToJSON(this.graph, pretty);
+  }
+
+  /**
+   * Import diagram data from JSON string
+   */
+  public importFromJSON(jsonString: string): void {
+    this.dataManager.importFromJSON(jsonString, this.graph, this.shapeFactory, this.linkFactory);
+  }
+
+  /**
+   * Get current diagram data for external use
+   */
+  public getDiagramData(): any {
+    return this.dataManager.serialize(this.graph);
+  }
+
+  /**
+   * Load diagram from external data
+   */
+  public loadFromData(data: any): void {
+    this.dataManager.deserialize(data, this.graph, this.shapeFactory, this.linkFactory);
+  }
+
 
 
 

@@ -30,7 +30,6 @@ export interface IEventManager {
  */
 export interface IDataManager {
   serialize(graph: dia.Graph): any;
-  serializeToCustomFormat(graph: dia.Graph): DiagramData;
   deserialize(
     data: any,
     graph: dia.Graph,
