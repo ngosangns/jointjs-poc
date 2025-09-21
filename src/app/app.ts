@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { DiagramCanvasComponent } from './components/diagram-canvas/diagram-canvas';
+import { DiagramCanvasComponent } from './components/diagram-canvas/diagram-canvas.component';
 
 @Component({
   selector: 'app-root',

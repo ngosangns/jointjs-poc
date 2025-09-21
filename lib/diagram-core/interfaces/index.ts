@@ -61,12 +61,10 @@ export interface IPaperManager {
   setGrid(paper: dia.Paper, enabled: boolean, gridSize?: number): void;
   resize(paper: dia.Paper, width: number, height: number): void;
   destroy(paper: dia.Paper): void;
-  fitToContent(paper: dia.Paper, padding?: number): void;
-  scale(paper: dia.Paper, scaleX: number, scaleY?: number): void;
   getScale(paper: dia.Paper): { sx: number; sy: number };
-  translate(paper: dia.Paper, dx: number, dy: number): void;
   setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void;
   getMousePosition(): { x: number; y: number };
+  calculatePaperCenter(paper: dia.Paper): { x: number; y: number };
 }
 
 /**
@@ -78,34 +76,8 @@ export interface IGraphManager {
     elementConfig: Partial<DiagramElement>,
     shapeFactory: IShapeFactory
   ): string;
-  addLink(graph: dia.Graph, linkConfig: Partial<DiagramLink>, linkFactory: ILinkFactory): string;
-  removeElement(graph: dia.Graph, elementId: string): void;
-  removeLink(graph: dia.Graph, linkId: string): void;
   clear(graph: dia.Graph): void;
   setupGraphEvents(graph: dia.Graph, eventManager: IEventManager): void;
-
-  // Query methods
-  getElement(graph: dia.Graph, elementId: string): dia.Element | null;
-  getLink(graph: dia.Graph, linkId: string): dia.Link | null;
-  getAllElements(graph: dia.Graph): dia.Element[];
-  getAllLinks(graph: dia.Graph): dia.Link[];
-  getConnectedLinks(graph: dia.Graph, elementId: string): dia.Link[];
-  areElementsConnected(graph: dia.Graph, sourceId: string, targetId: string): boolean;
-
-  // Embedding and grouping methods
-  embedElement(graph: dia.Graph, parentId: string, childId: string): void;
-  unembedElement(graph: dia.Graph, elementId: string): void;
-  getEmbeddedElements(graph: dia.Graph, parentId: string, deep?: boolean): dia.Element[];
-  getParentElement(graph: dia.Graph, elementId: string): dia.Element | null;
-  isElementEmbedded(graph: dia.Graph, elementId: string, parentId?: string): boolean;
-  getElementAncestors(graph: dia.Graph, elementId: string): dia.Element[];
-  fitParentToChildren(graph: dia.Graph, parentId: string, padding?: number): void;
-  createGroup(
-    graph: dia.Graph,
-    elementIds: string[],
-    groupConfig?: Partial<DiagramElement>
-  ): string;
-  ungroup(graph: dia.Graph, groupId: string): string[];
 }
 
 /**

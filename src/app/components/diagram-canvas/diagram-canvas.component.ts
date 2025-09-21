@@ -9,38 +9,33 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { DiagramElement } from 'lib';
-import { DiagramService } from '../../services/diagram';
+import { DiagramService } from '../../services/diagram.service';
 import {
   type ShapeCategory,
   ShapeLibraryService,
-  type ShapeMetadata,
-} from '../../services/shape-library';
+  type ShapeMetadataService,
+} from '../../services/shape-library.service';
 
 @Component({
   selector: 'app-diagram-canvas',
   standalone: true,
   imports: [DecimalPipe, CommonModule, FormsModule],
   providers: [DiagramService],
-  templateUrl: './diagram-canvas.html',
-  styleUrl: './diagram-canvas.scss',
+  templateUrl: './diagram-canvas.component.html',
+  styleUrl: './diagram-canvas.component.scss',
 })
 export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('diagramContainer', { static: true }) diagramContainer!: ElementRef<HTMLDivElement>;
 
   // Diagram state
   currentZoom: number = 1;
-  currentPan: { x: number; y: number } = { x: 0, y: 0 };
   isGridEnabled: boolean = true;
-  selectedCount: number = 0;
-  isPanning: boolean = false;
-  performanceStats: any = null;
 
   // Shape toolbar state
   categories: ShapeCategory[] = [];
   selectedCategory: string = 'basic';
   searchQuery: string = '';
-  filteredShapes: ShapeMetadata[] = [];
+  filteredShapes: ShapeMetadataService[] = [];
   hoveredShape: string | null = null;
 
   private resizeRafId: number | null = null;
@@ -68,7 +63,7 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     private diagramService: DiagramService,
     private cdr: ChangeDetectorRef,
     private shapeLibraryService: ShapeLibraryService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize shape library
@@ -145,7 +140,7 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     this.hoveredShape = null;
   }
 
-  getShapeIconClass(shape: ShapeMetadata): string {
+  getShapeIconClass(shape: ShapeMetadataService): string {
     // Map shape types to icon classes
     const iconMap: Record<string, string> = {
       rectangle: 'icon-rectangle',
@@ -182,107 +177,34 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     return this.hoveredShape === shapeType;
   }
 
-  getShortcutText(shape: ShapeMetadata): string {
-    return shape.shortcut ? `(${shape.shortcut})` : '';
-  }
 
-  getShapeType(shape: ShapeMetadata): string {
+  getShapeType(shape: ShapeMetadataService): string {
     return shape.name.toLowerCase().replace(/\s+/g, '-');
   }
 
   // Add shape click handler
-  onShapeClick(shape: ShapeMetadata): void {
+  onShapeClick(shape: ShapeMetadataService): void {
     // Calculate center position of paper and add shape
-    const centerPosition = this.calculatePaperCenter();
+    const centerPosition = this.diagramService.getCenterPosition();
     this.diagramService.insertShapeAtPosition(shape, centerPosition);
-  }
-
-  // Add method to calculate paper center
-  private calculatePaperCenter(): { x: number; y: number } {
-    // Get paper dimensions and current pan/zoom to calculate center
-    const paperSize = this.diagramService.getPaperSize();
-    const currentPan = this.diagramService.getPan();
-    const currentZoom = this.diagramService.getZoom();
-
-    // Calculate center position accounting for pan and zoom
-    return {
-      x: (paperSize.width / 2 - currentPan.x) / currentZoom,
-      y: (paperSize.height / 2 - currentPan.y) / currentZoom,
-    };
   }
 
   // Diagram methods
 
   private setupEventListeners(): void {
-    // Listen for viewport changes to update zoom and pan display
+    // Listen for viewport changes to update zoom display
     this.diagramService.addEventListener('viewport:changed', (event: any) => {
       this.currentZoom = event.data.zoom;
-      this.currentPan = event.data.pan;
       this.cdr.detectChanges();
     });
-
-    // Listen for selection changes
-    this.diagramService.addEventListener('element:selected', () => {
-      this.updateSelectionState();
-    });
-
-    this.diagramService.addEventListener('canvas:clicked', () => {
-      this.updateSelectionState();
-    });
-
-    // Listen for shape creation events
-    this.diagramService.addEventListener('shape:created', (event: any) => {
-      // Shape created event handled
-    });
-
-    // Mouse wheel zoom is now handled by PaperManager
-
-    // Setup performance monitoring
-    this.setupPerformanceMonitoring();
   }
 
-  private setupPerformanceMonitoring(): void {
-    // Update performance stats every 5 seconds
-    setInterval(() => {
-      this.performanceStats = this.diagramService.getPerformanceStats();
-      this.cdr.detectChanges();
-    }, 5000);
-  }
 
-  private updateSelectionState(): void {
-    setTimeout(() => {
-      this.selectedCount = this.diagramService.getSelectedElements().length;
-      this.cdr.detectChanges();
-    }, 0);
-  }
-
-  onAddElement(): void {
-    const randomId = 'element_' + Date.now();
-    const element: DiagramElement = {
-      id: randomId,
-      type: 'rectangle',
-      position: {
-        x: Math.random() * 400 + 50,
-        y: Math.random() * 300 + 50,
-      },
-      size: { width: 80, height: 50 },
-      properties: {
-        body: { fill: '#9b59b6', stroke: '#8e44ad' },
-        label: { text: 'New', fill: 'white' },
-      },
-    };
-
-    this.diagramService.addElement(element);
-  }
 
   onClearDiagram(): void {
     this.diagramService.clear();
   }
 
-  onExportData(): void {
-    const data = this.diagramService.exportData();
-    alert('Check console for diagram data');
-  }
 
   onZoomIn(): void {
     // Use cursor-centered zoom
@@ -298,63 +220,15 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     this.isGridEnabled = this.diagramService.toggleGrid();
   }
 
-  onZoomToFit(): void {
-    this.diagramService.zoomToFit();
+  // Search methods
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.onSearchChange();
   }
 
-  onZoomToSelection(): void {
-    this.diagramService.zoomToSelection();
+  // Category methods
+  getCategoryShapeCount(categoryId: string): number {
+    return this.shapeLibraryService.getShapesByCategory(categoryId).length;
   }
 
-  onSelectAll(): void {
-    this.diagramService.selectAll();
-    this.updateSelectionState();
-  }
-
-  onDeselectAll(): void {
-    this.diagramService.deselectAll();
-    this.updateSelectionState();
-  }
-
-  onDeleteSelected(): void {
-    this.diagramService.deleteSelected();
-    this.updateSelectionState();
-  }
-
-  onMoveSelected(dx: number, dy: number): void {
-    this.diagramService.moveSelected(dx, dy);
-  }
-
-  onSetZoom(zoom: number): void {
-    this.diagramService.setZoom(zoom);
-  }
-
-  onSetGridSize(size: number): void {
-    this.diagramService.setGridSize(size);
-  }
-
-  onPanTo(x: number, y: number): void {
-    this.diagramService.panTo(x, y);
-  }
-
-  onFitToViewport(): void {
-    this.diagramService.fitToViewport();
-  }
-
-  onSmoothZoom(zoom: number): void {
-    // Note: Smooth transitions are handled internally by the engine
-    this.diagramService.setZoom(zoom);
-  }
-
-  onSmoothPanTo(x: number, y: number): void {
-    this.diagramService.panTo(x, y, true); // Enable smooth transition
-  }
-
-  onTogglePerformanceOptimizations(): void {
-    const currentStats = this.diagramService.getPerformanceStats();
-    this.diagramService.setPerformanceOptimizations({
-      viewportCulling: !currentStats.viewportCullingEnabled,
-      batchOperations: !currentStats.batchOperationsEnabled,
-    });
-  }
 }

@@ -2,7 +2,7 @@
  * Paper manager for handling JointJS paper operations
  */
 
-import { dia, shapes } from '@joint/core';
+import { dia, shapes, Vectorizer } from '@joint/core';
 import { DiagramConfig } from '../../types';
 import { IEventManager, IPaperManager } from '../interfaces';
 
@@ -83,29 +83,25 @@ export class PaperManager implements IPaperManager {
     return { ...this.mousePosition };
   }
 
-  /**
-   * Setup mouse wheel zoom support with cursor centering
-   */
   private setupMouseWheelZoom(paper: dia.Paper, eventManager: IEventManager): void {
-    const paperElement = paper.el;
-    if (!paperElement) return;
+    paper.on("blank:mousewheel", (evt: any, x: number, y: number, delta: number) => {
+      this.mouseWheelZoomHandler(paper, evt, x, y, delta);
+    });
+    paper.on("cell:mousewheel", (cellView: any, evt: any, x: number, y: number, delta: number) => {
+      this.mouseWheelZoomHandler(paper, evt, x, y, delta);
+    });
+  }
 
-    paperElement.addEventListener(
-      'wheel',
-      (event: WheelEvent) => {
-        event.preventDefault();
+  private mouseWheelZoomHandler(paper: dia.Paper, evt: MouseEvent, x: number, y: number, delta: number) {
+    evt.preventDefault();
 
-        const delta = event.deltaY;
-        const zoomFactor = 1.1; // Smaller steps for smoother zoom
+    const oldscale = paper.scale().sx;
+    const newscale = oldscale + 0.2 * delta * oldscale;
 
-        // Emit wheel zoom event with cursor position relative to paper
-        eventManager.emitEvent('wheel:zoom', {
-          delta,
-          zoomFactor: delta < 0 ? zoomFactor : 1 / zoomFactor,
-        });
-      },
-      { passive: false }
-    );
+    if (newscale > 0.2 && newscale < 5) {
+      paper.scale(newscale, newscale);
+      paper.translate(-x * newscale + evt.offsetX!, -y * newscale + evt.offsetY!);
+    }
   }
 
   public setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void {
@@ -373,44 +369,25 @@ export class PaperManager implements IPaperManager {
     paper.remove();
   }
 
-  /**
-   * Enable/disable paper interactivity
-   */
-  public setInteractive(paper: dia.Paper, interactive: boolean): void {
-    paper.setInteractivity(interactive);
-  }
 
-  /**
-   * Fit paper content to viewport
-   */
-  public fitToContent(paper: dia.Paper, padding: number = 20): void {
-    paper.fitToContent({
-      padding,
-      allowNewOrigin: 'any',
-      minWidth: 100,
-      minHeight: 100,
-    });
-  }
-
-  /**
-   * Scale paper content
-   */
-  public scale(paper: dia.Paper, scaleX: number, scaleY?: number): void {
-    paper.scale(scaleX, scaleY || scaleX);
-  }
-
-  /**
-   * Get paper scale
-   */
-  public getScale(paper: dia.Paper): { sx: number; sy: number } {
+  public getScale(paper: dia.Paper): Vectorizer.Scale {
     return paper.scale();
   }
 
   /**
-   * Translate viewport by dx, dy
+   * Calculate the center position of the paper accounting for current pan and zoom
    */
-  public translate(paper: dia.Paper, dx: number, dy: number): void {
-    const origin = paper.translate();
-    paper.translate(origin.tx + dx, origin.ty + dy);
+  public calculatePaperCenter(paper: dia.Paper): { x: number; y: number } {
+    // Get paper dimensions and current pan/zoom to calculate center
+    const paperSize = paper.getComputedSize();
+    const currentPan = paper.translate();
+    const currentZoom = paper.scale().sx;
+
+    // Calculate center position accounting for pan and zoom
+    return {
+      x: (paperSize.width / 2 - currentPan.tx) / currentZoom,
+      y: (paperSize.height / 2 - currentPan.ty) / currentZoom,
+    };
   }
+
 }

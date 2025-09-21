@@ -16,7 +16,7 @@
 
 - addElement(element: Partial<DiagramElement>): string
 - addLink(link: Partial<DiagramLink>): string
-- insertShapeAtPosition(shapeMetadata: ShapeMetadata, position: { x: number; y: number }): string
+- insertShapeAtPosition(shapeMetadata: ShapeMetadataService, position: { x: number; y: number }): string
 - getCenterPosition(): { x: number; y: number }
 - clear(): void
 

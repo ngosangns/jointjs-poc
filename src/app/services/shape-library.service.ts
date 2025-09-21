@@ -1,27 +1,26 @@
 import { Injectable } from '@angular/core';
 
-export interface ShapeMetadata {
+export interface ShapeMetadataService {
   name: string;
   icon: string;
   category: string;
   defaultSize: { width: number; height: number };
   description?: string;
   keywords?: string[];
-  shortcut?: string;
 }
 
 export interface ShapeCategory {
   id: string;
   name: string;
   icon: string;
-  shapes: ShapeMetadata[];
+  shapes: ShapeMetadataService[];
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class ShapeLibraryService {
-  private shapeRegistry: Map<string, ShapeMetadata> = new Map();
+  private shapeRegistry: Map<string, ShapeMetadataService> = new Map();
   private categories: Map<string, ShapeCategory> = new Map();
 
   constructor() {
@@ -38,7 +37,7 @@ export class ShapeLibraryService {
   /**
    * Get shapes by category
    */
-  getShapesByCategory(categoryId: string): ShapeMetadata[] {
+  getShapesByCategory(categoryId: string): ShapeMetadataService[] {
     const category = this.categories.get(categoryId);
     return category ? category.shapes : [];
   }
@@ -46,21 +45,21 @@ export class ShapeLibraryService {
   /**
    * Get all shapes
    */
-  getAllShapes(): ShapeMetadata[] {
+  getAllShapes(): ShapeMetadataService[] {
     return Array.from(this.shapeRegistry.values());
   }
 
   /**
    * Get shape metadata by type
    */
-  getShapeMetadata(shapeType: string): ShapeMetadata | undefined {
+  getShapeMetadata(shapeType: string): ShapeMetadataService | undefined {
     return this.shapeRegistry.get(shapeType);
   }
 
   /**
    * Search shapes by name or keywords
    */
-  searchShapes(query: string): ShapeMetadata[] {
+  searchShapes(query: string): ShapeMetadataService[] {
     const lowercaseQuery = query.toLowerCase();
     return Array.from(this.shapeRegistry.values()).filter(
       (shape) =>
@@ -72,7 +71,7 @@ export class ShapeLibraryService {
   /**
    * Get shape preview data for toolbar display
    */
-  getShapePreview(shapeType: string): { type: string; metadata: ShapeMetadata } | null {
+  getShapePreview(shapeType: string): { type: string; metadata: ShapeMetadataService } | null {
     const metadata = this.shapeRegistry.get(shapeType);
     return metadata ? { type: shapeType, metadata } : null;
   }
@@ -82,7 +81,7 @@ export class ShapeLibraryService {
    */
   private initializeShapeRegistry(): void {
     // Basic Shapes Category
-    const basicShapes: ShapeMetadata[] = [
+    const basicShapes: ShapeMetadataService[] = [
       {
         name: 'Rectangle',
         icon: 'rectangle',
@@ -90,7 +89,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 100, height: 60 },
         description: 'A rectangular shape for general use',
         keywords: ['rectangle', 'box', 'square', 'rect'],
-        shortcut: 'R',
       },
       {
         name: 'Circle',
@@ -99,7 +97,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 80, height: 80 },
         description: 'A circular shape',
         keywords: ['circle', 'round', 'oval'],
-        shortcut: 'C',
       },
       {
         name: 'Ellipse',
@@ -108,7 +105,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 120, height: 80 },
         description: 'An elliptical shape',
         keywords: ['ellipse', 'oval', 'egg'],
-        shortcut: 'E',
       },
       {
         name: 'Polygon',
@@ -117,7 +113,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 100, height: 100 },
         description: 'A polygonal shape',
         keywords: ['polygon', 'star', 'shape'],
-        shortcut: 'P',
       },
       {
         name: 'Path',
@@ -126,12 +121,11 @@ export class ShapeLibraryService {
         defaultSize: { width: 100, height: 100 },
         description: 'A custom path shape',
         keywords: ['path', 'custom', 'diamond'],
-        shortcut: 'D',
       },
     ];
 
     // Flowchart Shapes Category
-    const flowchartShapes: ShapeMetadata[] = [
+    const flowchartShapes: ShapeMetadataService[] = [
       {
         name: 'Process',
         icon: 'rectangle',
@@ -139,7 +133,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 120, height: 60 },
         description: 'Process or action step',
         keywords: ['process', 'action', 'step', 'task'],
-        shortcut: 'P',
       },
       {
         name: 'Decision',
@@ -148,7 +141,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 100, height: 100 },
         description: 'Decision point with yes/no branches',
         keywords: ['decision', 'choice', 'if', 'condition'],
-        shortcut: 'D',
       },
       {
         name: 'Start/End',
@@ -157,7 +149,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 100, height: 60 },
         description: 'Start or end point of a process',
         keywords: ['start', 'end', 'begin', 'finish', 'terminator'],
-        shortcut: 'S',
       },
       {
         name: 'Input/Output',
@@ -166,7 +157,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 120, height: 60 },
         description: 'Input or output operation',
         keywords: ['input', 'output', 'data', 'io'],
-        shortcut: 'I',
       },
       {
         name: 'Connector',
@@ -175,12 +165,11 @@ export class ShapeLibraryService {
         defaultSize: { width: 40, height: 40 },
         description: 'Connection point or reference',
         keywords: ['connector', 'reference', 'link'],
-        shortcut: 'O',
       },
     ];
 
     // UML Shapes Category
-    const umlShapes: ShapeMetadata[] = [
+    const umlShapes: ShapeMetadataService[] = [
       {
         name: 'Class',
         icon: 'rectangle',
@@ -188,7 +177,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 150, height: 100 },
         description: 'UML class representation',
         keywords: ['class', 'uml', 'object', 'entity'],
-        shortcut: 'C',
       },
       {
         name: 'Interface',
@@ -197,7 +185,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 150, height: 80 },
         description: 'UML interface representation',
         keywords: ['interface', 'contract', 'uml'],
-        shortcut: 'I',
       },
       {
         name: 'Actor',
@@ -206,7 +193,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 80, height: 120 },
         description: 'UML actor (user or external system)',
         keywords: ['actor', 'user', 'person', 'uml'],
-        shortcut: 'A',
       },
       {
         name: 'Use Case',
@@ -215,7 +201,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 120, height: 60 },
         description: 'UML use case',
         keywords: ['usecase', 'use case', 'scenario', 'uml'],
-        shortcut: 'U',
       },
       {
         name: 'Package',
@@ -224,12 +209,11 @@ export class ShapeLibraryService {
         defaultSize: { width: 120, height: 80 },
         description: 'UML package',
         keywords: ['package', 'namespace', 'module', 'uml'],
-        shortcut: 'K',
       },
     ];
 
     // Network Shapes Category
-    const networkShapes: ShapeMetadata[] = [
+    const networkShapes: ShapeMetadataService[] = [
       {
         name: 'Router',
         icon: 'router',
@@ -237,7 +221,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 80, height: 80 },
         description: 'Network router device',
         keywords: ['router', 'network', 'device', 'switch'],
-        shortcut: 'R',
       },
       {
         name: 'Server',
@@ -246,7 +229,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 100, height: 80 },
         description: 'Server or computer',
         keywords: ['server', 'computer', 'pc', 'host'],
-        shortcut: 'S',
       },
       {
         name: 'Database',
@@ -255,7 +237,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 100, height: 80 },
         description: 'Database server',
         keywords: ['database', 'db', 'storage', 'data'],
-        shortcut: 'D',
       },
       {
         name: 'Cloud',
@@ -264,7 +245,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 120, height: 80 },
         description: 'Cloud service or external system',
         keywords: ['cloud', 'external', 'service', 'api'],
-        shortcut: 'L',
       },
       {
         name: 'Firewall',
@@ -273,7 +253,6 @@ export class ShapeLibraryService {
         defaultSize: { width: 100, height: 60 },
         description: 'Network firewall',
         keywords: ['firewall', 'security', 'gateway', 'filter'],
-        shortcut: 'F',
       },
     ];
 
