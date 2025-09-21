@@ -36,32 +36,6 @@ A comprehensive diagram library built on top of JointJS with enhanced features a
 
 ## 🎯 New Features
 
-### 1. Advanced Shape Management
-
-```typescript
-// Custom shape with namespace
-const CustomShape = shapeFactory.defineShape('MyShape', 'custom', {
-  attrs: {
-    body: { fill: '#e74c3c' },
-    label: { text: 'Custom Shape' },
-  },
-});
-
-// Shape with ports
-const elementWithPorts = shapeFactory.createShapeWithPorts(
-  'rectangle',
-  {
-    position: { x: 100, y: 100 },
-  },
-  {
-    groups: {
-      in: { position: 'left' },
-      out: { position: 'right' },
-    },
-  }
-);
-```
-
 ### 2. Tools Management
 
 ```typescript
@@ -217,8 +191,6 @@ diagram-core/
 ├── interfaces/           # Type definitions and contracts
 ├── managers/            # Business logic managers
 ├── factories/           # Object creation factories
-├── shapes/             # Custom shape definitions
-├── links/              # Custom link definitions
 ├── mappers/            # Data format mappers
 ├── persistence/        # Persistence adapters
 ├── validators/         # Data validation utilities
@@ -293,7 +265,6 @@ Manages interactive tools:
 - Element and link tool registration
 - Tool visibility and interaction
 - Grid controls and settings
-- Custom tool creation
 
 #### PersistenceManager
 
@@ -308,18 +279,17 @@ Handles document persistence:
 
 #### ShapeFactory
 
-Creates and manages custom shapes:
+Creates and manages shapes:
 
 - Registry pattern for shape types
 - Default shape configurations
 - Shape creation with validation
 - Cell namespace management
 - Port configuration and creation
-- Custom shape definition with JointJS patterns
 
 #### LinkFactory
 
-Creates and manages custom links:
+Creates and manages links:
 
 - Registry pattern for link types
 - Default link configurations
@@ -359,39 +329,7 @@ engine.addLink({
 });
 ```
 
-### Custom Shapes
 
-```typescript
-import { ProcessShape } from './diagram-core/shapes/CustomShapes';
-
-// Register custom shape
-const shapeFactory = engine.getShapeFactory();
-shapeFactory.registerShape('process', ProcessShape);
-
-// Use custom shape
-const processId = engine.addElement({
-  type: 'process',
-  position: { x: 200, y: 150 },
-  size: { width: 140, height: 80 },
-});
-```
-
-### Custom Links
-
-```typescript
-import { DataFlowLink } from './diagram-core/links/CustomLinks';
-
-// Register custom link
-const linkFactory = engine.getLinkFactory();
-linkFactory.registerLink('dataflow', DataFlowLink);
-
-// Use custom link
-engine.addLink({
-  source: sourceId,
-  target: targetId,
-  type: 'dataflow',
-});
-```
 
 ### Event Handling
 
@@ -446,7 +384,6 @@ const customDataManager = new DataManager();
 const customPaperManager = new PaperManager();
 const customGraphManager = new GraphManager();
 const customToolsManager = new ToolsManager();
-const customShapeFactory = new ShapeFactory();
 const customLinkFactory = new LinkFactory();
 
 const engine = new DiagramEngine(
@@ -456,26 +393,10 @@ const engine = new DiagramEngine(
   customPaperManager,
   customGraphManager,
   customToolsManager,
-  customShapeFactory,
   customLinkFactory
 );
 ```
 
-## Available Custom Shapes
-
-- **ProcessShape**: Rounded rectangle with icon and ports
-- **DecisionShape**: Diamond shape for decision points
-- **DatabaseShape**: Cylinder shape for databases
-- **ActorShape**: Stick figure for actors/users
-
-## Available Custom Links
-
-- **DataFlowLink**: Link with data label and orthogonal routing
-- **ControlFlowLink**: Dashed link for control flow with condition labels
-- **DependencyLink**: Dotted link for dependencies
-- **InheritanceLink**: Link with triangle arrow for inheritance
-- **CompositionLink**: Link with diamond marker for composition
-- **MessageLink**: Link with message label and sequence numbers
 
 ## Migration from Old Architecture
 
@@ -522,21 +443,20 @@ describe('EventManager', () => {
 
 The modular architecture makes it easy to add new features:
 
-1. **Custom Managers**: Implement new managers for specific behaviors
-2. **Plugin System**: Create plugins that extend functionality
-3. **Theme System**: Add theme management for consistent styling
-4. **Validation System**: Comprehensive validation for diagrams (already implemented)
-5. **Collaboration**: Add real-time collaboration features
-6. **Performance Optimization**: Advanced viewport culling and batch operations
+1. **Plugin System**: Create plugins that extend functionality
+2. **Theme System**: Add theme management for consistent styling
+3. **Validation System**: Comprehensive validation for diagrams (already implemented)
+4. **Collaboration**: Add real-time collaboration features
+5. **Performance Optimization**: Advanced viewport culling and batch operations
 
 ## Best Practices
 
 1. **Use Interfaces**: Always program against interfaces, not concrete implementations
-2. **Register Custom Types**: Use the factory pattern to register custom shapes and links
+2. **Use Factory Pattern**: Use the factory pattern to register shapes and links
 3. **Handle Events**: Use the event system for loose coupling between components
 4. **Validate Data**: Always validate data before processing (validation utilities available)
 5. **Test Components**: Write unit tests for individual components with dependency injection
 6. **Leverage JointJS**: Use JointJS built-in features and patterns for optimal performance
-7. **Namespace Management**: Use cell namespaces for custom shape organization
+7. **Namespace Management**: Use cell namespaces for shape organization
 
 This refactored architecture provides a solid foundation for building complex diagram applications while maintaining clean, maintainable code.

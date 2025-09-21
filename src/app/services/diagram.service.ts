@@ -235,6 +235,43 @@ export class DiagramService {
   }
 
   /**
+   * Insert shape with ports at specified position
+   */
+  insertShapeWithPortsAtPosition(
+    shapeMetadata: ShapeMetadata,
+    position: { x: number; y: number },
+    customPortsConfig?: { groups?: Record<string, any>; items?: any[] }
+  ): string {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+
+    try {
+      // Map shape metadata to diagram element properties 
+      const elementData = this.mapShapeMetadataToElement(shapeMetadata, position);
+
+      // Use custom ports config if provided, otherwise use metadata ports config
+      const portsConfig = customPortsConfig || shapeMetadata.portsConfig;
+
+      if (portsConfig) {
+        elementData.properties = {
+          ...elementData.properties,
+          ports: portsConfig,
+        };
+      }
+
+      // Add element to diagram
+      const elementId = this.diagramEngine.addElement(elementData);
+
+      return elementId;
+    } catch (error) {
+      console.error('Failed to insert shape with ports:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to insert shape with ports: ${errorMessage}`);
+    }
+  }
+
+  /**
    * Map shape metadata to diagram element properties
    */
   private mapShapeMetadataToElement(
@@ -259,6 +296,10 @@ export class DiagramService {
         name: shapeMetadata.name,
         description: shapeMetadata.description,
         icon: shapeMetadata.icon,
+        // Include ports configuration if available
+        ...(shapeMetadata.hasPorts && shapeMetadata.portsConfig && {
+          ports: shapeMetadata.portsConfig,
+        }),
       },
     };
 

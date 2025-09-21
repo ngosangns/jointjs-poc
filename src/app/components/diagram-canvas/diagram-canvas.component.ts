@@ -132,18 +132,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     const iconMap: Record<string, string> = {
       rectangle: 'icon-rectangle',
       circle: 'icon-circle',
-      ellipse: 'icon-ellipse',
-      polygon: 'icon-polygon',
-      path: 'icon-path',
-      diamond: 'icon-diamond',
-      parallelogram: 'icon-parallelogram',
-      stickman: 'icon-stickman',
-      folder: 'icon-folder',
-      router: 'icon-router',
-      server: 'icon-server',
-      database: 'icon-database',
-      cloud: 'icon-cloud',
-      firewall: 'icon-firewall',
     };
 
     return iconMap[shape.icon] || 'icon-rectangle';
@@ -163,7 +151,13 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
   onShapeClick(shape: ShapeMetadata): void {
     // Calculate center position of paper in local coordinates and add shape
     const centerPosition = this.diagramService.getCenterPosition();
-    this.diagramService.insertShapeAtPosition(shape, centerPosition);
+
+    // Use the new method that supports ports if the shape has ports
+    if (shape.hasPorts) {
+      this.diagramService.insertShapeWithPortsAtPosition(shape, centerPosition);
+    } else {
+      this.diagramService.insertShapeAtPosition(shape, centerPosition);
+    }
   }
 
   // Diagram methods

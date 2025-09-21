@@ -147,15 +147,12 @@ export * from './DocumentSettings';
 export interface IShapeFactory {
   createShape(type: string, config: Partial<DiagramElement>): dia.Element;
   registerShape(type: string, shapeClass: any, defaultConfig?: any): void;
-  registerCustomShape(type: string, namespace: string, shapeDefinition: any): void;
-  defineShape(type: string, namespace: string, protoProps: any, staticProps?: any): any;
   getAvailableShapes(): string[];
   hasShape(type: string): boolean;
   unregisterShape(type: string): boolean;
   getDefaultConfig(type: string): any;
   updateDefaultConfig(type: string, config: any): void;
   getCellNamespaces(): Record<string, any>;
-  getShapesInNamespace(namespace: string): string[];
   createShapeWithPorts(
     type: string,
     config: Partial<DiagramElement>,

@@ -27,17 +27,12 @@ export class ShapeFactory implements IShapeFactory {
   }
 
   /**
-   * Initialize cell namespaces for custom shapes
+   * Initialize cell namespaces for standard shapes
    */
   private initializeCellNamespaces(): void {
     // Standard JointJS shapes
     this.cellNamespaces = {
       ...shapes,
-      // Custom namespaces will be added here
-      custom: {},
-      business: {},
-      flowchart: {},
-      uml: {},
     };
   }
 
@@ -82,49 +77,6 @@ export class ShapeFactory implements IShapeFactory {
     this.shapeRegistry.set(type, shapeDefinition);
   }
 
-  /**
-   * Register a custom shape with namespace support
-   */
-  public registerCustomShape(
-    type: string,
-    namespace: string,
-    shapeDefinition: Partial<ShapeDefinition> & { constructor: ShapeConstructor }
-  ): void {
-    // Ensure namespace exists
-    if (!this.cellNamespaces[namespace]) {
-      this.cellNamespaces[namespace] = {};
-    }
-
-    // Add to namespace
-    this.cellNamespaces[namespace][type] = shapeDefinition.constructor;
-
-    // Register in factory
-    const fullDefinition: ShapeDefinition = {
-      ...shapeDefinition,
-      namespace,
-    };
-    this.shapeRegistry.set(`${namespace}.${type}`, fullDefinition);
-  }
-
-  /**
-   * Define a new shape using JointJS pattern
-   */
-  public defineShape(
-    type: string,
-    namespace: string,
-    protoProps: any,
-    staticProps?: any
-  ): ShapeConstructor {
-    const baseShape = shapes.standard.Rectangle;
-    const ShapeClass = baseShape.define(`${namespace}.${type}`, protoProps, staticProps);
-
-    this.registerCustomShape(type, namespace, {
-      constructor: ShapeClass,
-      defaultConfig: protoProps,
-    });
-
-    return ShapeClass;
-  }
 
   /**
    * Get all available shape types
@@ -144,14 +96,6 @@ export class ShapeFactory implements IShapeFactory {
    * Unregister a shape type
    */
   public unregisterShape(type: string): boolean {
-    const shapeDefinition = this.shapeRegistry.get(type);
-    if (shapeDefinition && shapeDefinition.namespace) {
-      // Remove from namespace as well
-      const [namespace, shapeName] = type.split('.');
-      if (this.cellNamespaces[namespace] && this.cellNamespaces[namespace][shapeName]) {
-        delete this.cellNamespaces[namespace][shapeName];
-      }
-    }
     return this.shapeRegistry.delete(type);
   }
 
@@ -182,14 +126,6 @@ export class ShapeFactory implements IShapeFactory {
     return this.cellNamespaces;
   }
 
-  /**
-   * Get shapes in a specific namespace
-   */
-  public getShapesInNamespace(namespace: string): string[] {
-    return Array.from(this.shapeRegistry.keys())
-      .filter((key) => key.startsWith(`${namespace}.`))
-      .map((key) => key.split('.')[1]);
-  }
 
   /**
    * Create a shape with ports configuration
