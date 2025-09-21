@@ -116,45 +116,13 @@ export class DiagramEngine {
   public zoomIn(step: number = 1.2): void {
     const paper = this.paper;
     if (!paper) return;
-
-    const { sx } = this.paperManager.getScale(paper);
-    const newScale = sx * step;
-    const clampedScale = this.paperManager.clampScale(newScale);
-
-    // Use paper center position in local coordinates
-    const centerPos = this.paperManager.getPaperCenterLocal(paper);
-
-    // Calculate new pan offset to keep center position fixed
-    const scaleChange = clampedScale / sx;
-    const currentTranslate = paper.translate();
-
-    const newTx = currentTranslate.tx - centerPos.x * (scaleChange - 1);
-    const newTy = currentTranslate.ty - centerPos.y * (scaleChange - 1);
-
-    paper.scale(clampedScale);
-    paper.translate(newTx, newTy);
+    this.paperManager.zoomIn(paper, step);
   }
 
   public zoomOut(step: number = 1 / 1.2): void {
     const paper = this.paper;
     if (!paper) return;
-
-    const { sx } = this.paperManager.getScale(paper);
-    const newScale = sx * step;
-    const clampedScale = this.paperManager.clampScale(newScale);
-
-    // Use paper center position in local coordinates
-    const centerPos = this.paperManager.getPaperCenterLocal(paper);
-
-    // Calculate new pan offset to keep center position fixed
-    const scaleChange = clampedScale / sx;
-    const currentTranslate = paper.translate();
-
-    const newTx = currentTranslate.tx - centerPos.x * (scaleChange - 1);
-    const newTy = currentTranslate.ty - centerPos.y * (scaleChange - 1);
-
-    paper.scale(clampedScale);
-    paper.translate(newTx, newTy);
+    this.paperManager.zoomOut(paper, step);
   }
 
 
@@ -164,10 +132,6 @@ export class DiagramEngine {
     const { sx } = this.paperManager.getScale(paper);
     return sx;
   }
-
-
-
-
 
   /**
    * Resize the diagram

@@ -65,6 +65,8 @@ export interface IPaperManager {
   setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void;
   calculatePaperCenter(paper: dia.Paper): { x: number; y: number };
   clampScale(scale: number, minScale?: number, maxScale?: number): number;
+  zoomIn(paper: dia.Paper, step?: number): void;
+  zoomOut(paper: dia.Paper, step?: number): void;
 
   // Coordinate system methods
   clientToLocal(paper: dia.Paper, clientPoint: { x: number; y: number }): { x: number; y: number };

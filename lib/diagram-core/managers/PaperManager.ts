@@ -73,6 +73,56 @@ export class PaperManager implements IPaperManager {
     }
   }
 
+  /**
+   * Zoom in with center-focused zoom
+   * @param paper - The paper instance
+   * @param step - Zoom step multiplier (default: 1.2)
+   */
+  public zoomIn(paper: dia.Paper, step: number = 1.2): void {
+    const { sx } = this.getScale(paper);
+    const newScale = sx * step;
+    const clampedScale = this.clampScale(newScale);
+
+    // Get paper center in local coordinates
+    const centerPos = this.getPaperCenterLocal(paper);
+
+    // Calculate the offset needed to keep the center point fixed during zoom
+    const scaleRatio = clampedScale / sx;
+    const currentTranslate = paper.translate();
+
+    // Adjust translation to zoom into the center
+    const newTranslateX = centerPos.x - centerPos.x * scaleRatio + currentTranslate.tx * scaleRatio;
+    const newTranslateY = centerPos.y - centerPos.y * scaleRatio + currentTranslate.ty * scaleRatio;
+
+    paper.scale(clampedScale);
+    paper.translate(newTranslateX, newTranslateY);
+  }
+
+  /**
+   * Zoom out with center-focused zoom
+   * @param paper - The paper instance
+   * @param step - Zoom step multiplier (default: 1/1.2)
+   */
+  public zoomOut(paper: dia.Paper, step: number = 1 / 1.2): void {
+    const { sx } = this.getScale(paper);
+    const newScale = sx * step;
+    const clampedScale = this.clampScale(newScale);
+
+    // Get paper center in local coordinates
+    const centerPos = this.getPaperCenterLocal(paper);
+
+    // Calculate the offset needed to keep the center point fixed during zoom
+    const scaleRatio = clampedScale / sx;
+    const currentTranslate = paper.translate();
+
+    // Adjust translation to zoom into the center
+    const newTranslateX = centerPos.x - centerPos.x * scaleRatio + currentTranslate.tx * scaleRatio;
+    const newTranslateY = centerPos.y - centerPos.y * scaleRatio + currentTranslate.ty * scaleRatio;
+
+    paper.scale(clampedScale);
+    paper.translate(newTranslateX, newTranslateY);
+  }
+
   public setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void {
     // Setup mouse wheel zoom support
     this.setupMouseWheelZoom(paper, eventManager);
@@ -159,30 +209,6 @@ export class PaperManager implements IPaperManager {
         id: cellView.model.id,
         cell: cellView.model,
         type: cellView.model.isElement() ? 'element' : 'link',
-      });
-    });
-
-    // Cell click events
-    paper.on('cell:pointerclick', (cellView, evt: MouseEvent | any) => {
-      const localPosition = this.eventToLocal(paper, evt);
-      const clientPosition = { x: evt.clientX, y: evt.clientY };
-
-      console.log('Cell clicked:', {
-        id: cellView.model.id,
-        type: cellView.model.isElement() ? 'element' : 'link',
-        localPosition,
-        clientPosition,
-      });
-    });
-
-    // Blank area click events
-    paper.on('blank:pointerclick', (evt: MouseEvent | any) => {
-      const localPosition = this.eventToLocal(paper, evt);
-      const clientPosition = { x: evt.clientX, y: evt.clientY };
-
-      console.log('Blank area clicked:', {
-        localPosition,
-        clientPosition,
       });
     });
 
