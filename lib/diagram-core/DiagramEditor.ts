@@ -2,6 +2,7 @@ import { dia } from '@joint/core';
 import type { DiagramConfig, DiagramElement, DiagramEventType } from '../types';
 import { LinkFactory, ShapeFactory } from './factories';
 import type {
+  ICursorManager,
   IEventManager,
   IGraphManager,
   ILinkFactory,
@@ -10,7 +11,7 @@ import type {
   IToolbarManager,
   IToolsManager,
 } from './interfaces';
-import { EventManager, GraphManager, Toolbar, ToolsManager, Viewport } from './managers';
+import { CursorManager, EventManager, GraphManager, Toolbar, ToolsManager, Viewport } from './managers';
 
 export class DiagramEditor {
   private graph: dia.Graph;
@@ -23,6 +24,7 @@ export class DiagramEditor {
   private graphManager: IGraphManager;
   private toolsManager: IToolsManager;
   private toolbarManager: IToolbarManager;
+  private cursorManager: ICursorManager;
 
   // Factories
   private shapeFactory: IShapeFactory;
@@ -35,6 +37,7 @@ export class DiagramEditor {
     graphManager?: IGraphManager,
     toolsManager?: IToolsManager,
     toolbarManager?: IToolbarManager,
+    cursorManager?: ICursorManager,
     shapeFactory?: IShapeFactory,
     linkFactory?: ILinkFactory
   ) {
@@ -47,6 +50,7 @@ export class DiagramEditor {
     this.graphManager = graphManager || new GraphManager();
     this.toolsManager = toolsManager || new ToolsManager();
     this.toolbarManager = toolbarManager || new Toolbar();
+    this.cursorManager = cursorManager || new CursorManager();
 
     // Initialize factories
     this.shapeFactory = shapeFactory || new ShapeFactory();
@@ -75,6 +79,7 @@ export class DiagramEditor {
 
     this.toolsManager.initialize(this.paper);
     this.toolbarManager.initialize(this.paper);
+    this.cursorManager.initialize(this.paper);
 
     // Apply initial mode settings (default is select mode)
     this.handleToolbarModeChange(this.toolbarManager.getCurrentMode());
@@ -139,6 +144,7 @@ export class DiagramEditor {
     this.eventManager.destroy();
     this.toolsManager.destroy();
     this.toolbarManager.destroy();
+    this.cursorManager.destroy();
     this.graph.clear();
   }
 
@@ -191,10 +197,17 @@ export class DiagramEditor {
   }
 
   /**
-   * Get the toolbar manager
+   * Get the toolbar manager instance
    */
   public getToolbarManager(): IToolbarManager {
     return this.toolbarManager;
+  }
+
+  /**
+   * Get the cursor manager instance
+   */
+  public getCursorManager(): ICursorManager {
+    return this.cursorManager;
   }
 
   /**
@@ -226,10 +239,52 @@ export class DiagramEditor {
   }
 
   /**
-   * Check if select mode is active
+   * Check if current mode is select mode
    */
   public isSelectMode(): boolean {
     return this.toolbarManager.isSelectMode();
+  }
+
+  /**
+   * Set cursor for the paper
+   */
+  public setCursor(cursor: string): void {
+    this.cursorManager.setCursor(cursor);
+  }
+
+  /**
+   * Get current cursor
+   */
+  public getCursor(): string {
+    return this.cursorManager.getCursor();
+  }
+
+  /**
+   * Reset cursor to default
+   */
+  public resetCursor(): void {
+    this.cursorManager.resetCursor();
+  }
+
+  /**
+   * Set cursor for a specific mode
+   */
+  public setCursorForMode(mode: string, cursor: string): void {
+    this.cursorManager.setCursorForMode(mode, cursor);
+  }
+
+  /**
+   * Set temporary cursor (e.g., during hover)
+   */
+  public setTemporaryCursor(cursor: string): void {
+    this.cursorManager.setTemporaryCursor(cursor);
+  }
+
+  /**
+   * Restore cursor for current mode
+   */
+  public restoreCursor(): void {
+    this.cursorManager.restoreCursor(this.getToolbarMode());
   }
 
   /**
@@ -264,5 +319,8 @@ export class DiagramEditor {
         elementMove: true,
       });
     }
+
+    // Notify cursor manager about mode change
+    this.cursorManager.onModeChange(mode);
   }
 }

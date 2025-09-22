@@ -109,6 +109,27 @@ export interface IToolbarManager {
   destroy(): void;
 }
 
+/**
+ * Interface for cursor management
+ */
+export interface ICursorManager {
+  initialize(paper: dia.Paper): void;
+  setCursor(cursor: string): void;
+  getCursor(): string;
+  resetCursor(): void;
+  setDefaultCursor(cursor: string): void;
+  getDefaultCursor(): string;
+  setCursorForMode(mode: string, cursor: string): void;
+  getCursorForMode(mode: string): string | undefined;
+  applyCursorForMode(mode: string): void;
+  setTemporaryCursor(cursor: string): void;
+  restoreCursor(mode?: string): void;
+  onMouseEnter(): void;
+  onMouseLeave(): void;
+  onModeChange(mode: string): void;
+  destroy(): void;
+}
+
 // Models
 export * from './Diagram';
 export * from './Page';

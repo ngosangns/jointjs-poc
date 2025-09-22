@@ -1,2 +1,0 @@
-- Zooming with the cursor position is center.
-- Keep elements on paper when toggle Grid.
