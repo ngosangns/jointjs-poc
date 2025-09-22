@@ -1,7 +1,3 @@
-/**
- * Paper manager for handling JointJS paper operations
- */
-
 import { dia, shapes, Vectorizer } from '@joint/core';
 import { DiagramConfig } from '../../types';
 import { IEventManager, IPaperManager } from '../interfaces';
@@ -25,8 +21,8 @@ export class Viewport implements IPaperManager {
       allowDrop: false,
       defaultLink: () => new shapes.standard.Link(),
       defaultInteraction: {
-        blank: { pan: false },
-        element: { move: false },
+        blank: { pan: false }, // Pan is disabled by default, controlled by DiagramEditor
+        element: { move: false }, // Element move is disabled by default, controlled by DiagramEditor
       },
       // Additional paper options for better UX
       highlighting: {
@@ -125,13 +121,8 @@ export class Viewport implements IPaperManager {
   }
 
   public setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void {
-    // Setup mouse wheel zoom support
-    this.setupMouseWheelZoom(paper, eventManager);
-
-    // Manual panning over blank area with LEFT mouse button
-    let isBlankPanning = false;
-    let blankPanStart = { x: 0, y: 0 };
-    let blankPanTranslate = { tx: 0, ty: 0 };
+    // Setup mouse wheel zoom support (will be controlled by setInteractionMode)
+    // Note: Mouse wheel zoom is initially disabled and will be enabled by DiagramEditor when needed
 
     paper.on('element:pointerdblclick', (elementView, evt) => {
       eventManager.emitEvent('element:double-click', {
@@ -158,42 +149,19 @@ export class Viewport implements IPaperManager {
       });
     });
 
-    // Paper events
+    // Paper events - only canvas click, no default pan behavior
     paper.on('blank:pointerdown', (evt: any) => {
-      // left button initiates pan on blank
-      if (evt.button === 0) {
-        isBlankPanning = true;
-        blankPanStart = { x: evt.clientX, y: evt.clientY };
-        blankPanTranslate = paper.translate();
-      }
       eventManager.emitEvent('canvas:clicked', {
         position: { x: evt.clientX, y: evt.clientY },
       });
     });
 
-    // Emit viewport changes on pan/translate and scale
+    // Emit viewport changes on translate and scale
     const emitViewport = () => {
       const scale = paper.scale().sx;
       const t = paper.translate();
       eventManager.emitEvent('viewport:changed', { zoom: scale, pan: { x: t.tx, y: t.ty } });
     };
-    paper.on('blank:pointermove', (evt: any) => {
-      if (isBlankPanning) {
-        // Ensure left button is still pressed
-        if ((evt.buttons & 1) === 1) {
-          const dx = evt.clientX - blankPanStart.x;
-          const dy = evt.clientY - blankPanStart.y;
-          paper.translate(blankPanTranslate.tx + dx, blankPanTranslate.ty + dy);
-        }
-      }
-      emitViewport();
-    });
-    paper.on('blank:pointerup', () => {
-      if (isBlankPanning) {
-        isBlankPanning = false;
-      }
-      emitViewport();
-    });
     paper.on('translate', () => emitViewport());
     paper.on('scale', () => emitViewport());
 
@@ -576,43 +544,18 @@ export class Viewport implements IPaperManager {
     paper: dia.Paper,
     mode: { pan: boolean; zoom: boolean; elementMove: boolean }
   ): void {
-    // Update paper interactive options based on mode
+    // Handle element move mode by enabling/disabling element move functionality
     if (mode.elementMove) {
-      // Enable element interaction
-      (paper.options as any).interactive = {
-        linkView: true,
-        arrowheadView: true,
-        vertexView: true,
-        vertexAddView: true,
-        useLinkTools: true,
-        useElementTools: true,
-        elementMove: true,
-      };
+      this.enableElementMove(paper);
     } else {
-      // Disable element interaction
-      (paper.options as any).interactive = {
-        linkView: false,
-        arrowheadView: false,
-        vertexView: false,
-        vertexAddView: false,
-        useLinkTools: false,
-        useElementTools: false,
-        elementMove: false,
-      };
+      this.disableElementMove(paper);
     }
 
-    // Handle pan mode
+    // Handle pan mode by adding/removing event listeners
     if (mode.pan) {
-      // Enable panning
-      (paper.options as any).panning = {
-        enabled: true,
-        eventTypes: ['leftMouseDown'],
-      };
+      this.enablePanEvents(paper);
     } else {
-      // Disable panning
-      (paper.options as any).panning = {
-        enabled: false,
-      };
+      this.disablePanEvents(paper);
     }
 
     // Handle zoom mode by enabling/disabling mouse wheel zoom events
@@ -648,5 +591,113 @@ export class Viewport implements IPaperManager {
   private disableMouseWheelZoom(paper: dia.Paper): void {
     paper.off('blank:mousewheel');
     paper.off('cell:mousewheel');
+  }
+
+  /**
+   * Enable pan events for manual panning
+   */
+  private enablePanEvents(paper: dia.Paper): void {
+    // Remove existing pan listeners first to avoid duplicates
+    this.disablePanEvents(paper);
+
+    // Pan state variables
+    let isBlankPanning = false;
+    let blankPanStart = { x: 0, y: 0 };
+    let blankPanTranslate = { tx: 0, ty: 0 };
+
+    // Store references to the event handlers so we can remove them later
+    const panDownHandler = (evt: any) => {
+      // left button initiates pan on blank
+      if (evt.button === 0) {
+        isBlankPanning = true;
+        blankPanStart = { x: evt.clientX, y: evt.clientY };
+        blankPanTranslate = paper.translate();
+      }
+    };
+
+    const panMoveHandler = (evt: any) => {
+      if (isBlankPanning) {
+        // Ensure left button is still pressed
+        if ((evt.buttons & 1) === 1) {
+          const dx = evt.clientX - blankPanStart.x;
+          const dy = evt.clientY - blankPanStart.y;
+          paper.translate(blankPanTranslate.tx + dx, blankPanTranslate.ty + dy);
+        }
+      }
+    };
+
+    const panUpHandler = () => {
+      if (isBlankPanning) {
+        isBlankPanning = false;
+      }
+    };
+
+    // Store handlers on paper for later removal
+    (paper as any)._panHandlers = {
+      down: panDownHandler,
+      move: panMoveHandler,
+      up: panUpHandler,
+    };
+
+    // Add pan event listeners
+    paper.on('blank:pointerdown', panDownHandler);
+    paper.on('blank:pointermove', panMoveHandler);
+    paper.on('blank:pointerup', panUpHandler);
+  }
+
+  /**
+   * Disable pan events
+   */
+  private disablePanEvents(paper: dia.Paper): void {
+    // Remove pan event handlers if they exist
+    const handlers = (paper as any)._panHandlers;
+    if (handlers) {
+      paper.off('blank:pointerdown', handlers.down);
+      paper.off('blank:pointermove', handlers.move);
+      paper.off('blank:pointerup', handlers.up);
+      delete (paper as any)._panHandlers;
+    }
+  }
+
+  /**
+   * Enable element move functionality
+   */
+  private enableElementMove(paper: dia.Paper): void {
+    // Use JointJS setInteractivity method to enable element movement
+    paper.setInteractivity(true);
+    
+    // Update defaultInteraction for elements to allow movement
+    paper.options['defaultInteraction'] = {
+      ...paper.options['defaultInteraction'],
+      element: { move: true },
+    };
+  }
+
+  /**
+   * Disable element move functionality
+   */
+  private disableElementMove(paper: dia.Paper): void {
+    // Use JointJS setInteractivity method but with custom function to disable only element movement
+    paper.setInteractivity((cellView: any) => {
+      if (cellView.model.isElement()) {
+        // For elements, disable movement but keep other interactions
+        return {
+          elementMove: false,
+          addVertices: true,
+          vertexMove: true,
+          vertexRemove: true,
+          arrowheadMove: true,
+          useLinkTools: true,
+        };
+      }
+      // For links, keep all interactions enabled
+      return true;
+    });
+    
+    // Update defaultInteraction for elements to disable movement
+    paper.options['defaultInteraction'] = {
+      ...paper.options['defaultInteraction'],
+      element: { move: false },
+    };
   }
 }
