@@ -150,17 +150,6 @@ export class DiagramEditor {
   }
 
   /**
-   * Calculate the center position of the paper accounting for current pan and zoom
-   * @deprecated Use getPaperCenterLocal() instead
-   */
-  public calculatePaperCenter(): { x: number; y: number } {
-    if (!this.paper) {
-      throw new Error('Paper not initialized.');
-    }
-    return this.viewport.getPaperCenterLocal(this.paper);
-  }
-
-  /**
    * Get the center position of the paper in local coordinates
    */
   public getPaperCenterLocal(): { x: number; y: number } {

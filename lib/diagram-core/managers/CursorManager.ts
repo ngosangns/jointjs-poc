@@ -41,7 +41,10 @@ export class CursorManager implements ICursorManager {
 
     if (this.paperElement) {
       this.setupEventListeners();
+      // Override the disabled default cursor and set initial cursor
       this.setCursor(this.defaultCursor);
+      // Apply cursor for current interaction mode
+      this.updateCursorBasedOnInteractionMode();
     }
   }
 
@@ -83,7 +86,7 @@ export class CursorManager implements ICursorManager {
    */
   private handleMouseLeave(): void {
     this.isMouseOverPaper = false;
-    this.onMouseLeave();
+    this.updateCursorBasedOnInteractionMode();
   }
 
   /**
@@ -161,8 +164,8 @@ export class CursorManager implements ICursorManager {
    * Xử lý khi mouse leave khỏi paper
    */
   public onMouseLeave(): void {
-    // Reset cursor khi mouse leave
-    this.setCursor('default');
+    // Restore cursor based on current interaction mode instead of default
+    this.updateCursorBasedOnInteractionMode();
   }
 
   /**
@@ -217,7 +220,15 @@ export class CursorManager implements ICursorManager {
    * Xử lý khi mouse enter vào element
    */
   private handleElementMouseEnter(): void {
-    this.setTemporaryCursor('pointer');
+    // Chỉ hiển thị pointer cursor khi ở select mode
+    // Khi ở pan mode, hiển thị cursor resize khi hover element
+    if (this.interactionMode.pan) {
+      // Khi ở pan mode, hiển thị cursor resize khi hover element
+      this.setTemporaryCursor('nw-resize');
+    } else {
+      // Khi ở select mode, hiển thị pointer cursor
+      this.setTemporaryCursor('pointer');
+    }
   }
 
   /**
@@ -231,7 +242,13 @@ export class CursorManager implements ICursorManager {
    * Xử lý khi mouse enter vào link
    */
   private handleLinkMouseEnter(): void {
-    this.setTemporaryCursor('pointer');
+    // Tương tự như element, hiển thị cursor phù hợp với mode
+    if (this.interactionMode.pan) {
+      // Khi ở pan mode, hiển thị cursor resize khi hover link
+      this.setTemporaryCursor('nw-resize');
+    } else {
+      this.setTemporaryCursor('pointer');
+    }
   }
 
   /**

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
+import { DiagramConfig, DiagramEditor, DiagramElement } from 'lib';
 import { BehaviorSubject } from 'rxjs';
-import { DiagramConfig, DiagramElement, DiagramEditor } from 'lib';
 import { ShapeMetadata } from './shape-library.service';
 
 @Injectable({

@@ -24,7 +24,6 @@ export interface IViewport {
   destroy(paper: dia.Paper): void;
   getScale(paper: dia.Paper): { sx: number; sy: number };
   setupPaperEvents(paper: dia.Paper, eventManager: IEventManager): void;
-  calculatePaperCenter(paper: dia.Paper): { x: number; y: number };
   clampScale(scale: number, minScale?: number, maxScale?: number): number;
   zoomIn(paper: dia.Paper, step?: number): void;
   zoomOut(paper: dia.Paper, step?: number): void;
@@ -124,7 +123,7 @@ export interface ICursorManager {
   onMouseEnter(): void;
   onMouseLeave(): void;
   onModeChange(mode: string): void;
-  
+
   // Interaction state management
   onInteractionModeChange(mode: { pan: boolean; zoom: boolean; elementMove: boolean }): void;
   onPanStart(): void;
@@ -133,11 +132,11 @@ export interface ICursorManager {
   onZoomEnd(): void;
   onElementMoveStart(): void;
   onElementMoveEnd(): void;
-  
+
   // Viewport coordination
   onViewportStateChange(state: 'idle' | 'panning' | 'zooming' | 'element-moving'): void;
   getCurrentViewportState(): 'idle' | 'panning' | 'zooming' | 'element-moving';
-  
+
   destroy(): void;
 }
 

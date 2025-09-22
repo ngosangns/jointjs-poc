@@ -4,6 +4,7 @@ import { IEventManager, IViewport, ICursorManager } from '../interfaces';
 
 export class Viewport implements IViewport {
   private cursorManager: ICursorManager | null = null;
+
   public initialize(element: HTMLElement, graph: dia.Graph, config: DiagramConfig): dia.Paper {
     const paper = new dia.Paper({
       el: element,
@@ -25,6 +26,8 @@ export class Viewport implements IViewport {
         blank: { pan: false }, // Pan is disabled by default, controlled by DiagramEditor
         element: { move: false }, // Element move is disabled by default, controlled by DiagramEditor
       },
+      // Disable default view actions to prevent default cursor behavior
+      preventDefaultViewAction: false,
       // Additional paper options for better UX
       highlighting: {
         default: {
@@ -40,16 +43,12 @@ export class Viewport implements IViewport {
       },
     });
 
-    return paper;
-  }
+    // Disable default cursor on paper element
+    if (paper.el) {
+      (paper.el as HTMLElement).style.cursor = 'none';
+    }
 
-  private setupMouseWheelZoom(paper: dia.Paper, eventManager: IEventManager): void {
-    paper.on('blank:mousewheel', (evt: any, x: number, y: number, delta: number) => {
-      this.mouseWheelZoomHandler(paper, evt, x, y, delta);
-    });
-    paper.on('cell:mousewheel', (cellView: any, evt: any, x: number, y: number, delta: number) => {
-      this.mouseWheelZoomHandler(paper, evt, x, y, delta);
-    });
+    return paper;
   }
 
   private mouseWheelZoomHandler(
@@ -362,14 +361,6 @@ export class Viewport implements IViewport {
   }
 
   /**
-   * Calculate the center position of the paper accounting for current pan and zoom
-   * @deprecated Use getPaperCenterLocal() instead
-   */
-  public calculatePaperCenter(paper: dia.Paper): { x: number; y: number } {
-    return this.getPaperCenterLocal(paper);
-  }
-
-  /**
    * Clamp scale value within specified bounds
    * @param scale - The scale value to clamp
    * @param minScale - Minimum allowed scale (default: 0.1)
@@ -630,7 +621,7 @@ export class Viewport implements IViewport {
         isBlankPanning = true;
         blankPanStart = { x: evt.clientX, y: evt.clientY };
         blankPanTranslate = paper.translate();
-        
+
         // Notify cursor manager about pan start
         if (this.cursorManager) {
           this.cursorManager.onPanStart();
@@ -652,7 +643,7 @@ export class Viewport implements IViewport {
     const panUpHandler = () => {
       if (isBlankPanning) {
         isBlankPanning = false;
-        
+
         // Notify cursor manager about pan end
         if (this.cursorManager) {
           this.cursorManager.onPanEnd();
@@ -693,7 +684,7 @@ export class Viewport implements IViewport {
   private enableElementMove(paper: dia.Paper): void {
     // Use JointJS setInteractivity method to enable element movement
     paper.setInteractivity(true);
-    
+
     // Update defaultInteraction for elements to allow movement
     paper.options['defaultInteraction'] = {
       ...paper.options['defaultInteraction'],
@@ -721,7 +712,7 @@ export class Viewport implements IViewport {
       // For links, keep all interactions enabled
       return true;
     });
-    
+
     // Update defaultInteraction for elements to disable movement
     paper.options['defaultInteraction'] = {
       ...paper.options['defaultInteraction'],

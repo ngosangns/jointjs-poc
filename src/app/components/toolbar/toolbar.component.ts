@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { DiagramService } from '../../services/diagram.service';
 import { ShapeLibraryService, type ShapeMetadata } from '../../services/shape-library.service';
 
