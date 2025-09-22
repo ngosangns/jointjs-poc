@@ -9,9 +9,8 @@ import type {
   IViewport,
   IShapeFactory,
   IToolbar,
-  IToolsManager,
 } from './interfaces';
-import { CursorManager, EventManager, GraphManager, Toolbar, ToolsManager, Viewport } from './managers';
+import { CursorManager, EventManager, GraphManager, Toolbar, Viewport } from './managers';
 
 export class DiagramEditor {
   private graph: dia.Graph;
@@ -22,7 +21,6 @@ export class DiagramEditor {
   private eventManager: IEventManager;
   private paperManager: IViewport;
   private graphManager: IGraphManager;
-  private toolsManager: IToolsManager;
   private toolbarManager: IToolbar;
   private cursorManager: ICursorManager;
 
@@ -35,7 +33,6 @@ export class DiagramEditor {
     eventManager?: IEventManager,
     paperManager?: IViewport,
     graphManager?: IGraphManager,
-    toolsManager?: IToolsManager,
     toolbarManager?: IToolbar,
     cursorManager?: ICursorManager,
     shapeFactory?: IShapeFactory,
@@ -48,7 +45,6 @@ export class DiagramEditor {
     this.eventManager = eventManager || new EventManager();
     this.paperManager = paperManager || new Viewport();
     this.graphManager = graphManager || new GraphManager();
-    this.toolsManager = toolsManager || new ToolsManager();
     this.toolbarManager = toolbarManager || new Toolbar();
     this.cursorManager = cursorManager || new CursorManager();
 
@@ -77,7 +73,6 @@ export class DiagramEditor {
       console.error('GraphManager setupGraphEvents error:', error);
     }
 
-    this.toolsManager.initialize(this.paper);
     this.toolbarManager.initialize(this.paper);
     this.cursorManager.initialize(this.paper);
 
@@ -142,7 +137,6 @@ export class DiagramEditor {
       this.paper = null;
     }
     this.eventManager.destroy();
-    this.toolsManager.destroy();
     this.toolbarManager.destroy();
     this.cursorManager.destroy();
     this.graph.clear();

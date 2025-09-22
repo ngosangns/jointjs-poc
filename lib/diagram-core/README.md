@@ -25,7 +25,7 @@ A comprehensive diagram library built on top of JointJS with enhanced features a
 - **EventManager**: JointJS event integration with custom event mapping
 - **Viewport**: Paper lifecycle and configuration management
 - **GraphManager**: Graph operations with embedding/grouping support
-- **ToolsManager**: Interactive tools for elements and links
+- **Toolbar**: Mode management and interactive tools for elements and links
 
 ### Factories
 
@@ -39,13 +39,13 @@ A comprehensive diagram library built on top of JointJS with enhanced features a
 ```typescript
 // Custom element tools
 const customTools = [
-  toolsManager.createElementTool('Remove'),
-  toolsManager.createElementTool('Boundary'),
+  toolbar.createElementTool('Remove'),
+  toolbar.createElementTool('Boundary'),
 ];
-toolsManager.registerElementTools('custom', customTools);
+toolbar.registerElementTools('custom', customTools);
 
 // Show tools on element
-toolsManager.showElementTools(elementView, 'custom');
+toolbar.showElementTools(elementView, 'custom');
 ```
 
 ### 3. Embedding & Grouping
@@ -215,7 +215,7 @@ Define contracts for all major components:
 - `IEventManager`: Event handling interface
 - `IViewport`: JointJS viewport management interface
 - `IGraphManager`: JointJS graph operations interface
-- `IToolsManager`: Tools management interface
+- `IToolbar`: Toolbar and tools management interface
 - `IShapeFactory`: Shape creation interface
 - `ILinkFactory`: Link creation interface
 
@@ -248,13 +248,14 @@ Manages JointJS graph operations:
 - Embedding and grouping operations
 - Element querying and relationships
 
-#### ToolsManager
+#### Toolbar
 
-Manages interactive tools:
+Manages toolbar modes and interactive tools:
 
+- Mode management (select/pan)
 - Element and link tool registration
 - Tool visibility and interaction
-- Grid controls and settings
+- Keyboard and mouse event handling
 
 ### Factories
 
@@ -335,7 +336,7 @@ import {
   EventManager,
   Viewport,
   GraphManager,
-  ToolsManager,
+  Toolbar,
   ShapeFactory,
   LinkFactory,
 } from './diagram-core';
@@ -343,7 +344,7 @@ import {
 const customEventManager = new EventManager();
 const customPaperManager = new Viewport();
 const customGraphManager = new GraphManager();
-const customToolsManager = new ToolsManager();
+const customToolbar = new Toolbar();
 const customShapeFactory = new ShapeFactory();
 const customLinkFactory = new LinkFactory();
 
@@ -352,7 +353,7 @@ const engine = new DiagramEditor(
   customEventManager,
   customPaperManager,
   customGraphManager,
-  customToolsManager,
+  customToolbar,
   customShapeFactory,
   customLinkFactory
 );

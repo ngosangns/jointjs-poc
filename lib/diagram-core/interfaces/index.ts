@@ -64,11 +64,29 @@ export interface IGraphManager {
   setupGraphEvents(graph: dia.Graph, eventManager: IEventManager): void;
 }
 
+
+
 /**
- * Interface for tools management
+ * Interface for toolbar management with integrated tools management
  */
-export interface IToolsManager {
+export interface IToolbar {
+  // Mode management
   initialize(paper: dia.Paper): void;
+  getCurrentMode(): 'select' | 'pan';
+  setMode(mode: 'select' | 'pan'): void;
+  toggleMode(): void;
+  isPanMode(): boolean;
+  isSelectMode(): boolean;
+  activatePanModeTemporarily(): void;
+  restorePreviousMode(): void;
+  addModeChangeListener(callback: (event: any) => void): void;
+  removeModeChangeListener(callback: (event: any) => void): void;
+  setupKeyboardEvents(): void;
+  setupMouseEvents(): void;
+  updatePaperInteraction(): void;
+  destroy(): void;
+
+  // Tools management
   registerElementTools(name: string, tools: dia.ToolView[]): void;
   registerLinkTools(name: string, tools: dia.ToolView[]): void;
   showElementTools(elementView: dia.ElementView, toolsName?: string): void;
@@ -86,27 +104,6 @@ export interface IToolsManager {
   getLinkToolNames(): string[];
   unregisterElementTools(name: string): boolean;
   unregisterLinkTools(name: string): boolean;
-  destroy(): void;
-}
-
-/**
- * Interface for toolbar management
- */
-export interface IToolbar {
-  initialize(paper: dia.Paper): void;
-  getCurrentMode(): 'select' | 'pan';
-  setMode(mode: 'select' | 'pan'): void;
-  toggleMode(): void;
-  isPanMode(): boolean;
-  isSelectMode(): boolean;
-  activatePanModeTemporarily(): void;
-  restorePreviousMode(): void;
-  addModeChangeListener(callback: (event: any) => void): void;
-  removeModeChangeListener(callback: (event: any) => void): void;
-  setupKeyboardEvents(): void;
-  setupMouseEvents(): void;
-  updatePaperInteraction(): void;
-  destroy(): void;
 }
 
 /**
