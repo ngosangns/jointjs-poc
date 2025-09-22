@@ -11,7 +11,7 @@
       <div class="shapes-container">
         <div class="shapes-grid">
           @for (shape of allShapes; track getShapeType(shape)) {
-          <div
+          <button
             class="shape-item"
             [class.hovered]="isShapeHovered(getShapeType(shape))"
             [attr.data-shape-type]="getShapeType(shape)"
@@ -19,14 +19,10 @@
             (mouseleave)="onShapeHoverEnd()"
             (click)="onShapeClick(shape)"
             [title]="shape.description"
+            type="button"
           >
-            <div class="shape-preview">
-              <div class="shape-icon" [ngClass]="getShapeIconClass(shape)"></div>
-            </div>
-            <div class="shape-info">
-              <span class="shape-name">{{ shape.name }}</span>
-            </div>
-          </div>
+            <span class="shape-icon" [ngClass]="getShapeIconClass(shape)"></span>
+          </button>
           }
         </div>
       </div>
@@ -40,7 +36,7 @@
 
       <!-- Clear Button -->
       <div class="tool-group">
-        <button class="btn btn-danger" (click)="onClearDiagram()">
+        <button class="btn btn-danger w-full" (click)="onClearDiagram()">
           <svg
             width="16"
             height="16"
@@ -62,9 +58,6 @@
 
       <!-- Zoom Controls -->
       <div class="tool-group">
-        <div class="tool-group-header">
-          <span class="tool-group-title">Zoom</span>
-        </div>
         <div class="zoom-controls">
           <button
             class="btn btn-icon zoom-btn"
