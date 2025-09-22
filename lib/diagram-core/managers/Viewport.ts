@@ -1,8 +1,9 @@
 import { dia, shapes, Vectorizer } from '@joint/core';
 import { DiagramConfig } from '../../types';
-import { IEventManager, IViewport } from '../interfaces';
+import { IEventManager, IViewport, ICursorManager } from '../interfaces';
 
 export class Viewport implements IViewport {
+  private cursorManager: ICursorManager | null = null;
   public initialize(element: HTMLElement, graph: dia.Graph, config: DiagramConfig): dia.Paper {
     const paper = new dia.Paper({
       el: element,
@@ -60,6 +61,11 @@ export class Viewport implements IViewport {
   ) {
     evt.preventDefault();
 
+    // Notify cursor manager about zoom start
+    if (this.cursorManager) {
+      this.cursorManager.onZoomStart();
+    }
+
     const oldscale = paper.scale().sx;
     const newscale = oldscale + 0.2 * delta * oldscale;
     const clampedScale = this.clampScale(newscale, 0.2, 5.0);
@@ -67,6 +73,11 @@ export class Viewport implements IViewport {
     if (clampedScale !== oldscale) {
       paper.scale(clampedScale, clampedScale);
       paper.translate(-x * clampedScale + evt.offsetX!, -y * clampedScale + evt.offsetY!);
+    }
+
+    // Notify cursor manager about zoom end (for wheel zoom, it's immediate)
+    if (this.cursorManager) {
+      this.cursorManager.onZoomEnd();
     }
   }
 
@@ -536,6 +547,13 @@ export class Viewport implements IViewport {
   }
 
   /**
+   * Set cursor manager for coordination
+   */
+  public setCursorManager(cursorManager: ICursorManager): void {
+    this.cursorManager = cursorManager;
+  }
+
+  /**
    * Set interaction mode for the paper
    * @param paper - The paper instance
    * @param mode - Interaction mode configuration
@@ -612,6 +630,11 @@ export class Viewport implements IViewport {
         isBlankPanning = true;
         blankPanStart = { x: evt.clientX, y: evt.clientY };
         blankPanTranslate = paper.translate();
+        
+        // Notify cursor manager about pan start
+        if (this.cursorManager) {
+          this.cursorManager.onPanStart();
+        }
       }
     };
 
@@ -629,6 +652,11 @@ export class Viewport implements IViewport {
     const panUpHandler = () => {
       if (isBlankPanning) {
         isBlankPanning = false;
+        
+        // Notify cursor manager about pan end
+        if (this.cursorManager) {
+          this.cursorManager.onPanEnd();
+        }
       }
     };
 

@@ -9,8 +9,15 @@ export class CursorManager implements ICursorManager {
   private currentCursor: string = 'default';
   private defaultCursor: string = 'default';
   private modeCursors: Map<string, string> = new Map();
+  private temporaryCursor: string | null = null;
   private isMouseOverPaper: boolean = false;
   private paperElement: HTMLElement | null = null;
+  private viewportState: 'idle' | 'panning' | 'zooming' | 'element-moving' = 'idle';
+  private interactionMode: { pan: boolean; zoom: boolean; elementMove: boolean } = {
+    pan: false,
+    zoom: false,
+    elementMove: false
+  };
 
   constructor() {
     // Thiết lập cursor mặc định cho các mode khác nhau
@@ -18,9 +25,11 @@ export class CursorManager implements ICursorManager {
     this.modeCursors.set('pan', 'grab');
     this.modeCursors.set('panning', 'grabbing');
     this.modeCursors.set('zoom', 'zoom-in');
+    this.modeCursors.set('zooming', 'zoom-in');
     this.modeCursors.set('draw', 'crosshair');
     this.modeCursors.set('resize', 'nw-resize');
     this.modeCursors.set('move', 'move');
+    this.modeCursors.set('element-moving', 'move');
   }
 
   /**
@@ -29,7 +38,7 @@ export class CursorManager implements ICursorManager {
   public initialize(paper: dia.Paper): void {
     this.paper = paper;
     this.paperElement = paper.el as HTMLElement;
-    
+
     if (this.paperElement) {
       this.setupEventListeners();
       this.setCursor(this.defaultCursor);
@@ -45,7 +54,7 @@ export class CursorManager implements ICursorManager {
     // Mouse enter/leave events
     this.paperElement.addEventListener('mouseenter', this.handleMouseEnter.bind(this));
     this.paperElement.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
-    
+
     // Prevent context menu to avoid cursor issues
     this.paperElement.addEventListener('contextmenu', (e) => e.preventDefault());
 
@@ -54,7 +63,7 @@ export class CursorManager implements ICursorManager {
     this.paper.on('element:mouseleave', this.handleElementMouseLeave.bind(this));
     this.paper.on('link:mouseenter', this.handleLinkMouseEnter.bind(this));
     this.paper.on('link:mouseleave', this.handleLinkMouseLeave.bind(this));
-    
+
     // Pan events
     this.paper.on('blank:pointerdown', this.handlePanStart.bind(this));
     this.paper.on('blank:pointermove', this.handlePanMove.bind(this));
@@ -82,7 +91,7 @@ export class CursorManager implements ICursorManager {
    */
   public setCursor(cursor: string): void {
     if (!this.paperElement) return;
-    
+
     this.currentCursor = cursor;
     this.paperElement.style.cursor = cursor;
   }
@@ -256,6 +265,109 @@ export class CursorManager implements ICursorManager {
   }
 
   /**
+   * Handle interaction mode changes from viewport
+   */
+  onInteractionModeChange(mode: { pan: boolean; zoom: boolean; elementMove: boolean }): void {
+    this.interactionMode = { ...mode };
+    this.updateCursorBasedOnInteractionMode();
+  }
+
+  /**
+   * Handle pan start
+   */
+  onPanStart(): void {
+    this.onViewportStateChange('panning');
+  }
+
+  /**
+   * Handle pan end
+   */
+  onPanEnd(): void {
+    this.onViewportStateChange('idle');
+  }
+
+  /**
+   * Handle zoom start
+   */
+  onZoomStart(): void {
+    this.onViewportStateChange('zooming');
+  }
+
+  /**
+   * Handle zoom end
+   */
+  onZoomEnd(): void {
+    this.onViewportStateChange('idle');
+  }
+
+  /**
+   * Handle element move start
+   */
+  onElementMoveStart(): void {
+    this.onViewportStateChange('element-moving');
+  }
+
+  /**
+   * Handle element move end
+   */
+  onElementMoveEnd(): void {
+    this.onViewportStateChange('idle');
+  }
+
+  /**
+   * Handle viewport state changes
+   */
+  onViewportStateChange(state: 'idle' | 'panning' | 'zooming' | 'element-moving'): void {
+    this.viewportState = state;
+    this.updateCursorBasedOnViewportState();
+  }
+
+  /**
+   * Get current viewport state
+   */
+  getCurrentViewportState(): 'idle' | 'panning' | 'zooming' | 'element-moving' {
+    return this.viewportState;
+  }
+
+  /**
+   * Update cursor based on current interaction mode
+   */
+  private updateCursorBasedOnInteractionMode(): void {
+    if (this.viewportState === 'idle') {
+      // Only update cursor when not actively interacting
+      if (this.interactionMode.pan) {
+        this.applyCursorForMode('pan');
+      } else if (this.interactionMode.zoom) {
+        this.applyCursorForMode('zooming');
+      } else if (this.interactionMode.elementMove) {
+        this.applyCursorForMode('element-moving');
+      } else {
+        this.applyCursorForMode('select');
+      }
+    }
+  }
+
+  /**
+   * Update cursor based on current viewport state
+   */
+  private updateCursorBasedOnViewportState(): void {
+    switch (this.viewportState) {
+      case 'panning':
+        this.applyCursorForMode('panning');
+        break;
+      case 'zooming':
+        this.applyCursorForMode('zooming');
+        break;
+      case 'element-moving':
+        this.applyCursorForMode('element-moving');
+        break;
+      case 'idle':
+        this.updateCursorBasedOnInteractionMode();
+        break;
+    }
+  }
+
+  /**
    * Hủy cursor manager và cleanup
    */
   public destroy(): void {
@@ -273,7 +385,7 @@ export class CursorManager implements ICursorManager {
       this.paper.off('blank:pointermove', this.handlePanMove.bind(this));
       this.paper.off('blank:pointerup', this.handlePanEnd.bind(this));
     }
-    
+
     this.paper = null;
     this.paperElement = null;
     this.modeCursors.clear();

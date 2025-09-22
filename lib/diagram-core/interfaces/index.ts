@@ -1,7 +1,3 @@
-/**
- * Core interfaces for diagram engine components
- */
-
 import { dia } from '@joint/core';
 import { DiagramConfig, DiagramElement, DiagramEventType, DiagramLink } from '../../types';
 
@@ -47,9 +43,15 @@ export interface IViewport {
   isPointInPaper(paper: dia.Paper, clientPoint: { x: number; y: number }): boolean;
   getPaperDimensions(paper: dia.Paper): { width: number; height: number };
   getPaperDimensionsClient(paper: dia.Paper): { width: number; height: number };
-  
+
   // Interaction mode control
-  setInteractionMode(paper: dia.Paper, mode: { pan: boolean; zoom: boolean; elementMove: boolean }): void;
+  setInteractionMode(
+    paper: dia.Paper,
+    mode: { pan: boolean; zoom: boolean; elementMove: boolean }
+  ): void;
+
+  // Cursor manager coordination
+  setCursorManager(cursorManager: ICursorManager): void;
 }
 
 /**
@@ -63,8 +65,6 @@ export interface IGraphManager {
   ): string;
   setupGraphEvents(graph: dia.Graph, eventManager: IEventManager): void;
 }
-
-
 
 /**
  * Interface for toolbar management with integrated tools management
@@ -124,6 +124,20 @@ export interface ICursorManager {
   onMouseEnter(): void;
   onMouseLeave(): void;
   onModeChange(mode: string): void;
+  
+  // Interaction state management
+  onInteractionModeChange(mode: { pan: boolean; zoom: boolean; elementMove: boolean }): void;
+  onPanStart(): void;
+  onPanEnd(): void;
+  onZoomStart(): void;
+  onZoomEnd(): void;
+  onElementMoveStart(): void;
+  onElementMoveEnd(): void;
+  
+  // Viewport coordination
+  onViewportStateChange(state: 'idle' | 'panning' | 'zooming' | 'element-moving'): void;
+  getCurrentViewportState(): 'idle' | 'panning' | 'zooming' | 'element-moving';
+  
   destroy(): void;
 }
 

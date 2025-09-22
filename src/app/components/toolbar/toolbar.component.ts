@@ -182,9 +182,9 @@ export class ToolbarComponent implements OnInit, OnDestroy {
   private setupToolbarModeListener(): void {
     if (this.diagramService.isInitialized()) {
       try {
-        const toolbarManager = this.diagramService.getToolbarManager();
-        if (toolbarManager) {
-          toolbarManager.addModeChangeListener((event: any) => {
+        const toolbar = this.diagramService.getToolbarManager();
+        if (toolbar) {
+          toolbar.addModeChangeListener((event: any) => {
             this.currentMode.set(event.mode);
           });
         }

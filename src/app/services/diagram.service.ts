@@ -53,8 +53,6 @@ export class DiagramService {
     });
   }
 
-
-
   /**
    * Resize the diagram
    */
@@ -147,8 +145,8 @@ export class DiagramService {
     }
 
     // Use the paper manager to get dimensions in local coordinates
-    const paperManager = (this.diagramEditor as any).paperManager;
-    return paperManager.getPaperDimensions(paper);
+    const viewport = (this.diagramEditor as any).viewport;
+    return viewport.getPaperDimensions(paper);
   }
 
   /**
@@ -165,8 +163,8 @@ export class DiagramService {
     }
 
     // Use the paper manager to get dimensions in client coordinates
-    const paperManager = (this.diagramEditor as any).paperManager;
-    return paperManager.getPaperDimensionsClient(paper);
+    const viewport = (this.diagramEditor as any).viewport;
+    return viewport.getPaperDimensionsClient(paper);
   }
 
   /**
