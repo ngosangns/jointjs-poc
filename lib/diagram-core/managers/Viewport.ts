@@ -45,7 +45,9 @@ export class Viewport implements IViewport {
 
     // Disable default cursor on paper element
     if (paper.el) {
-      (paper.el as HTMLElement).style.cursor = 'none';
+      paper.el.style.cursor = 'none';
+      if (paper.el.getElementsByTagName('svg')[0])
+        paper.el.getElementsByTagName('svg')[0].style.cursor = 'none';
     }
 
     return paper;

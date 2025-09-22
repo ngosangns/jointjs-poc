@@ -16,7 +16,7 @@ export class CursorManager implements ICursorManager {
   private interactionMode: { pan: boolean; zoom: boolean; elementMove: boolean } = {
     pan: false,
     zoom: false,
-    elementMove: false
+    elementMove: false,
   };
 
   constructor() {
@@ -37,7 +37,7 @@ export class CursorManager implements ICursorManager {
    */
   public initialize(paper: dia.Paper): void {
     this.paper = paper;
-    this.paperElement = paper.el as HTMLElement;
+    this.paperElement = paper.el;
 
     if (this.paperElement) {
       this.setupEventListeners();
@@ -95,8 +95,9 @@ export class CursorManager implements ICursorManager {
   public setCursor(cursor: string): void {
     if (!this.paperElement) return;
 
-    this.currentCursor = cursor;
-    this.paperElement.style.cursor = cursor;
+    // this.currentCursor = cursor;
+    // if (this.paperElement.getElementsByTagName('svg')[0])
+    //   this.paperElement.getElementsByTagName('svg')[0].style.cursor = cursor;
   }
 
   /**

@@ -20,7 +20,7 @@ import { DiagramEditor, DiagramConfig } from 'lib';
 constructor(private elementRef: ElementRef) {}
 
 ngAfterViewInit() {
-  const host = this.elementRef.nativeElement.querySelector('#canvas') as HTMLElement;
+  const host = this.elementRef.nativeElement.querySelector('#canvas');
   const config: DiagramConfig = { width: host.clientWidth, height: host.clientHeight, gridSize: 10 };
   this.engine = new DiagramEditor(config);
   this.engine.initializePaper(host);
