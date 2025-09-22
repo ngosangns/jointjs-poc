@@ -8,8 +8,10 @@ import type {
   IPaperManager,
   IShapeFactory,
   IToolsManager,
+  IToolbarManager,
 } from './interfaces';
 import { EventManager, GraphManager, PaperManager, ToolsManager } from './managers';
+import { ToolbarManager } from './managers/ToolbarManager';
 
 export class DiagramEngine {
   private graph: dia.Graph;
@@ -21,6 +23,7 @@ export class DiagramEngine {
   private paperManager: IPaperManager;
   private graphManager: IGraphManager;
   private toolsManager: IToolsManager;
+  private toolbarManager: IToolbarManager;
 
   // Factories
   private shapeFactory: IShapeFactory;
@@ -32,6 +35,7 @@ export class DiagramEngine {
     paperManager?: IPaperManager,
     graphManager?: IGraphManager,
     toolsManager?: IToolsManager,
+    toolbarManager?: IToolbarManager,
     shapeFactory?: IShapeFactory,
     linkFactory?: ILinkFactory
   ) {
@@ -43,6 +47,7 @@ export class DiagramEngine {
     this.paperManager = paperManager || new PaperManager();
     this.graphManager = graphManager || new GraphManager();
     this.toolsManager = toolsManager || new ToolsManager();
+    this.toolbarManager = toolbarManager || new ToolbarManager();
 
     // Initialize factories
     this.shapeFactory = shapeFactory || new ShapeFactory();
@@ -72,6 +77,9 @@ export class DiagramEngine {
 
     // Initialize ToolsManager with paper for tools management
     this.toolsManager.initialize(this.paper);
+
+    // Initialize ToolbarManager with paper for toolbar management
+    this.toolbarManager.initialize(this.paper);
   }
 
   /**
@@ -137,6 +145,7 @@ export class DiagramEngine {
     }
     this.eventManager.destroy();
     this.toolsManager.destroy();
+    this.toolbarManager.destroy();
     this.graph.clear();
   }
 
@@ -186,5 +195,47 @@ export class DiagramEngine {
     // For now, return empty array since selection tracking was removed
     // This method is kept for compatibility but doesn't function
     return [];
+  }
+
+  /**
+   * Get the toolbar manager
+   */
+  public getToolbarManager(): IToolbarManager {
+    return this.toolbarManager;
+  }
+
+  /**
+   * Set toolbar mode
+   */
+  public setToolbarMode(mode: 'select' | 'pan'): void {
+    this.toolbarManager.setMode(mode);
+  }
+
+  /**
+   * Get current toolbar mode
+   */
+  public getToolbarMode(): 'select' | 'pan' {
+    return this.toolbarManager.getCurrentMode();
+  }
+
+  /**
+   * Toggle toolbar mode
+   */
+  public toggleToolbarMode(): void {
+    this.toolbarManager.toggleMode();
+  }
+
+  /**
+   * Check if pan mode is active
+   */
+  public isPanMode(): boolean {
+    return this.toolbarManager.isPanMode();
+  }
+
+  /**
+   * Check if select mode is active
+   */
+  public isSelectMode(): boolean {
+    return this.toolbarManager.isSelectMode();
   }
 }

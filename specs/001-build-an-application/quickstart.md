@@ -92,7 +92,6 @@ engine.addEventListener('viewport:changed', (e) => {
 - ✅ **Shape Toolbar**: Click shapes to insert at viewport center
 - ✅ **Selection Actions**: Delete/Duplicate buttons show only when selection exists
 - ✅ **Grid Controls**: Toggle grid and adjust spacing via DiagramService
-- ✅ **Keyboard Shortcuts**: Global shortcuts for shape insertion (e.g., 'R' for rectangle)
 - ✅ **Visual Feedback**: Loading states and success/error animations
 
 ## Persistence

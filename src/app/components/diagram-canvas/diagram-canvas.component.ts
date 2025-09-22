@@ -11,11 +11,12 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DiagramService } from '../../services/diagram.service';
 import { ShapeLibraryService, type ShapeMetadata } from '../../services/shape-library.service';
+import { ToolbarComponent } from '../toolbar/toolbar.component';
 
 @Component({
   selector: 'app-diagram-canvas',
   standalone: true,
-  imports: [DecimalPipe, CommonModule, FormsModule],
+  imports: [DecimalPipe, CommonModule, FormsModule, ToolbarComponent],
   providers: [DiagramService],
   templateUrl: './diagram-canvas.component.html',
   styleUrl: './diagram-canvas.component.scss',

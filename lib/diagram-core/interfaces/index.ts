@@ -3,13 +3,7 @@
  */
 
 import { dia } from '@joint/core';
-import {
-  DiagramConfig,
-  DiagramData,
-  DiagramElement,
-  DiagramEventType,
-  DiagramLink,
-} from '../../types';
+import { DiagramConfig, DiagramElement, DiagramEventType, DiagramLink } from '../../types';
 
 /**
  * Interface for event management
@@ -90,6 +84,26 @@ export interface IToolsManager {
   getLinkToolNames(): string[];
   unregisterElementTools(name: string): boolean;
   unregisterLinkTools(name: string): boolean;
+  destroy(): void;
+}
+
+/**
+ * Interface for toolbar management
+ */
+export interface IToolbarManager {
+  initialize(paper: dia.Paper): void;
+  getCurrentMode(): 'select' | 'pan';
+  setMode(mode: 'select' | 'pan'): void;
+  toggleMode(): void;
+  isPanMode(): boolean;
+  isSelectMode(): boolean;
+  activatePanModeTemporarily(): void;
+  restorePreviousMode(): void;
+  addModeChangeListener(callback: (event: any) => void): void;
+  removeModeChangeListener(callback: (event: any) => void): void;
+  setupKeyboardEvents(): void;
+  setupMouseEvents(): void;
+  updatePaperInteraction(): void;
   destroy(): void;
 }
 

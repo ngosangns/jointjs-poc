@@ -79,9 +79,8 @@ As a user, I want to create, edit, and share diagrams in a canvas-based editor t
 8. **Given** a diagram, **When** the user edits text within shapes/connectors (double-click) and applies formatting, **Then** text updates inline and flows correctly.
 9. **Given** a selection, **When** the user presses Delete or uses context menu "Delete", **Then** selected elements are removed.
 10. **Given** the grid/snapping is toggled, **When** the user moves/resizes elements, **Then** snapping behavior follows the toggle state and spacing settings.
-11. **Given** keyboard shortcuts are used (e.g., copy/paste/duplicate, arrow nudge), **When** invoked, **Then** the corresponding actions execute.
-12. **Given** templates/stencils are available, **When** the user inserts a template, **Then** a multi-element structure appears with preserved relationships and styles.
-13. **Given** the user imports a supported file (e.g., draw.io XML), **When** the file is opened, **Then** the diagram renders with equivalent semantics or clear error mapping.
+11. **Given** templates/stencils are available, **When** the user inserts a template, **Then** a multi-element structure appears with preserved relationships and styles.
+12. **Given** the user imports a supported file (e.g., draw.io XML), **When** the file is opened, **Then** the diagram renders with equivalent semantics or clear error mapping.
 
 ### Edge Cases
 
@@ -118,8 +117,6 @@ As a user, I want to create, edit, and share diagrams in a canvas-based editor t
 - **FR-019**: Users MUST import diagrams from at least draw.io XML (additional formats deferred to future releases).
 - **FR-020**: Autosave MUST periodically persist the working diagram every 5 seconds of idle or after 20 operations to IndexedDB.
 - **FR-021**: Users MUST access a minimap/overview panel to navigate large diagrams.
-- **FR-022**: Users MUST have a context menu and toolbar with commonly used actions and visible keyboard shortcuts.
-- **FR-023**: Keyboard shortcuts MUST cover selection, editing, navigation, and formatting actions, matching draw.io conventions where feasible.
 - **FR-024**: Users MUST set and use templates (document-level and element-level) and custom shape sets.
 - **FR-025**: Users MUST collapse/expand containers and use swimlanes/pools with child element management.
 - **FR-026**: System MUST preserve manual routing and layout choices on subsequent edits.

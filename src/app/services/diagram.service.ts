@@ -301,4 +301,73 @@ export class DiagramService {
 
     return typeMap[shapeMetadata.icon] || 'rectangle';
   }
+
+  // Toolbar Methods
+
+  /**
+   * Set toolbar mode
+   */
+  setToolbarMode(mode: 'select' | 'pan'): void {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+    this.diagramEngine.setToolbarMode(mode);
+  }
+
+  /**
+   * Get current toolbar mode
+   */
+  getToolbarMode(): 'select' | 'pan' {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+    return this.diagramEngine.getToolbarMode();
+  }
+
+  /**
+   * Toggle toolbar mode
+   */
+  toggleToolbarMode(): void {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+    this.diagramEngine.toggleToolbarMode();
+  }
+
+  /**
+   * Check if pan mode is active
+   */
+  isPanMode(): boolean {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+    return this.diagramEngine.isPanMode();
+  }
+
+  /**
+   * Check if select mode is active
+   */
+  isSelectMode(): boolean {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+    return this.diagramEngine.isSelectMode();
+  }
+
+  /**
+   * Get toolbar manager for advanced operations
+   */
+  getToolbarManager(): any {
+    if (!this.diagramEngine) {
+      throw new Error('Diagram engine not initialized.');
+    }
+    return this.diagramEngine.getToolbarManager();
+  }
+
+  /**
+   * Check if diagram engine is initialized
+   */
+  isInitialized(): boolean {
+    return this.diagramEngine !== null;
+  }
 }

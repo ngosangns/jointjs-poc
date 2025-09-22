@@ -50,7 +50,6 @@
    - Category-based organization with search
    - Click-to-insert shapes at viewport center
    - Visual feedback and error handling
-   - Keyboard shortcuts and accessibility
 
 2. **Diagram Service**
 

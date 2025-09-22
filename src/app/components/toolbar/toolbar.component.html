@@ -1,0 +1,13 @@
+<div class="toolbar">
+  <div class="toolbar-section">
+    <h3 class="toolbar-title">Tools</h3>
+    <div class="tool-group">
+      @for (tool of tools; track tool.id) {
+      <button [class]="getToolButtonClass(tool)" (click)="onToolSelect(tool.id)" type="button">
+        <span [class]="getToolIconClass(tool)"></span>
+        <span class="tool-label">{{ tool.name }}</span>
+      </button>
+      }
+    </div>
+  </div>
+</div>
