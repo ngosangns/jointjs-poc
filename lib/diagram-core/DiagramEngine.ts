@@ -1,12 +1,7 @@
 import { dia } from '@joint/core';
-import type {
-  DiagramConfig,
-  DiagramElement,
-  DiagramEventType,
-} from '../types';
+import type { DiagramConfig, DiagramElement, DiagramEventType } from '../types';
 import { LinkFactory, ShapeFactory } from './factories';
 import type {
-  IDataManager,
   IEventManager,
   IGraphManager,
   ILinkFactory,
@@ -14,14 +9,7 @@ import type {
   IShapeFactory,
   IToolsManager,
 } from './interfaces';
-import {
-  DataManager,
-  EventManager,
-  GraphManager,
-  PaperManager,
-  PersistenceManager,
-  ToolsManager,
-} from './managers';
+import { EventManager, GraphManager, PaperManager, ToolsManager } from './managers';
 
 export class DiagramEngine {
   private graph: dia.Graph;
@@ -30,43 +18,35 @@ export class DiagramEngine {
 
   // Managers
   private eventManager: IEventManager;
-  private dataManager: IDataManager;
   private paperManager: IPaperManager;
   private graphManager: IGraphManager;
   private toolsManager: IToolsManager;
-  private persistence: PersistenceManager;
 
   // Factories
   private shapeFactory: IShapeFactory;
   private linkFactory: ILinkFactory;
 
-
   constructor(
     config: DiagramConfig,
     eventManager?: IEventManager,
-    dataManager?: IDataManager,
     paperManager?: IPaperManager,
     graphManager?: IGraphManager,
     toolsManager?: IToolsManager,
     shapeFactory?: IShapeFactory,
-    linkFactory?: ILinkFactory,
-    options?: { persistence?: PersistenceManager }
+    linkFactory?: ILinkFactory
   ) {
     this.config = { ...config };
     this.graph = new dia.Graph();
 
     // Initialize managers (allow dependency injection for testing)
     this.eventManager = eventManager || new EventManager();
-    this.dataManager = dataManager || new DataManager();
     this.paperManager = paperManager || new PaperManager();
     this.graphManager = graphManager || new GraphManager();
     this.toolsManager = toolsManager || new ToolsManager();
-    this.persistence = options?.persistence || new PersistenceManager();
 
     // Initialize factories
     this.shapeFactory = shapeFactory || new ShapeFactory();
     this.linkFactory = linkFactory || new LinkFactory();
-
   }
 
   /**
@@ -92,7 +72,6 @@ export class DiagramEngine {
 
     // Initialize ToolsManager with paper for tools management
     this.toolsManager.initialize(this.paper);
-
   }
 
   /**
@@ -102,15 +81,12 @@ export class DiagramEngine {
     return this.graphManager.addElement(this.graph, elementConfig, this.shapeFactory);
   }
 
-
-
   /**
    * Clear the entire diagram
    */
   public clear(): void {
     this.graphManager.clear(this.graph);
   }
-
 
   // Center-centered zoom methods
   public zoomIn(step: number = 1.2): void {
@@ -124,7 +100,6 @@ export class DiagramEngine {
     if (!paper) return;
     this.paperManager.zoomOut(paper, step);
   }
-
 
   public getZoom(): number {
     const paper = this.paper;
@@ -152,7 +127,6 @@ export class DiagramEngine {
     this.eventManager.addEventListener(eventType, callback);
   }
 
-
   /**
    * Destroy the diagram engine
    */
@@ -165,9 +139,6 @@ export class DiagramEngine {
     this.toolsManager.destroy();
     this.graph.clear();
   }
-
-
-
 
   /**
    * Get the underlying JointJS paper
@@ -207,27 +178,6 @@ export class DiagramEngine {
     return this.paperManager.getPaperCenterClient(this.paper);
   }
 
-
-
-  // Grid controls exposed on engine
-  public grid = {
-    toggle: (): boolean => {
-      const next = this.toolsManager.toggleGrid();
-      if (this.paper) {
-        const currentScale = this.paper.scale().sx;
-        const currentTranslate = this.paper.translate();
-        this.paperManager.setGrid(this.paper, next);
-        this.paper.scale(currentScale);
-        this.paper.translate(currentTranslate.tx, currentTranslate.ty);
-      }
-      return next;
-    },
-    isEnabled: (): boolean => {
-      return this.toolsManager.getGridEnabled();
-    },
-  };
-
-
   /** Duplicate current selection with a configurable offset */
   public duplicateSelectedElements(
     offset: { dx: number; dy: number } = { dx: 20, dy: 20 }
@@ -237,57 +187,4 @@ export class DiagramEngine {
     // This method is kept for compatibility but doesn't function
     return [];
   }
-
-  /**
-   * Save the current diagram state
-   */
-  public async saveDiagram(documentId: string): Promise<void> {
-    const diagramData = this.dataManager.serialize(this.graph);
-    await this.persistence.saveDocument(documentId, diagramData);
-  }
-
-  /**
-   * Load diagram from storage
-   */
-  public async loadDiagram(documentId: string): Promise<void> {
-    const diagramData = await this.persistence.loadDocument(documentId);
-    if (diagramData) {
-      this.dataManager.deserialize(diagramData, this.graph, this.shapeFactory, this.linkFactory);
-    }
-  }
-
-  /**
-   * Export diagram data as JSON string
-   */
-  public exportToJSON(pretty: boolean = false): string {
-    return this.dataManager.exportToJSON(this.graph, pretty);
-  }
-
-  /**
-   * Import diagram data from JSON string
-   */
-  public importFromJSON(jsonString: string): void {
-    this.dataManager.importFromJSON(jsonString, this.graph, this.shapeFactory, this.linkFactory);
-  }
-
-  /**
-   * Get current diagram data for external use
-   */
-  public getDiagramData(): any {
-    return this.dataManager.serialize(this.graph);
-  }
-
-  /**
-   * Load diagram from external data
-   */
-  public loadFromData(data: any): void {
-    this.dataManager.deserialize(data, this.graph, this.shapeFactory, this.linkFactory);
-  }
-
-
-
-
-
-
-
 }

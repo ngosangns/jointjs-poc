@@ -16,8 +16,6 @@ export class PaperManager implements IPaperManager {
       model: graph,
       width: config.width,
       height: config.height,
-      gridSize: config.gridSize || 10,
-      drawGrid: true,
       interactive: config.interactive !== false,
       background: config.background || { color: '#f8f9fa' },
       interaction: {
@@ -52,15 +50,21 @@ export class PaperManager implements IPaperManager {
   }
 
   private setupMouseWheelZoom(paper: dia.Paper, eventManager: IEventManager): void {
-    paper.on("blank:mousewheel", (evt: any, x: number, y: number, delta: number) => {
+    paper.on('blank:mousewheel', (evt: any, x: number, y: number, delta: number) => {
       this.mouseWheelZoomHandler(paper, evt, x, y, delta);
     });
-    paper.on("cell:mousewheel", (cellView: any, evt: any, x: number, y: number, delta: number) => {
+    paper.on('cell:mousewheel', (cellView: any, evt: any, x: number, y: number, delta: number) => {
       this.mouseWheelZoomHandler(paper, evt, x, y, delta);
     });
   }
 
-  private mouseWheelZoomHandler(paper: dia.Paper, evt: MouseEvent, x: number, y: number, delta: number) {
+  private mouseWheelZoomHandler(
+    paper: dia.Paper,
+    evt: MouseEvent,
+    x: number,
+    y: number,
+    delta: number
+  ) {
     evt.preventDefault();
 
     const oldscale = paper.scale().sx;
@@ -363,15 +367,6 @@ export class PaperManager implements IPaperManager {
     return Math.sqrt(dx * dx + dy * dy);
   }
 
-  /** Update grid without reinitializing paper or clearing cells */
-  public setGrid(paper: dia.Paper, enabled: boolean, gridSize?: number): void {
-    paper.options.drawGrid = !!enabled;
-    if (typeof gridSize === 'number' && gridSize > 0) {
-      paper.setGridSize(gridSize);
-    }
-    paper.render();
-  }
-
   /**
    * Resize the paper
    */
@@ -385,7 +380,6 @@ export class PaperManager implements IPaperManager {
   public destroy(paper: dia.Paper): void {
     paper.remove();
   }
-
 
   public getScale(paper: dia.Paper): Vectorizer.Scale {
     return paper.scale();
@@ -418,7 +412,10 @@ export class PaperManager implements IPaperManager {
    * @param clientPoint - Client coordinates {x, y}
    * @returns Local coordinates {x, y}
    */
-  public clientToLocal(paper: dia.Paper, clientPoint: { x: number; y: number }): { x: number; y: number } {
+  public clientToLocal(
+    paper: dia.Paper,
+    clientPoint: { x: number; y: number }
+  ): { x: number; y: number } {
     return paper.clientToLocalPoint(clientPoint);
   }
 
@@ -428,7 +425,10 @@ export class PaperManager implements IPaperManager {
    * @param localPoint - Local coordinates {x, y}
    * @returns Client coordinates {x, y}
    */
-  public localToClient(paper: dia.Paper, localPoint: { x: number; y: number }): { x: number; y: number } {
+  public localToClient(
+    paper: dia.Paper,
+    localPoint: { x: number; y: number }
+  ): { x: number; y: number } {
     return paper.localToClientPoint(localPoint);
   }
 
@@ -438,7 +438,10 @@ export class PaperManager implements IPaperManager {
    * @param pagePoint - Page coordinates {x, y}
    * @returns Local coordinates {x, y}
    */
-  public pageToLocal(paper: dia.Paper, pagePoint: { x: number; y: number }): { x: number; y: number } {
+  public pageToLocal(
+    paper: dia.Paper,
+    pagePoint: { x: number; y: number }
+  ): { x: number; y: number } {
     return paper.pageToLocalPoint(pagePoint);
   }
 
@@ -448,7 +451,10 @@ export class PaperManager implements IPaperManager {
    * @param localPoint - Local coordinates {x, y}
    * @returns Page coordinates {x, y}
    */
-  public localToPage(paper: dia.Paper, localPoint: { x: number; y: number }): { x: number; y: number } {
+  public localToPage(
+    paper: dia.Paper,
+    localPoint: { x: number; y: number }
+  ): { x: number; y: number } {
     return paper.localToPagePoint(localPoint);
   }
 
@@ -458,7 +464,10 @@ export class PaperManager implements IPaperManager {
    * @param paperPoint - Paper coordinates {x, y}
    * @returns Local coordinates {x, y}
    */
-  public paperToLocal(paper: dia.Paper, paperPoint: { x: number; y: number }): { x: number; y: number } {
+  public paperToLocal(
+    paper: dia.Paper,
+    paperPoint: { x: number; y: number }
+  ): { x: number; y: number } {
     return paper.paperToLocalPoint(paperPoint);
   }
 
@@ -468,7 +477,10 @@ export class PaperManager implements IPaperManager {
    * @param localPoint - Local coordinates {x, y}
    * @returns Paper coordinates {x, y}
    */
-  public localToPaper(paper: dia.Paper, localPoint: { x: number; y: number }): { x: number; y: number } {
+  public localToPaper(
+    paper: dia.Paper,
+    localPoint: { x: number; y: number }
+  ): { x: number; y: number } {
     return paper.localToPaperPoint(localPoint);
   }
 
@@ -481,7 +493,7 @@ export class PaperManager implements IPaperManager {
     const paperSize = paper.getComputedSize();
     const paperCenter = {
       x: paperSize.width / 2,
-      y: paperSize.height / 2
+      y: paperSize.height / 2,
     };
     return this.paperToLocal(paper, paperCenter);
   }
@@ -505,7 +517,7 @@ export class PaperManager implements IPaperManager {
   public eventToLocal(paper: dia.Paper, event: MouseEvent | Touch): { x: number; y: number } {
     const clientPoint = {
       x: event.clientX,
-      y: event.clientY
+      y: event.clientY,
     };
     return this.clientToLocal(paper, clientPoint);
   }
@@ -557,5 +569,4 @@ export class PaperManager implements IPaperManager {
     if (!bounds) return { width: 0, height: 0 };
     return { width: bounds.width, height: bounds.height };
   }
-
 }

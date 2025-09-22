@@ -26,38 +26,10 @@ export interface IEventManager {
 }
 
 /**
- * Interface for data serialization/deserialization
- */
-export interface IDataManager {
-  serialize(graph: dia.Graph): any;
-  deserialize(
-    data: any,
-    graph: dia.Graph,
-    shapeFactory?: IShapeFactory,
-    linkFactory?: ILinkFactory
-  ): void;
-  deserializeCustomFormat(
-    data: DiagramData,
-    graph: dia.Graph,
-    shapeFactory: IShapeFactory,
-    linkFactory: ILinkFactory
-  ): void;
-  validateData(data: DiagramData): boolean;
-  exportToJSON(graph: dia.Graph, pretty?: boolean): string;
-  importFromJSON(
-    jsonString: string,
-    graph: dia.Graph,
-    shapeFactory?: IShapeFactory,
-    linkFactory?: ILinkFactory
-  ): void;
-}
-
-/**
  * Interface for paper management
  */
 export interface IPaperManager {
   initialize(element: HTMLElement, graph: dia.Graph, config: DiagramConfig): dia.Paper;
-  setGrid(paper: dia.Paper, enabled: boolean, gridSize?: number): void;
   resize(paper: dia.Paper, width: number, height: number): void;
   destroy(paper: dia.Paper): void;
   getScale(paper: dia.Paper): { sx: number; sy: number };
@@ -119,12 +91,6 @@ export interface IToolsManager {
   unregisterElementTools(name: string): boolean;
   unregisterLinkTools(name: string): boolean;
   destroy(): void;
-  // Grid controls
-  setGridEnabled(enabled: boolean): void;
-  setGridSize(size: number): void;
-  getGridEnabled(): boolean;
-  getGridSize(): number;
-  toggleGrid(): boolean;
 }
 
 // Models

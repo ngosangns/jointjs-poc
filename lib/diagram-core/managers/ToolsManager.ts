@@ -9,8 +9,6 @@ export class ToolsManager implements IToolsManager {
   private elementToolsRegistry: Map<string, dia.ToolView[]> = new Map();
   private linkToolsRegistry: Map<string, dia.ToolView[]> = new Map();
   private paper: dia.Paper | null = null;
-  private gridEnabled: boolean = true;
-  private gridSize: number = 10;
 
   /**
    * Initialize tools manager with paper instance
@@ -19,8 +17,6 @@ export class ToolsManager implements IToolsManager {
     this.paper = paper;
     this.registerDefaultTools();
     this.setupToolEvents();
-    const currentGrid = paper.options.gridSize as number | undefined;
-    if (typeof currentGrid === 'number') this.gridSize = currentGrid;
   }
 
   /**
@@ -174,48 +170,6 @@ export class ToolsManager implements IToolsManager {
     if (this.paper) {
       this.paper.hideTools();
     }
-  }
-
-  /** Enhanced Grid controls with better visual feedback */
-  public setGridEnabled(enabled: boolean) {
-    this.gridEnabled = enabled;
-    if (this.paper) {
-      // Update grid visibility without recreating or clearing cells
-      this.paper.options.drawGrid = !!enabled;
-      if (enabled) this.paper.setGridSize(this.gridSize);
-      // Redraw background grid layer only
-      try {
-        (this.paper as any).drawGrid({ color: '#e9ecef' });
-      } catch {
-        // Fallback to render if drawGrid not available
-        this.paper.render();
-      }
-    }
-  }
-
-  public setGridSize(size: number) {
-    this.gridSize = Math.max(1, size);
-    if (this.paper && this.gridEnabled) {
-      this.paper.setGridSize(this.gridSize);
-      try {
-        (this.paper as any).drawGrid({ color: '#e9ecef' });
-      } catch {
-        this.paper.render();
-      }
-    }
-  }
-
-  public getGridEnabled(): boolean {
-    return this.gridEnabled;
-  }
-
-  public getGridSize(): number {
-    return this.gridSize;
-  }
-
-  public toggleGrid(): boolean {
-    this.setGridEnabled(!this.gridEnabled);
-    return this.gridEnabled;
   }
 
   /**

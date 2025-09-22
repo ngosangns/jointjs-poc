@@ -23,11 +23,9 @@ A comprehensive diagram library built on top of JointJS with enhanced features a
 ### Managers
 
 - **EventManager**: JointJS event integration with custom event mapping
-- **DataManager**: Standard JointJS serialization with custom format support
 - **PaperManager**: Paper lifecycle and configuration management
 - **GraphManager**: Graph operations with embedding/grouping support
 - **ToolsManager**: Interactive tools for elements and links
-- **PersistenceManager**: Document persistence and storage management
 
 ### Factories
 
@@ -215,7 +213,6 @@ diagram-core/
 Define contracts for all major components:
 
 - `IEventManager`: Event handling interface
-- `IDataManager`: Data serialization/deserialization interface
 - `IPaperManager`: JointJS paper management interface
 - `IGraphManager`: JointJS graph operations interface
 - `IToolsManager`: Tools management interface
@@ -231,15 +228,6 @@ Handles all event-related operations:
 - Event listener registration/removal
 - Event emission
 - Cross-component communication
-
-#### DataManager
-
-Manages data serialization and persistence:
-
-- Serialize graph to JSON
-- Deserialize JSON to graph
-- Data validation
-- Import/export functionality
 
 #### PaperManager
 
@@ -267,15 +255,6 @@ Manages interactive tools:
 - Element and link tool registration
 - Tool visibility and interaction
 - Grid controls and settings
-
-#### PersistenceManager
-
-Handles document persistence:
-
-- Document saving and loading
-- Storage adapter management
-- Data serialization for persistence
-
 
 ### Factories
 
@@ -331,8 +310,6 @@ engine.addLink({
 });
 ```
 
-
-
 ### Event Handling
 
 ```typescript
@@ -348,23 +325,6 @@ eventManager.addEventListener('link:connected', (event) => {
 });
 ```
 
-### Data Management
-
-```typescript
-const dataManager = engine.getDataManager();
-
-// Export diagram
-const jsonData = dataManager.exportToJSON(engine.getGraph(), true);
-
-// Import diagram
-dataManager.importFromJSON(
-  jsonData,
-  engine.getGraph(),
-  engine.getShapeFactory(),
-  engine.getLinkFactory()
-);
-```
-
 ## Dependency Injection
 
 For testing or custom implementations, you can inject your own managers:
@@ -373,7 +333,6 @@ For testing or custom implementations, you can inject your own managers:
 import {
   DiagramEngine,
   EventManager,
-  DataManager,
   PaperManager,
   GraphManager,
   ToolsManager,
@@ -382,23 +341,22 @@ import {
 } from './diagram-core';
 
 const customEventManager = new EventManager();
-const customDataManager = new DataManager();
 const customPaperManager = new PaperManager();
 const customGraphManager = new GraphManager();
 const customToolsManager = new ToolsManager();
+const customShapeFactory = new ShapeFactory();
 const customLinkFactory = new LinkFactory();
 
 const engine = new DiagramEngine(
   config,
   customEventManager,
-  customDataManager,
   customPaperManager,
   customGraphManager,
   customToolsManager,
+  customShapeFactory,
   customLinkFactory
 );
 ```
-
 
 ## Migration from Old Architecture
 

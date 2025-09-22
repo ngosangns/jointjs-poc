@@ -19,7 +19,14 @@
               <div class="shape-icon" [ngClass]="getShapeIconClass(shape)"></div>
               <div class="shape-overlay">
                 <div class="shape-add-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                   </svg>
@@ -32,7 +39,6 @@
           </div>
           }
         </div>
-
       </div>
     </div>
 
@@ -41,14 +47,22 @@
       <div class="section-header">
         <h3 class="section-title">Canvas Tools</h3>
       </div>
-      
 
       <!-- Clear Button -->
       <div class="tool-group">
         <button class="btn btn-danger" (click)="onClearDiagram()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <polyline points="3,6 5,6 21,6"></polyline>
-            <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+            <path
+              d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"
+            ></path>
             <line x1="10" y1="11" x2="10" y2="17"></line>
             <line x1="14" y1="11" x2="14" y2="17"></line>
           </svg>
@@ -70,7 +84,14 @@
             [attr.aria-label]="'Zoom out at cursor position'"
             title="Zoom out at cursor position"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="8" y1="11" x2="14" y2="11"></line>
             </svg>
@@ -82,7 +103,14 @@
             [attr.aria-label]="'Zoom in at cursor position'"
             title="Zoom in at cursor position"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="11" y1="8" x2="11" y2="14"></line>
               <line x1="8" y1="11" x2="14" y2="11"></line>
@@ -90,121 +118,6 @@
           </button>
         </div>
       </div>
-
-      <!-- Grid Controls -->
-      <div class="tool-group">
-        <div class="tool-group-header">
-          <span class="tool-group-title">Grid</span>
-          <span class="grid-status" [class.active]="isGridEnabled">
-            {{ isGridEnabled ? 'On' : 'Off' }}
-          </span>
-        </div>
-        <button
-          class="btn btn-toggle"
-          [class.active]="isGridEnabled"
-          (click)="onToggleGrid()"
-          data-testid="btn-grid-toggle"
-          [attr.aria-pressed]="isGridEnabled"
-          aria-label="Toggle grid"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7"></rect>
-            <rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="14" y="14" width="7" height="7"></rect>
-            <rect x="3" y="14" width="7" height="7"></rect>
-          </svg>
-          Toggle Grid
-        </button>
-      </div>
-    </div>
-
-    <!-- File Operations Section -->
-    <div class="toolbar-section">
-      <div class="section-header">
-        <h3 class="section-title">File Operations</h3>
-      </div>
-
-      <!-- Save/Load Controls -->
-      <div class="tool-group">
-        <div class="tool-group-header">
-          <span class="tool-group-title">Save & Load</span>
-        </div>
-        <div class="file-controls">
-          <button
-            class="btn btn-primary"
-            (click)="onSaveDiagram()"
-            data-testid="btn-save-diagram"
-            title="Save diagram to browser storage"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-              <polyline points="17,21 17,13 7,13 7,21"></polyline>
-              <polyline points="7,3 7,8 15,8"></polyline>
-            </svg>
-            Save
-          </button>
-          <button
-            class="btn btn-secondary"
-            (click)="onLoadDiagram()"
-            data-testid="btn-load-diagram"
-            title="Load diagram from browser storage"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14,2 14,8 20,8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10,9 9,9 8,9"></polyline>
-            </svg>
-            Load
-          </button>
-        </div>
-      </div>
-
-      <!-- Export/Import Controls -->
-      <div class="tool-group">
-        <div class="tool-group-header">
-          <span class="tool-group-title">Export & Import</span>
-        </div>
-        <div class="file-controls">
-          <button
-            class="btn btn-success"
-            (click)="onExportDiagram()"
-            data-testid="btn-export-diagram"
-            title="Export diagram as JSON file"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7,10 12,15 17,10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Export
-          </button>
-          <button
-            class="btn btn-info"
-            (click)="onImportDiagram()"
-            data-testid="btn-import-diagram"
-            title="Import diagram from JSON file"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17,8 12,3 7,8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            Import
-          </button>
-        </div>
-      </div>
-
-      <!-- Hidden file input for import -->
-      <input
-        #fileInput
-        type="file"
-        accept=".json"
-        (change)="onFileSelected($event)"
-        style="display: none"
-        data-testid="file-input"
-      />
     </div>
   </div>
 

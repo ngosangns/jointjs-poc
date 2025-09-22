@@ -5,7 +5,6 @@
 export interface DiagramConfig {
   width: number;
   height: number;
-  gridSize?: number;
   interactive?: boolean;
   collisionDetection?: boolean;
   background?: {

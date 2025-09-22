@@ -10,10 +10,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DiagramService } from '../../services/diagram.service';
-import {
-  ShapeLibraryService,
-  type ShapeMetadata,
-} from '../../services/shape-library.service';
+import { ShapeLibraryService, type ShapeMetadata } from '../../services/shape-library.service';
 
 @Component({
   selector: 'app-diagram-canvas',
@@ -25,11 +22,9 @@ import {
 })
 export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('diagramContainer', { static: true }) diagramContainer!: ElementRef<HTMLDivElement>;
-  @ViewChild('fileInput', { static: false }) fileInput!: ElementRef<HTMLInputElement>;
 
   // Diagram state
   currentZoom: number = 1;
-  isGridEnabled: boolean = true;
 
   // Shape toolbar state
   allShapes: ShapeMetadata[] = [];
@@ -60,7 +55,7 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     private diagramService: DiagramService,
     private cdr: ChangeDetectorRef,
     private shapeLibraryService: ShapeLibraryService
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     // Initialize shape library
@@ -76,7 +71,6 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
       await this.diagramService.initialize({
         width: Math.max(0, clientWidth),
         height: Math.max(0, clientHeight),
-        gridSize: 10,
         interactive: true,
       });
 
@@ -90,8 +84,7 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
       // Listen to window resize and resize diagram based on container size
       window.addEventListener('resize', this.onWindowResize, { passive: true });
 
-      // Initialize grid state
-      this.isGridEnabled = this.diagramService.isGridEnabled();
+      // Initialize zoom state
       this.currentZoom = this.diagramService.getZoom();
     }
   }
@@ -125,11 +118,9 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     return iconMap[shape.icon] || 'icon-rectangle';
   }
 
-
   isShapeHovered(shapeType: string): boolean {
     return this.hoveredShape === shapeType;
   }
-
 
   getShapeType(shape: ShapeMetadata): string {
     return shape.name.toLowerCase().replace(/\s+/g, '-');
@@ -158,12 +149,9 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     });
   }
 
-
-
   onClearDiagram(): void {
     this.diagramService.clear();
   }
-
 
   onZoomIn(): void {
     // Use cursor-centered zoom
@@ -174,96 +162,4 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
     // Use cursor-centered zoom
     this.diagramService.zoomOut();
   }
-
-  onToggleGrid(): void {
-    this.isGridEnabled = this.diagramService.toggleGrid();
-  }
-
-  // File Operations Methods
-
-  /**
-   * Save diagram to browser storage
-   */
-  async onSaveDiagram(): Promise<void> {
-    try {
-      await this.diagramService.saveDiagram();
-      console.log('Diagram saved successfully');
-      // You could add a toast notification here
-    } catch (error) {
-      console.error('Failed to save diagram:', error);
-      alert('Failed to save diagram. Please try again.');
-    }
-  }
-
-  /**
-   * Load diagram from browser storage
-   */
-  async onLoadDiagram(): Promise<void> {
-    try {
-      await this.diagramService.loadDiagram();
-      console.log('Diagram loaded successfully');
-      // You could add a toast notification here
-    } catch (error) {
-      console.error('Failed to load diagram:', error);
-      alert('Failed to load diagram. Please try again.');
-    }
-  }
-
-  /**
-   * Export diagram as JSON file
-   */
-  onExportDiagram(): void {
-    try {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `diagram-${timestamp}.json`;
-      this.diagramService.downloadDiagramAsJSON(filename, true);
-      console.log('Diagram exported successfully');
-    } catch (error) {
-      console.error('Failed to export diagram:', error);
-      alert('Failed to export diagram. Please try again.');
-    }
-  }
-
-  /**
-   * Import diagram from JSON file
-   */
-  onImportDiagram(): void {
-    if (this.fileInput) {
-      this.fileInput.nativeElement.click();
-    }
-  }
-
-  /**
-   * Handle file selection for import
-   */
-  async onFileSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-
-    if (!file) return;
-
-    // Validate file type
-    if (!file.name.toLowerCase().endsWith('.json')) {
-      alert('Please select a valid JSON file.');
-      input.value = '';
-      return;
-    }
-
-    // Show loading state (you could add a loading indicator here)
-    const originalButtonText = 'Import';
-
-    try {
-      await this.diagramService.loadDiagramFromFile(file);
-      console.log('Diagram imported successfully');
-      alert('Diagram imported successfully!');
-    } catch (error) {
-      console.error('Failed to import diagram:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      alert(`Failed to import diagram: ${errorMessage}`);
-    } finally {
-      // Clear the input so the same file can be selected again
-      input.value = '';
-    }
-  }
-
 }

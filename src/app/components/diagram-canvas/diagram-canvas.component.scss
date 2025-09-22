@@ -16,25 +16,24 @@
   flex-direction: column;
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.08);
   position: relative;
-  
+
   &::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.1);
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.2);
   }
 }
-
 
 /* Modern Button Styles */
 .btn {
@@ -53,7 +52,7 @@
   color: white;
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -61,25 +60,25 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     transition: left 0.5s;
   }
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
     background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-    
+
     &::before {
       left: 100%;
     }
   }
-  
+
   &:active {
     transform: translateY(0);
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -93,7 +92,7 @@
 .btn-primary {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: white;
-  
+
   &:hover {
     background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
     box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
@@ -103,7 +102,7 @@
 .btn-secondary {
   background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
   color: white;
-  
+
   &:hover {
     background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
     box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
@@ -112,7 +111,7 @@
 
 .btn-danger {
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-  
+
   &:hover {
     background: linear-gradient(135deg, #ff5252 0%, #e53935 100%);
     box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
@@ -127,7 +126,7 @@
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   color: #495057;
   border: 1px solid #dee2e6;
-  
+
   &:hover {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -140,20 +139,19 @@
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   color: #495057;
   border: 1px solid #dee2e6;
-  
+
   &.active {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     color: white;
     border-color: transparent;
     box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
   }
-  
+
   &:hover:not(.active) {
     background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
     border-color: #adb5bd;
   }
 }
-
 
 .diagram-container {
   width: 100%;
@@ -164,7 +162,6 @@
   overflow: hidden;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
-
 
 /* Enhanced control groups */
 .zoom-controls {
@@ -185,10 +182,6 @@
   min-width: 40px;
 }
 
-
-
-
-
 /* Toolbar Section Styles */
 .toolbar-section {
   padding: 1.25rem;
@@ -203,7 +196,7 @@
   padding-bottom: 0.75rem;
   border-bottom: 2px solid #f1f3f4;
   position: relative;
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -223,9 +216,6 @@
   margin: 0;
   letter-spacing: -0.025em;
 }
-
-
-
 
 /* Enhanced Shapes Grid */
 .shapes-container {
@@ -250,7 +240,7 @@
   position: relative;
   cursor: pointer;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -261,22 +251,22 @@
     background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
     transition: left 0.5s;
   }
-  
+
   &:hover {
     border-color: #667eea;
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
     transform: translateY(-4px);
     background: #ffffff;
-    
+
     &::before {
       left: 100%;
     }
-    
+
     .shape-overlay {
       opacity: 1;
     }
   }
-  
+
   &.hovered {
     border-color: #28a745;
     box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15);
@@ -351,11 +341,6 @@
   line-height: 1.3;
 }
 
-
-
-
-
-
 /* Tool Groups */
 .tool-group {
   margin-bottom: 1.5rem;
@@ -364,7 +349,7 @@
 .file-controls {
   display: flex;
   gap: 0.5rem;
-  
+
   .btn {
     flex: 1;
     min-width: 0;
@@ -397,29 +382,12 @@
   text-align: center;
 }
 
-.grid-status {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #6c757d;
-  background: rgba(108, 117, 125, 0.1);
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  min-width: 32px;
-  text-align: center;
-  
-  &.active {
-    color: #28a745;
-    background: rgba(40, 167, 69, 0.1);
-  }
-}
-
 .zoom-controls {
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
   justify-content: center;
 }
-
 
 /* Shape Icons */
 .icon-rectangle {
@@ -449,7 +417,7 @@
   background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
   color: white;
   box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
-  
+
   &:hover {
     background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
     box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
@@ -461,7 +429,7 @@
   background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
   color: white;
   box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
-  
+
   &:hover {
     background: linear-gradient(135deg, #545b62 0%, #3d4449 100%);
     box-shadow: 0 4px 8px rgba(108, 117, 125, 0.4);
@@ -473,7 +441,7 @@
   background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
   color: white;
   box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
-  
+
   &:hover {
     background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
     box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
@@ -485,7 +453,7 @@
   background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);
   color: white;
   box-shadow: 0 2px 4px rgba(23, 162, 184, 0.3);
-  
+
   &:hover {
     background: linear-gradient(135deg, #117a8b 0%, #0c5460 100%);
     box-shadow: 0 4px 8px rgba(23, 162, 184, 0.4);
