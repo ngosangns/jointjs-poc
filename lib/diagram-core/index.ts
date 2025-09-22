@@ -1,4 +1,4 @@
-export { DiagramEngine } from './DiagramEngine';
+export { DiagramEditor } from './DiagramEditor';
 export * from './interfaces';
 export * from './managers';
 export * from './factories';

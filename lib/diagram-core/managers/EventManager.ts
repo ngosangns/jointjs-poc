@@ -191,10 +191,6 @@ export class EventManager implements IEventManager {
     return listeners ? listeners.length > 0 : false;
   }
 
-  // Paper-specific event setup moved to PaperManager
-
-  // Graph-specific event setup moved to GraphManager
-
   /**
    * Destroy the event manager and clean up all listeners
    */

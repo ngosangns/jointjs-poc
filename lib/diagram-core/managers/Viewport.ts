@@ -6,10 +6,7 @@ import { dia, shapes, Vectorizer } from '@joint/core';
 import { DiagramConfig } from '../../types';
 import { IEventManager, IPaperManager } from '../interfaces';
 
-export class PaperManager implements IPaperManager {
-  /**
-   * Initialize a new paper instance
-   */
+export class Viewport implements IPaperManager {
   public initialize(element: HTMLElement, graph: dia.Graph, config: DiagramConfig): dia.Paper {
     const paper = new dia.Paper({
       el: element,
@@ -22,14 +19,14 @@ export class PaperManager implements IPaperManager {
         dragStartThresholdPx: config.interaction?.dragStartThresholdPx ?? 4,
         pressHoldMs: config.interaction?.pressHoldMs ?? 200,
       },
-      snapLinks: true,
+      snapLinks: false,
       linkPinning: false,
-      allowDrag: true,
-      allowDrop: true,
+      allowDrag: false,
+      allowDrop: false,
       defaultLink: () => new shapes.standard.Link(),
       defaultInteraction: {
-        blank: { pan: true },
-        element: { move: true },
+        blank: { pan: false },
+        element: { move: false },
       },
       // Additional paper options for better UX
       highlighting: {
@@ -568,5 +565,88 @@ export class PaperManager implements IPaperManager {
     const bounds = this.getPaperBounds(paper);
     if (!bounds) return { width: 0, height: 0 };
     return { width: bounds.width, height: bounds.height };
+  }
+
+  /**
+   * Set interaction mode for the paper
+   * @param paper - The paper instance
+   * @param mode - Interaction mode configuration
+   */
+  public setInteractionMode(
+    paper: dia.Paper,
+    mode: { pan: boolean; zoom: boolean; elementMove: boolean }
+  ): void {
+    // Update paper interactive options based on mode
+    if (mode.elementMove) {
+      // Enable element interaction
+      (paper.options as any).interactive = {
+        linkView: true,
+        arrowheadView: true,
+        vertexView: true,
+        vertexAddView: true,
+        useLinkTools: true,
+        useElementTools: true,
+        elementMove: true,
+      };
+    } else {
+      // Disable element interaction
+      (paper.options as any).interactive = {
+        linkView: false,
+        arrowheadView: false,
+        vertexView: false,
+        vertexAddView: false,
+        useLinkTools: false,
+        useElementTools: false,
+        elementMove: false,
+      };
+    }
+
+    // Handle pan mode
+    if (mode.pan) {
+      // Enable panning
+      (paper.options as any).panning = {
+        enabled: true,
+        eventTypes: ['leftMouseDown'],
+      };
+    } else {
+      // Disable panning
+      (paper.options as any).panning = {
+        enabled: false,
+      };
+    }
+
+    // Handle zoom mode by enabling/disabling mouse wheel zoom events
+    if (mode.zoom) {
+      // Re-setup mouse wheel zoom if not already set up
+      this.enableMouseWheelZoom(paper);
+    } else {
+      // Disable mouse wheel zoom
+      this.disableMouseWheelZoom(paper);
+    }
+  }
+
+  /**
+   * Enable mouse wheel zoom functionality
+   */
+  private enableMouseWheelZoom(paper: dia.Paper): void {
+    // Remove existing listeners first to avoid duplicates
+    paper.off('blank:mousewheel');
+    paper.off('cell:mousewheel');
+
+    // Add mouse wheel zoom listeners
+    paper.on('blank:mousewheel', (evt: any, x: number, y: number, delta: number) => {
+      this.mouseWheelZoomHandler(paper, evt, x, y, delta);
+    });
+    paper.on('cell:mousewheel', (cellView: any, evt: any, x: number, y: number, delta: number) => {
+      this.mouseWheelZoomHandler(paper, evt, x, y, delta);
+    });
+  }
+
+  /**
+   * Disable mouse wheel zoom functionality
+   */
+  private disableMouseWheelZoom(paper: dia.Paper): void {
+    paper.off('blank:mousewheel');
+    paper.off('cell:mousewheel');
   }
 }

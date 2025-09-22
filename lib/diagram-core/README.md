@@ -23,7 +23,7 @@ A comprehensive diagram library built on top of JointJS with enhanced features a
 ### Managers
 
 - **EventManager**: JointJS event integration with custom event mapping
-- **PaperManager**: Paper lifecycle and configuration management
+- **Viewport**: Paper lifecycle and configuration management
 - **GraphManager**: Graph operations with embedding/grouping support
 - **ToolsManager**: Interactive tools for elements and links
 
@@ -100,10 +100,10 @@ dataManager.deserializeCustomFormat(customData, graph, shapeFactory, linkFactory
 ## 🔧 Usage Example
 
 ```typescript
-import { DiagramEngine } from './diagram-core';
+import { DiagramEditor } from './diagram-core';
 
 // Initialize with enhanced features
-const engine = new DiagramEngine({
+const engine = new DiagramEditor({
   width: 800,
   height: 600,
   gridSize: 10,
@@ -182,7 +182,7 @@ This document describes the refactored modular architecture of the diagram-core 
 
 ## Architecture Overview
 
-The library has been refactored from a monolithic `DiagramEngine` class into a modular architecture with the following components:
+The library has been refactored from a monolithic `DiagramEditor` class into a modular architecture with the following components:
 
 ### Core Components
 
@@ -194,7 +194,7 @@ diagram-core/
 ├── mappers/            # Data format mappers
 ├── persistence/        # Persistence adapters
 ├── validators/         # Data validation utilities
-├── DiagramEngine.ts    # Main orchestrator
+├── DiagramEditor.ts    # Main orchestrator
 └── index.ts           # Main export file
 ```
 
@@ -229,7 +229,7 @@ Handles all event-related operations:
 - Event emission
 - Cross-component communication
 
-#### PaperManager
+#### Viewport
 
 Manages JointJS paper operations:
 
@@ -283,7 +283,7 @@ Creates and manages links:
 ### Basic Usage
 
 ```typescript
-import { DiagramEngine, DiagramConfig } from './diagram-core';
+import { DiagramEditor, DiagramConfig } from './diagram-core';
 
 const config: DiagramConfig = {
   width: 800,
@@ -292,7 +292,7 @@ const config: DiagramConfig = {
   interactive: true,
 };
 
-const engine = new DiagramEngine(config);
+const engine = new DiagramEditor(config);
 engine.initializePaper(document.getElementById('diagram-container'));
 
 // Add elements
@@ -331,9 +331,9 @@ For testing or custom implementations, you can inject your own managers:
 
 ```typescript
 import {
-  DiagramEngine,
+  DiagramEditor,
   EventManager,
-  PaperManager,
+  Viewport,
   GraphManager,
   ToolsManager,
   ShapeFactory,
@@ -341,13 +341,13 @@ import {
 } from './diagram-core';
 
 const customEventManager = new EventManager();
-const customPaperManager = new PaperManager();
+const customPaperManager = new Viewport();
 const customGraphManager = new GraphManager();
 const customToolsManager = new ToolsManager();
 const customShapeFactory = new ShapeFactory();
 const customLinkFactory = new LinkFactory();
 
-const engine = new DiagramEngine(
+const engine = new DiagramEditor(
   config,
   customEventManager,
   customPaperManager,
@@ -360,7 +360,7 @@ const engine = new DiagramEngine(
 
 ## Migration from Old Architecture
 
-The public API of `DiagramEngine` remains the same, so existing code should work without changes. However, you now have access to the underlying managers and factories for advanced customization:
+The public API of `DiagramEditor` remains the same, so existing code should work without changes. However, you now have access to the underlying managers and factories for advanced customization:
 
 ```typescript
 // Old way (still works)

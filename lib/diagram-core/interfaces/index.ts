@@ -47,6 +47,9 @@ export interface IPaperManager {
   isPointInPaper(paper: dia.Paper, clientPoint: { x: number; y: number }): boolean;
   getPaperDimensions(paper: dia.Paper): { width: number; height: number };
   getPaperDimensionsClient(paper: dia.Paper): { width: number; height: number };
+  
+  // Interaction mode control
+  setInteractionMode(paper: dia.Paper, mode: { pan: boolean; zoom: boolean; elementMove: boolean }): void;
 }
 
 /**

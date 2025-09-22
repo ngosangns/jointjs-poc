@@ -7,13 +7,12 @@ import type {
   ILinkFactory,
   IPaperManager,
   IShapeFactory,
-  IToolsManager,
   IToolbarManager,
+  IToolsManager,
 } from './interfaces';
-import { EventManager, GraphManager, PaperManager, ToolsManager } from './managers';
-import { ToolbarManager } from './managers/ToolbarManager';
+import { EventManager, GraphManager, Toolbar, ToolsManager, Viewport } from './managers';
 
-export class DiagramEngine {
+export class DiagramEditor {
   private graph: dia.Graph;
   private paper: dia.Paper | null = null;
   private config: DiagramConfig;
@@ -44,42 +43,41 @@ export class DiagramEngine {
 
     // Initialize managers (allow dependency injection for testing)
     this.eventManager = eventManager || new EventManager();
-    this.paperManager = paperManager || new PaperManager();
+    this.paperManager = paperManager || new Viewport();
     this.graphManager = graphManager || new GraphManager();
     this.toolsManager = toolsManager || new ToolsManager();
-    this.toolbarManager = toolbarManager || new ToolbarManager();
+    this.toolbarManager = toolbarManager || new Toolbar();
 
     // Initialize factories
     this.shapeFactory = shapeFactory || new ShapeFactory();
     this.linkFactory = linkFactory || new LinkFactory();
+
+    // Setup toolbar mode change listener
+    this.setupToolbarModeListener();
   }
 
   /**
    * Initialize the diagram paper with a DOM element
    */
   public initializePaper(element: HTMLElement): void {
-    if (this.paper) {
-      this.paperManager.destroy(this.paper);
-    }
+    if (this.paper) this.paperManager.destroy(this.paper);
 
     this.paper = this.paperManager.initialize(element, this.graph, this.config);
     this.paperManager.setupPaperEvents(this.paper, this.eventManager);
 
-    // Initialize EventManager with graph and paper for JointJS event integration
     this.eventManager.initialize(this.graph, this.paper);
 
-    // Setup graph event bridging via GraphManager
     try {
       this.graphManager.setupGraphEvents(this.graph, this.eventManager);
     } catch (error) {
       console.error('GraphManager setupGraphEvents error:', error);
     }
 
-    // Initialize ToolsManager with paper for tools management
     this.toolsManager.initialize(this.paper);
-
-    // Initialize ToolbarManager with paper for toolbar management
     this.toolbarManager.initialize(this.paper);
+
+    // Apply initial mode settings (default is select mode)
+    this.handleToolbarModeChange(this.toolbarManager.getCurrentMode());
   }
 
   /**
@@ -237,5 +235,39 @@ export class DiagramEngine {
    */
   public isSelectMode(): boolean {
     return this.toolbarManager.isSelectMode();
+  }
+
+  /**
+   * Setup toolbar mode change listener to coordinate with viewport
+   */
+  private setupToolbarModeListener(): void {
+    this.toolbarManager.addModeChangeListener((event) => {
+      this.handleToolbarModeChange(event.mode);
+    });
+  }
+
+  /**
+   * Handle toolbar mode changes and update viewport accordingly
+   */
+  private handleToolbarModeChange(mode: 'select' | 'pan'): void {
+    if (!this.paper) return;
+
+    if (mode === 'select') {
+      // Select mode: disable pan, zoom, and element movement
+      // Focus on element selection and interaction only
+      this.paperManager.setInteractionMode(this.paper, {
+        pan: false,
+        zoom: false,
+        elementMove: false,
+      });
+    } else if (mode === 'pan') {
+      // Pan mode: enable pan, zoom, and element movement
+      // Allow full viewport navigation and element manipulation
+      this.paperManager.setInteractionMode(this.paper, {
+        pan: true,
+        zoom: true,
+        elementMove: true,
+      });
+    }
   }
 }
