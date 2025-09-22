@@ -61,7 +61,6 @@ export interface IGraphManager {
     elementConfig: Partial<DiagramElement>,
     shapeFactory: IShapeFactory
   ): string;
-  clear(graph: dia.Graph): void;
   setupGraphEvents(graph: dia.Graph, eventManager: IEventManager): void;
 }
 

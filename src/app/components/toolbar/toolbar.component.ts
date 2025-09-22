@@ -1,17 +1,25 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, signal, ChangeDetectorRef } from '@angular/core';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { DiagramService } from '../../services/diagram.service';
+import { ShapeLibraryService, type ShapeMetadata } from '../../services/shape-library.service';
 
 @Component({
   selector: 'app-toolbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DecimalPipe],
   templateUrl: './toolbar.component.html',
   styleUrl: './toolbar.component.scss',
 })
 export class ToolbarComponent implements OnInit, OnDestroy {
   // Toolbar state
   currentMode = signal<'select' | 'pan'>('select');
+
+  // Diagram state
+  currentZoom: number = 1;
+
+  // Shape toolbar state
+  allShapes: ShapeMetadata[] = [];
+  hoveredShape: string | null = null;
 
   // Tool definitions
   tools = [
@@ -29,13 +37,21 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     },
   ];
 
-  constructor(private diagramService: DiagramService) {}
+  constructor(
+    private diagramService: DiagramService,
+    private cdr: ChangeDetectorRef,
+    private shapeLibraryService: ShapeLibraryService
+  ) {}
 
   ngOnInit(): void {
+    // Initialize shape library
+    this.allShapes = this.shapeLibraryService.getAllShapes();
+
     // Initialize toolbar mode with error handling
     if (this.diagramService.isInitialized()) {
       try {
         this.currentMode.set(this.diagramService.getToolbarMode());
+        this.currentZoom = this.diagramService.getZoom();
       } catch (error) {
         console.warn('Error getting toolbar mode, using default select mode');
         this.currentMode.set('select');
@@ -93,6 +109,71 @@ export class ToolbarComponent implements OnInit, OnDestroy {
     const baseClass = 'tool-button';
     const activeClass = this.isToolActive(tool.id) ? 'active' : '';
     return `${baseClass} ${activeClass}`.trim();
+  }
+
+  /**
+   * Shape-related methods
+   */
+  onShapeHover(shapeType: string): void {
+    this.hoveredShape = shapeType;
+  }
+
+  onShapeHoverEnd(): void {
+    this.hoveredShape = null;
+  }
+
+  getShapeIconClass(shape: ShapeMetadata): string {
+    // Map shape types to icon classes
+    const iconMap: Record<string, string> = {
+      rectangle: 'icon-rectangle',
+      circle: 'icon-circle',
+    };
+
+    return iconMap[shape.icon] || 'icon-rectangle';
+  }
+
+  isShapeHovered(shapeType: string): boolean {
+    return this.hoveredShape === shapeType;
+  }
+
+  getShapeType(shape: ShapeMetadata): string {
+    return shape.name.toLowerCase().replace(/\s+/g, '-');
+  }
+
+  onShapeClick(shape: ShapeMetadata): void {
+    if (this.diagramService.isInitialized()) {
+      try {
+        // Calculate center position of paper in local coordinates and add shape
+        const centerPosition = this.diagramService.getCenterPosition();
+
+        // Use the new method that supports ports if the shape has ports
+        if (shape.hasPorts) {
+          this.diagramService.insertShapeWithPortsAtPosition(shape, centerPosition);
+        } else {
+          this.diagramService.insertShapeAtPosition(shape, centerPosition);
+        }
+      } catch (error) {
+        console.error('Error adding shape:', error);
+      }
+    }
+  }
+
+  /**
+   * Canvas tools methods
+   */
+
+  onZoomIn(): void {
+    // Use cursor-centered zoom
+    this.diagramService.zoomIn();
+    this.currentZoom = this.diagramService.getZoom();
+    this.cdr.detectChanges();
+  }
+
+  onZoomOut(): void {
+    // Use cursor-centered zoom
+    this.diagramService.zoomOut();
+    this.currentZoom = this.diagramService.getZoom();
+    this.cdr.detectChanges();
   }
 
   /**

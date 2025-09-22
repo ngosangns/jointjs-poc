@@ -1,35 +1,25 @@
-import { CommonModule, DecimalPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
   type AfterViewInit,
   ChangeDetectorRef,
   Component,
   type ElementRef,
   type OnDestroy,
-  type OnInit,
   ViewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { DiagramService } from '../../services/diagram.service';
-import { ShapeLibraryService, type ShapeMetadata } from '../../services/shape-library.service';
 import { ToolbarComponent } from '../toolbar/toolbar.component';
 
 @Component({
   selector: 'app-diagram-canvas',
   standalone: true,
-  imports: [DecimalPipe, CommonModule, FormsModule, ToolbarComponent],
+  imports: [CommonModule, ToolbarComponent],
   providers: [DiagramService],
   templateUrl: './diagram-canvas.component.html',
   styleUrl: './diagram-canvas.component.scss',
 })
-export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
+export class DiagramCanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChild('diagramContainer', { static: true }) diagramContainer!: ElementRef<HTMLDivElement>;
-
-  // Diagram state
-  currentZoom: number = 1;
-
-  // Shape toolbar state
-  allShapes: ShapeMetadata[] = [];
-  hoveredShape: string | null = null;
 
   private resizeRafId: number | null = null;
   private lastContainerSize: { width: number; height: number } = { width: 0, height: 0 };
@@ -54,14 +44,8 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
 
   constructor(
     private diagramService: DiagramService,
-    private cdr: ChangeDetectorRef,
-    private shapeLibraryService: ShapeLibraryService
+    private cdr: ChangeDetectorRef
   ) {}
-
-  ngOnInit(): void {
-    // Initialize shape library
-    this.allShapes = this.shapeLibraryService.getAllShapes();
-  }
 
   async ngAfterViewInit(): Promise<void> {
     // Initialize and attach diagram based on container size
@@ -80,13 +64,8 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
       // Cache current size
       this.lastContainerSize = { width: clientWidth, height: clientHeight };
 
-      this.setupEventListeners();
-
       // Listen to window resize and resize diagram based on container size
       window.addEventListener('resize', this.onWindowResize, { passive: true });
-
-      // Initialize zoom state
-      this.currentZoom = this.diagramService.getZoom();
     }
   }
 
@@ -97,70 +76,5 @@ export class DiagramCanvasComponent implements OnInit, AfterViewInit, OnDestroy 
       cancelAnimationFrame(this.resizeRafId);
       this.resizeRafId = null;
     }
-  }
-
-  // Shape toolbar methods
-
-  onShapeHover(shapeType: string): void {
-    this.hoveredShape = shapeType;
-  }
-
-  onShapeHoverEnd(): void {
-    this.hoveredShape = null;
-  }
-
-  getShapeIconClass(shape: ShapeMetadata): string {
-    // Map shape types to icon classes
-    const iconMap: Record<string, string> = {
-      rectangle: 'icon-rectangle',
-      circle: 'icon-circle',
-    };
-
-    return iconMap[shape.icon] || 'icon-rectangle';
-  }
-
-  isShapeHovered(shapeType: string): boolean {
-    return this.hoveredShape === shapeType;
-  }
-
-  getShapeType(shape: ShapeMetadata): string {
-    return shape.name.toLowerCase().replace(/\s+/g, '-');
-  }
-
-  // Add shape click handler
-  onShapeClick(shape: ShapeMetadata): void {
-    // Calculate center position of paper in local coordinates and add shape
-    const centerPosition = this.diagramService.getCenterPosition();
-
-    // Use the new method that supports ports if the shape has ports
-    if (shape.hasPorts) {
-      this.diagramService.insertShapeWithPortsAtPosition(shape, centerPosition);
-    } else {
-      this.diagramService.insertShapeAtPosition(shape, centerPosition);
-    }
-  }
-
-  // Diagram methods
-
-  private setupEventListeners(): void {
-    // Listen for viewport changes to update zoom display
-    this.diagramService.addEventListener('viewport:changed', (event: any) => {
-      this.currentZoom = event.data.zoom;
-      this.cdr.detectChanges();
-    });
-  }
-
-  onClearDiagram(): void {
-    this.diagramService.clear();
-  }
-
-  onZoomIn(): void {
-    // Use cursor-centered zoom
-    this.diagramService.zoomIn();
-  }
-
-  onZoomOut(): void {
-    // Use cursor-centered zoom
-    this.diagramService.zoomOut();
   }
 }

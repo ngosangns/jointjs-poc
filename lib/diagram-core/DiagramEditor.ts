@@ -87,12 +87,7 @@ export class DiagramEditor {
     return this.graphManager.addElement(this.graph, elementConfig, this.shapeFactory);
   }
 
-  /**
-   * Clear the entire diagram
-   */
-  public clear(): void {
-    this.graphManager.clear(this.graph);
-  }
+
 
   // Center-centered zoom methods
   public zoomIn(step: number = 1.2): void {

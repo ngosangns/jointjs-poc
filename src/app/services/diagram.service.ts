@@ -53,15 +53,7 @@ export class DiagramService {
     });
   }
 
-  /**
-   * Clear the diagram
-   */
-  clear(): void {
-    if (!this.diagramEditor) {
-      throw new Error('Diagram editor not initialized.');
-    }
-    this.diagramEditor.clear();
-  }
+
 
   /**
    * Resize the diagram

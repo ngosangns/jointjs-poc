@@ -36,12 +36,7 @@ export class GraphManager implements IGraphManager {
     }
   }
 
-  /**
-   * Clear all cells from the graph
-   */
-  public clear(graph: dia.Graph): void {
-    graph.clear();
-  }
+
 
   /**
    * Setup graph-specific events and bridge them through the provided EventManager
