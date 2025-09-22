@@ -213,7 +213,7 @@ diagram-core/
 Define contracts for all major components:
 
 - `IEventManager`: Event handling interface
-- `IPaperManager`: JointJS paper management interface
+- `IViewport`: JointJS viewport management interface
 - `IGraphManager`: JointJS graph operations interface
 - `IToolsManager`: Tools management interface
 - `IShapeFactory`: Shape creation interface

@@ -6,9 +6,9 @@ import type {
   IEventManager,
   IGraphManager,
   ILinkFactory,
-  IPaperManager,
+  IViewport,
   IShapeFactory,
-  IToolbarManager,
+  IToolbar,
   IToolsManager,
 } from './interfaces';
 import { CursorManager, EventManager, GraphManager, Toolbar, ToolsManager, Viewport } from './managers';
@@ -20,10 +20,10 @@ export class DiagramEditor {
 
   // Managers
   private eventManager: IEventManager;
-  private paperManager: IPaperManager;
+  private paperManager: IViewport;
   private graphManager: IGraphManager;
   private toolsManager: IToolsManager;
-  private toolbarManager: IToolbarManager;
+  private toolbarManager: IToolbar;
   private cursorManager: ICursorManager;
 
   // Factories
@@ -33,10 +33,10 @@ export class DiagramEditor {
   constructor(
     config: DiagramConfig,
     eventManager?: IEventManager,
-    paperManager?: IPaperManager,
+    paperManager?: IViewport,
     graphManager?: IGraphManager,
     toolsManager?: IToolsManager,
-    toolbarManager?: IToolbarManager,
+    toolbarManager?: IToolbar,
     cursorManager?: ICursorManager,
     shapeFactory?: IShapeFactory,
     linkFactory?: ILinkFactory
@@ -199,7 +199,7 @@ export class DiagramEditor {
   /**
    * Get the toolbar manager instance
    */
-  public getToolbarManager(): IToolbarManager {
+  public getToolbarManager(): IToolbar {
     return this.toolbarManager;
   }
 

@@ -20,9 +20,9 @@ export interface IEventManager {
 }
 
 /**
- * Interface for paper management
+ * Interface for viewport management
  */
-export interface IPaperManager {
+export interface IViewport {
   initialize(element: HTMLElement, graph: dia.Graph, config: DiagramConfig): dia.Paper;
   resize(paper: dia.Paper, width: number, height: number): void;
   destroy(paper: dia.Paper): void;
@@ -92,7 +92,7 @@ export interface IToolsManager {
 /**
  * Interface for toolbar management
  */
-export interface IToolbarManager {
+export interface IToolbar {
   initialize(paper: dia.Paper): void;
   getCurrentMode(): 'select' | 'pan';
   setMode(mode: 'select' | 'pan'): void;
@@ -142,6 +142,7 @@ export * from './Group';
 export * from './Style';
 export * from './Template';
 export * from './DocumentSettings';
+export * from './IToolbar';
 
 /**
  * Interface for shape factory

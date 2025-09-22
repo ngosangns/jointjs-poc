@@ -1,8 +1,8 @@
 import { dia, shapes, Vectorizer } from '@joint/core';
 import { DiagramConfig } from '../../types';
-import { IEventManager, IPaperManager } from '../interfaces';
+import { IEventManager, IViewport } from '../interfaces';
 
-export class Viewport implements IPaperManager {
+export class Viewport implements IViewport {
   public initialize(element: HTMLElement, graph: dia.Graph, config: DiagramConfig): dia.Paper {
     const paper = new dia.Paper({
       el: element,

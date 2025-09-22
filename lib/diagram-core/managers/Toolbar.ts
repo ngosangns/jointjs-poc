@@ -1,8 +1,8 @@
 import { dia } from '@joint/core';
-import type { ToolbarMode, ToolbarModeChangeEvent } from '../interfaces/IToolbarManager';
-import { IToolbarManager } from '..';
+import type { ToolbarMode, ToolbarModeChangeEvent } from '../interfaces/IToolbar';
+import { IToolbar } from '..';
 
-export class Toolbar implements IToolbarManager {
+export class Toolbar implements IToolbar {
   private paper: dia.Paper | null = null;
   private currentMode: ToolbarMode = 'select';
   private previousMode: ToolbarMode = 'select';
